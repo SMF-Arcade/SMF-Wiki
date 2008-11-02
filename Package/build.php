@@ -14,15 +14,13 @@ $build_info = array(
 	),
 );
 
-if (!function_exists('build_replaces_project01'))
+if (!function_exists('build_replaces_wiki01'))
 {
-	function build_replaces_project01(&$content, $filename, $rev, $svnInfo)
+	function build_replaces_wiki01(&$content, $filename, $rev, $svnInfo)
 	{
 		global $build_info;
 
-		if ($rev && ($filename == 'Sources/Project.php' || $filename == 'Sources/ProjectDatabase.php'))
-			$content = str_replace('$project_version = \'0.2\';', '$project_version = \'0.2 rev' . $rev . '\';', $content);
-		elseif (in_array($filename, array('readme.txt', 'install.xml',  'package-info.xml')))
+		if (in_array($filename, array('readme.txt', 'install.xml',  'package-info.xml', 'Sources/Wiki.php')))
 		{
 			$content = strtr($content, array(
 				'{version}' => $rev ? $build_info['version_str'] . ' rev' . $rev : $build_info['version_str']

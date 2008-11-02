@@ -2,9 +2,12 @@
 
 function Wiki()
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
 
 	require_once($sourcedir . '/Subs-Wiki.php');
+
+	// Wiki Version
+	$wiki_version = '{version}';
 
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
