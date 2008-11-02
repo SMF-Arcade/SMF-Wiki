@@ -20,4 +20,13 @@
 	<id>Niko:SMFWiki</id>
 	<version>{version}</version>
 
+	<!-- Board directory -->
+	<file name="$boarddir/index.php">
+		<operation>
+			<search position="before"><![CDATA[		'im' => array('PersonalMessage.php', 'MessageMain'),]]></search>
+			<add><![CDATA[
+		'wiki' => array('Wiki.php', 'Wiki'),]]></add>
+		</operation>
+	</file>
+
 </modification>
