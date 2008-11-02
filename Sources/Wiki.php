@@ -4,8 +4,7 @@ function Wiki()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
-	require_once(dirname(__FILE__) . '/Sources/Subs-Wiki.php');
-	require_once(dirname(__FILE__) . '/Sources/lang.php');
+	require_once($sourcedir . '/Subs-Wiki.php');
 
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
@@ -76,7 +75,7 @@ function Wiki()
 	// Normal Namespace
 	if ($namespace != 'Special')
 	{
-		require_once(dirname(__FILE__) . '/Sources/WikiMain.php');
+		require_once($sourcedir . '/WikiMain.php');
 		return WikiMain();
 	}
 	// Special Namespace
@@ -93,7 +92,7 @@ function Wiki()
 		if (!isset($_REQUEST['page']) || !isset($actionArray[$_REQUEST['page']]))
 			fatal_lang_error('wiki_action_not_found', false, array($_REQUEST['page']));
 
-		require_once(dirname(__FILE__) . '/Sources/' . $actionArray[$_REQUEST['page']][0]);
+		require_once($sourcedir . '/' . $actionArray[$_REQUEST['page']][0]);
 		return $actionArray[$_REQUEST['page']][1];
 	}
 
