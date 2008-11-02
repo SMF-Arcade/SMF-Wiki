@@ -7,7 +7,7 @@ function EditPage()
 	require_once($sourcedir . '/Subs-Editor.php');
 	require_once($sourcedir . '/Subs-Post.php');
 
-	siteIsAllowed('wiki_edit');
+	allowedTo('wiki_edit');
 	$context['edit_section'] = 0;
 
 	if (!isset($context['current_page']['body']))
@@ -77,7 +77,7 @@ function EditPage2()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
-	siteIsAllowed('wiki_edit');
+	isAllowedTo('wiki_edit');
 
 	require_once($sourcedir . '/Subs-Editor.php');
 	require_once($sourcedir . '/Subs-Post.php');

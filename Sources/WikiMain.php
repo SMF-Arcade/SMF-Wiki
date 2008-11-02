@@ -44,7 +44,7 @@ function WikiMain()
 			'title' => $txt['wiki_edit'],
 			'url' => $context['url'] . (strpos($context['url'], '?') !== false ? ';' : '?') . 'action=edit',
 			'selected' => in_array($_REQUEST['action'], array('edit', 'edit2')),
-			'show' => siteAllowed('wiki_edit'),
+			'show' => allowedTo('wiki_edit'),
 			'class' => 'margin',
 		),
 		'history' => array(
@@ -52,7 +52,7 @@ function WikiMain()
 			'url' => $context['base_url'] . '?action=history',
 			'selected' => in_array($_REQUEST['action'], array('history', 'diff')),
 			'show' => true,
-			'class' => siteAllowed('wiki_edit') ? '' : 'margin',
+			'class' => allowedTo('wiki_edit') ? '' : 'margin',
 		),
 	);
 
@@ -91,7 +91,7 @@ function WikiMain()
 		);
 	}
 
-	require_once(dirname(__FILE__) . '/' . $actionArray[$_REQUEST['action']][0]);
+	require_once($sourcedir . '/' . $actionArray[$_REQUEST['action']][0]);
 	return $actionArray[$_REQUEST['action']][1];
 }
 

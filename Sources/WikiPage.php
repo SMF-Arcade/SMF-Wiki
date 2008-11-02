@@ -22,7 +22,6 @@ function DiffPage()
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
 	require_once($sourcedir . '/Subs-Post.php');
-	require_once(dirname(__FILE__) . '/Diff.php');
 
 	// This is pretty much duplicate content
 	$context['robot_no_index'] = true;
