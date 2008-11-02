@@ -4,7 +4,7 @@ function wiki_get_url($params)
 {
 	global $scripturl;
 
-	$return = '';
+	$return = '?action=wiki';
 
 	foreach ($params as $p => $value)
 	{
