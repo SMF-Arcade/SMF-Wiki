@@ -18,7 +18,7 @@
 
 <package-info xmlns="http://www.simplemachines.org/xml/package-info" xmlns:smf="http://www.simplemachines.org/">
 	<id>Niko:SMFWiki</id>
-	<name>SMF Project Tools</name>
+	<name>SMF Wiki</name>
 	<version>{version}</version>
 	<type>modification</type>
 
