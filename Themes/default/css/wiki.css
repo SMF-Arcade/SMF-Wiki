@@ -1,0 +1,308 @@
+/* ************************************* */
+/* Styles from Wiki.template             */
+/* ************************************* */
+.wikileft
+{
+	float: left;
+	width: 15%;
+}
+.wikileft div
+{
+	margin: 0 10px 0 5px;
+	border: 1px solid #AAAAAA;
+}
+.wikileft h3
+{
+
+}
+.wikileft h3 a
+{
+	border-bottom: 1px solid black;
+	background: url(../images/catbg.jpg);
+	color: white;
+	padding: 5px;
+	display: block;
+	font-size: small;
+	text-decoration: none;
+}
+.wikileft ul
+{
+}
+.wikileft li
+{
+}
+.wikileft li a
+{
+	border-bottom: 1px solid black;
+	background: url(../images/menubg.png);
+	display: block;
+	font-size: small;
+	padding: 5px;
+	text-decoration: none;
+}
+.wikileft li a:hover
+{
+	background: url(../images/menubg2.png);
+}
+.wikiright
+{
+	float: left;
+	width: 85%;
+}
+
+.wikibg
+{
+	background: #F6F6F6;
+}
+.wikibg2
+{
+	background: #ECEDF3;
+}
+
+/* ************************************* */
+/* Styles from WikiPage.template         */
+/* ************************************* */
+ul.wikimenu
+{
+	margin: 0;
+	margin-right: 10px;
+	padding: 0;
+	float: right;
+	border: 1px solid #AAAAAA;
+	border-top: 0;
+	border-bottom: 0;
+	margin-bottom: 2px;
+	clear: right;
+}
+ul.wikimenu li
+{
+	border: 1px solid #AAAAAA;
+	border-left: 0;
+	border-right: 0;
+	float: left;
+	list-style: none;
+}
+.wikimenu li.margin
+{
+}
+.wikimenu li a
+{
+	display: block;
+	padding: 4px 5px 4px 25px;
+	font-size: small;
+}
+.wikimenu li a:hover
+{
+	text-decoration: none;
+}
+.wikimenu li.selected
+{
+	border-color: #FABD23;
+}
+.wikimenu li:hover
+{
+}
+.wikimenu li a:hover
+{
+	background-color: #F6F6F6;
+}
+.wikimenu li.selected a
+{
+	background-color: #F6F6F6;
+}
+.wikimenu li.view a
+{
+	background-image: url(../images/wiki/view.png);
+	background-position: 5px center;
+	background-repeat: no-repeat;
+}
+.wikimenu li.talk a
+{
+	background-image: url(../images/wiki/talk.png);
+	background-position: 5px center;
+	background-repeat: no-repeat;
+}
+.wikimenu li.edit a
+{
+	background-image: url(../images/wiki/edit.png);
+	background-position: 5px center;
+	background-repeat: no-repeat;
+}
+.wikimenu li.history a
+{
+	background-image: url(../images/wiki/history.png);
+	background-position: 5px center;
+	background-repeat: no-repeat;
+}
+
+.wikicontent
+{
+	padding: 0 10px;
+}
+.wikicontent h2
+{
+	height: 1.4em;
+	margin-bottom: -1.8em;
+}
+
+.post h3, h4, h5, h6
+{
+	clear: both;
+	margin-top: 9px;
+	margin-bottom: 7px;
+}
+.post h3
+{
+	font-size: 115%;
+	border-bottom: 1px solid #666666;
+}
+.post h4
+{
+	font-size: 105%;
+	border-bottom: 1px solid #666666;
+	font-weight: normal;
+}
+.post h5
+{
+	font-size: 100%;
+	font-weight: normal;
+}
+.post h6
+{
+	font-size: 90%;
+	font-weight: normal;
+}
+
+.wikitoc
+{
+	border: 1px solid #AAAAAA;
+	background: #F9F9F9;
+	padding: 5px;
+	font-size: 95%;
+	list-style: none;
+	clear: right;
+}
+.wikitoc ul
+{
+	padding: 0;
+}
+.wikitoc ul li
+{
+	list-style: none;
+}
+.wikitoc ul li ul
+{
+	padding-left: 1em;
+}
+.wikitoc ul li ul li
+{
+	list-style: none;
+}
+
+/* ************************************* */
+/* Styles from WikiHistory.template      */
+/* ************************************* */
+ul.wikihistory
+{
+	padding-left: 0.5em;
+}
+ul.wikihistory li
+{
+	list-style: none;
+}
+ul.wikihistory li span.difflinks
+{
+}
+ul.wikihistory li span.diffselect
+{
+	padding-left: 0.5em;
+}
+ul.wikihistory li span.diffselect input[type=radio]
+{
+	padding: 0 5px;
+}
+ul.wikihistory li span.date
+{
+	padding-left: 0.5em;
+	display: inline-block;
+	min-width: 15em;
+}
+ul.wikihistory li span.author
+{
+	padding-left: 0.5em;
+	display: inline-block;
+	min-width: 7.5em;
+}
+ul.wikihistory li span.comment
+{
+	padding-left: 0.5em;
+}
+
+.diff
+{
+	margin: 5px;
+}
+.diff h3
+{
+	margin: 0;
+}
+.diff dl
+{
+	margin: 0;
+	padding: 0 0 0 0.2em;
+}
+.diff dt
+{
+	margin: 0;
+	float: left;
+	font-family: monospace;
+	width: 40px;
+}
+.diff dd
+{
+	margin: 0 0 0 80px;
+	padding: 0 0.2em;
+	border-left: 1px solid #A0A0A0;
+	font-family: monospace;
+	white-space: pre;
+}
+.diff div.windowbg2
+{
+}
+
+div.infobox
+{
+	margin: 3px 15px;
+	padding: 10px;
+	border: 1px solid #BDA2A2;
+	background-color: #F4EAEA;
+
+}
+div.infobox h2
+{
+	margin-bottom: 5px;
+}
+div.ibcolblue
+{
+	border-color: #7883A7;
+	background-color: #D3D8E9;
+}
+
+/* ************************************* */
+/* Styles from TalkPage.template         */
+/* ************************************* */
+.comment
+{
+	padding: 6px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-opera-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.commentinfo
+{
+	background: url(../images/wiki/arrow.png) 20px top no-repeat;
+	padding-left: 65px;
+	margin-bottom: 1.2em;
+}

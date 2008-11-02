@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="package-info.xsl" type="text/xsl"?>
+<!DOCTYPE package-info SYSTEM "http://www.simplemachines.org/xml/package-info">
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	ATTENTION: If you are trying to install this manually, you should try
+	the package manager.  If it will not work for you, please take a look
+	at the following for information on this format:
+		http://mods.simplemachines.org/docs/manual-install.php
+
+================================================================================
+
+	This script can be used to make your package do many different things.
+	The following documentation should be available on the format of this
+	file and the things you can do with it:
+		http://mods.simplemachines.org/docs/package-info.php
+
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+<package-info xmlns="http://www.simplemachines.org/xml/package-info" xmlns:smf="http://www.simplemachines.org/">
+	<id>Niko:SMFWiki</id>
+	<name>SMF Project Tools</name>
+	<version>{version}</version>
+	<type>modification</type>
+
+	<install for="2.0 RC1">
+		<readme parsebbc="true">readme.txt</readme>
+
+		<require-file name="Sources/WikiDatabase.php" destination="$sourcedir" />
+		<database>installDatabase.php</database>
+
+		<!-- These files goes to Sources directory -->
+		<require-file name="Sources/Subs-Wiki.php" destination="$sourcedir" />
+		<require-file name="Sources/Wiki.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiEditPage.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiHistory.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiMain.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiPage.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiTalkPage.php" destination="$sourcedir" />
+
+		<!-- These files goest to Theme directory -->
+		<require-file name="Themes/default/Wiki.template.php" destination="$themedir" />
+		<require-file name="Themes/default/WikiPage.template.php" destination="$themedir" />
+
+		<!-- CSS -->
+		<require-file name="Themes/default/css/wiki.css" destination="$themedir/css" />
+
+		<!-- Langauges -->
+		<require-file name="Themes/default/languages/Wiki.english.php" destination="$languagedir" />
+
+		<modification format="xml" type="file">install.xml</modification>
+	</install>
+
+	<uninstall>
+		<!-- Remove code modifications -->
+		<modification format="xml" type="file" reverse="true">install.xml</modification>
+
+		<!-- Remove these files from Sources -->
+		<remove-file name="$sourcedir/Subs-Wiki.php" />
+		<remove-file name="$sourcedir/Wiki.php" />
+		<remove-file name="$sourcedir/WikiEditPage.php" />
+		<remove-file name="$sourcedir/WikiHistory.php" />
+		<remove-file name="$sourcedir/WikiMain.php" />
+		<remove-file name="$sourcedir/WikiPage.php" />
+		<remove-file name="$sourcedir/WikiTalkPage.php" />
+
+		<!-- Templates -->
+		<remove-file name="$themedir/Wiki.template.php" />
+		<remove-file name="$themedir/WikiPage.template.php" />
+
+		<!-- CSS -->
+		<remove-file name="$themedir/css/wiki.css" />
+
+		<!-- Scripts -->
+		<remove-file name="$themedir/scripts/project.js" />
+
+		<!-- Languages -->
+		<remove-file name="$languagedir/Wiki.english.php" />
+	</uninstall>
+</package-info>
