@@ -8,12 +8,18 @@ function wiki_get_url($params)
 
 	foreach ($params as $p => $value)
 	{
+		if ($value === null)
+			continue;
+
 		if (!empty($return))
 			$return .= ';';
 		else
 			$return .= '?';
 
-		$return .= $p . '=' . $value;
+		if (!empty($value))
+			$return .= $p . '=' . $value;
+		else
+			$return .= $p;
 	}
 
 	return $scripturl . $return;

@@ -54,7 +54,9 @@ function Wiki()
 		$context['namespace'] = array(
 			'id' => $row['namespace'],
 			'prefix' => $row['ns_prefix'],
-			'url' => $baseurl . '/' . (!empty($row['namespace']) ? $row['namespace'] . ':' : '') . $row['default_page'],
+			'url' => wiki_get_url(array(
+				'page' => (!empty($row['namespace']) ? $row['namespace'] . ':' : '') . $row['default_page']
+			)),
 		);
 
 		if (empty($_REQUEST['page']))

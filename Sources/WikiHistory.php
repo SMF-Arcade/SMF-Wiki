@@ -2,7 +2,7 @@
 
 function ViewPageHistory()
 {
-	global $context, $baseurl, $scripturl, $rooturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	$request = $smcFunc['db_query']('', '
 		SELECT con.id_revision, con.id_page, con.timestamp, con.comment, mem.id_member, mem.real_name, MAX(prev.id_revision) AS id_prev_revision

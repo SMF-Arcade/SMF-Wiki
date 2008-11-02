@@ -2,11 +2,16 @@
 
 function WikiMain()
 {
-	global $context, $baseurl, $rooturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
-	$context['base_url'] = $baseurl . '/' . (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page'];
-	$context['url'] = $baseurl . '/' . (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page'] . (isset($_REQUEST['revision']) ? '?revision=' . (int) $_REQUEST['revision'] : '');
+	$context['base_url'] = wiki_get_url(array(
+		'page' => (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page'],
+	));
+	$context['url'] = wiki_get_url(array(
+		'page' => (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page'],
+		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
+	));
 
 	$actionArray = array(
 		'view' => array('ViewPage.php', 'ViewPage'),

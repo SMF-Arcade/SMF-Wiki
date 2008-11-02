@@ -2,7 +2,7 @@
 
 function ViewTalkPage()
 {
-	global $boarddir, $context, $baseurl, $scripturl, $rooturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $boarddir, $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	require_once($boarddir . '/SSI.php');
 
@@ -18,7 +18,7 @@ function ViewTalkPage()
 
 function ViewTalkPage2()
 {
-	global $boarddir, $context, $baseurl, $scripturl, $rooturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $boarddir, $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	checkSession('post');
 	checkSubmitOnce('check');
