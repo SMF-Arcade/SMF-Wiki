@@ -1,10 +1,10 @@
 <?php
 /**********************************************************************************
-* ArcadeDatabase.php                                                              *
+* WikiDatabase.php                                                                *
 ***********************************************************************************
-* SMF Arcade                                                                      *
+* SMF Wiki                                                                        *
 * =============================================================================== *
-* Software Version:           SMF Arcade 2.5 Beta 2                               *
+* Software Version:           SMF Wiki 0.1                                        *
 * Software by:                Niko Pahajoki (http://www.madjoki.com)              *
 * Copyright 2004-2008 by:     Niko Pahajoki (http://www.madjoki.com)              *
 * Support, News, Updates at:  http://www.smfarcade.info                           *
