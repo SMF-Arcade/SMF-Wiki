@@ -20,7 +20,7 @@ if (!function_exists('build_replaces_wiki01'))
 	{
 		global $build_info;
 
-		if (in_array($filename, array('readme.txt', 'install.xml',  'package-info.xml', 'Sources/Wiki.php')))
+		if (in_array($filename, array('readme.txt', 'install.xml',  'package-info.xml', 'Sources/Wiki.php', 'Sources/WikiDatabase.php')))
 		{
 			$content = strtr($content, array(
 				'{version}' => $rev ? $build_info['version_str'] . ' rev' . $rev : $build_info['version_str']
