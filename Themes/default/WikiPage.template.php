@@ -1,5 +1,5 @@
 <?php
-// Version: 2.0 Beta 4; WikiPage
+// Version: 0.1; WikiPage
 
 function template_wikipage_above()
 {
@@ -22,7 +22,7 @@ function template_wikipage_above()
 		if (!empty($item['class']))
 			$classes[] = $item['class'];
 		echo '
-				<li class="',  implode(' ', $classes), '"><a href="', $item['url'], '">', $item['title'], '</a></li>';
+		<li class="',  implode(' ', $classes), '"><a href="', $item['url'], '">', $item['title'], '</a></li>';
 	}
 
 	echo '

@@ -1,5 +1,5 @@
 <?php
-// Version: 2.0 Beta 4; Wiki
+// Version: 0.1; Wiki
 
 function template_wiki_above()
 {
