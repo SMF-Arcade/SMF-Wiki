@@ -20,6 +20,9 @@
 * The latest version can always be found at http://www.simplemachines.org.        *
 **********************************************************************************/
 
+if (!defined('SMF'))
+	die('Hacking attempt...');
+	
 function WikiMain()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
