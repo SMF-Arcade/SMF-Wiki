@@ -27,6 +27,8 @@ function ViewPageHistory()
 {
 	global $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
+	$context['form_url'] = wiki_get_url(array_merge(array('sa' => 'history')), $context['wiki_url']);
+
 	$request = $smcFunc['db_query']('', '
 		SELECT con.id_revision, con.id_page, con.timestamp, con.comment, mem.id_member, mem.real_name, MAX(prev.id_revision) AS id_prev_revision
 		FROM {db_prefix}wiki_content AS con

@@ -192,7 +192,7 @@ function template_page_history()
 	global $context, $modSettings, $txt, $user_info;
 
 	echo '
-	<form action="', $context['base_url'], '">
+	<form action="', $context['form_url'], '">
 		<ul class="wikihistory">';
 
 	foreach ($context['history'] as $item)
@@ -278,7 +278,7 @@ function template_edit_page()
 	}
 
 	echo '
-	<form action="', $context['edit_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editarticle" id="editarticle" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
+	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editarticle" id="editarticle" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
 		<div style="width: 95%; margin: auto">
 			<div>
 				', template_control_richedit($context['post_box_name'], 'bbc'), '
