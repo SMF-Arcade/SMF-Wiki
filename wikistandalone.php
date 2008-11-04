@@ -32,9 +32,9 @@
 
 */
 
-// Here you can add SSI settings
+// Here you can add SSI settings or any settings for your site
 
-// Path to SSI
+// Path to SSI or file which includes SSI.php
 require_once(dirname(__FILE__) . '/SSI.php');
 
 // DON'T modify anything below unless you are sure what your doing
