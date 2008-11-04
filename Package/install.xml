@@ -40,7 +40,7 @@
 			<add><![CDATA[			'wiki' => array(
 				'title' => $txt['wiki'],
 				'href' => $scripturl . '?action=wiki',
-				'show' => $context['allow_wiki'],
+				'show' => $context['allow_wiki'] && empty($modSettings['wikiStandalone']),
 				'sub_buttons' => array(),
 			),]]></add>
 		</operation>

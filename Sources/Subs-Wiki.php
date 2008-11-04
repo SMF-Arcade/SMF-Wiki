@@ -31,7 +31,7 @@ function wiki_get_url($params)
 		$params = array('page' => $params);
 
 	// Running in "standalone" mode WITH rewrite
-	if (!empty($modSettings['wikiStandalone']) && $modSettings['wikiStandalone'] === 2)
+	if (!empty($modSettings['wikiStandalone']) && $modSettings['wikiStandalone'] == 2)
 	{
 		$page = '';
 
@@ -42,7 +42,9 @@ function wiki_get_url($params)
 		}
 
 		if (count($params) === 0)
-			return $modSettings['wikiStandaloneUrl'] . '/' . $page;		$query = '';
+			return $modSettings['wikiStandaloneUrl'] . '/' . $page;
+
+		$query = '';
 
 		foreach ($params as $p => $value)
 		{
