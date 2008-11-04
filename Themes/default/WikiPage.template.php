@@ -103,7 +103,7 @@ function template_view_page()
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
 			echo '
-			<h', $section['level'] + 1, ' id="', wikiurlname($section['title']), '" class="clearfix">
+			<h', $section['level'] + 1, ' id="', make_html_safe($section['title']), '" class="clearfix">
 				<span class="floatleft">', $section['title'], '</span>';
 
 			if (!empty($context['can_edit_page']))
