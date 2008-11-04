@@ -29,6 +29,9 @@ function wiki_get_url($params)
 
 	$return = '?action=wiki';
 
+	if (is_string($params))
+		$params = array('page' => $params);
+
 	foreach ($params as $p => $value)
 	{
 		if ($value === null)
@@ -80,7 +83,7 @@ function diff($old, $new)
 	);
 }
 
-function loadWikiPage($name, $namespace, $revision = null)
+function loadWikiPage($name, $namespace = '', $revision = null)
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
@@ -99,10 +102,6 @@ function loadWikiPage($name, $namespace, $revision = null)
 		)
 	);
 
-	$context['page_url'] = wiki_get_url(array(
-		'page' => (!empty($namespace) ? $namespace . ':' : '') . $name,
-	));
-
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 	{
 		$smcFunc['db_free_result']($request);
@@ -113,11 +112,10 @@ function loadWikiPage($name, $namespace, $revision = null)
 
 	return array(
 		'id' => $row['id_page'],
-		'topic' => $row['id_topic'],
 		'title' => read_urlname($row['title']),
+		'name' => wiki_urlname($row['title'], $row['namespace']),
 		'namespace' => $row['namespace'],
-		'url' => $row['title'],
-		'name' => $row['title'],
+		'topic' => $row['id_topic'],
 		'is_current' => $row['id_revision'] == $row['id_revision_current'],
 		'revision' => $row['id_revision'],
 		'current_revision' => $row['id_revision_current'],
@@ -131,7 +129,7 @@ function read_urlname($url, $last = false)
 
 	return $smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', $url));
 }
-function sanitise_urlname($page, $namespace = null)
+function wiki_urlname($page, $namespace = null)
 {
 	global $smcFunc;
 
@@ -148,11 +146,6 @@ function sanitise_urlname($page, $namespace = null)
 	$page = $smcFunc['ucfirst'](str_replace(array(' ', '[', ']', '{', '}'), '_', $page));
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
-}
-
-function wikiurlname($url)
-{
-	return sanitise_urlname($url);
 }
 
 function do_toctable($tlevel, $toc, $main = true)
@@ -215,7 +208,10 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		'title' => $page_title,
 		'level' => 1,
 		'content' => '',
-		'edit_url' => $wikiurl . '/' . sanitise_urlname($page_title, $namespace) . '?action=edit',
+		'edit_url' => wiki_get_url(array(
+			'page' => wiki_urlname($page_title, $namespace),
+			'sa' => 'edit',
+		)),
 	);
 
 
@@ -244,7 +240,11 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 					'title' => $parts[$i + 1],
 					'level' => strlen($parts[$i]),
 					'content' => '',
-					'edit_url' => $wikiurl . '/' . sanitise_urlname($page_title, $namespace) . '?action=edit;section=' . count($object['sections']),
+					'edit_url' => wiki_get_url(array(
+						'page' => wiki_urlname($page_title, $namespace),
+						'sa' => 'edit',
+						'section' => count($object['sections']),
+					)),
 				);
 
 				$i += 3;
@@ -276,7 +276,7 @@ function wikilink_callback($groups)
 	global $wikiurl, $rep_temp;
 
 	if (empty($groups[3]))
-		$link = '<a href="' . $wikiurl . '/' . sanitise_urlname($groups[1]) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
+		$link = '<a href="' . wiki_get_url(sanitise_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
 	else
 		$link = '<a href="' . $wikiurl . '/' . sanitise_urlname($groups[1]) . '">' . $groups[3] . $groups[4] . '</a>';
 

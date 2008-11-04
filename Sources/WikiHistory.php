@@ -22,7 +22,7 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 function ViewPageHistory()
 {
 	global $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
@@ -57,8 +57,16 @@ function ViewPageHistory()
 			'current' => $row['id_revision'] == $context['current_page']['current_revision'],
 			'previous' => $row['id_prev_revision'],
 			'href' => $context['url'] . '?revision=' . $row['id_revision'],
-			'diff_current_href' => $context['url'] . '?action=diff;old_revision=' . $row['id_revision'],
-			'diff_prev_href' => $context['url'] . '?action=diff;revision=' . $row['id_revision'] . ';old_revision=' . $row['id_prev_revision'],
+			'diff_current_href' => wiki_get_url(array_merge($context['wiki_url'], array(
+				'sa' => 'diff',
+				'revision' => null,
+				'old_revision' => $row['id_revision'],
+			))),
+			'diff_prev_href' => wiki_get_url(array_merge($context['wiki_url'], array(
+				'sa' => 'diff',
+				'revision' =>  $row['id_revision'],
+				'old_revision' => $row['id_revision'],
+			))),
 		);
 	}
 	$smcFunc['db_free_result']($request);

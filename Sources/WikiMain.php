@@ -22,19 +22,18 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 function WikiMain()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
-	$context['base_url'] = wiki_get_url(array(
-		'page' => (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page'],
-	));
-	$context['url'] = wiki_get_url(array(
-		'page' => (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page'],
+
+	// Base array for calling wiki_get_url for this page
+	$context['wiki_url'] = array(
+		'page' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
 		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
-	));
+	);
 
 	$actionArray = array(
 		'view' => array('ViewPage.php', 'ViewPage'),

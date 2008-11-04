@@ -22,7 +22,7 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 function EditPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -226,7 +226,7 @@ function EditPage2()
 	);
 
 	redirectexit(wiki_get_url(array(
-		'page' => (!empty($_REQUEST['namespace']) ? $_REQUEST['namespace'] . ':' : '' ) . $_REQUEST['page']
+		'page' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
 	)));
 }
 

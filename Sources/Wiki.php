@@ -22,7 +22,7 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 function Wiki()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
@@ -46,12 +46,12 @@ function Wiki()
 
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url(array(
-			'page' => (!empty($namespace) ? $namespace . ':' : '') . $page,
+			'page' => wiki_urlname($page, $namespace),
 		)));
 
 	// Linktree
 	$context['linktree'][] = array(
-		'url' => wiki_get_url(array('page' => 'Main_Page')),
+		'url' => wiki_get_url('Main_Page'),
 		'name' => $txt['wiki'],
 	);
 
@@ -80,7 +80,7 @@ function Wiki()
 			'id' => $row['namespace'],
 			'prefix' => $row['ns_prefix'],
 			'url' => wiki_get_url(array(
-				'page' => (!empty($row['namespace']) ? $row['namespace'] . ':' : '') . $row['default_page']
+				'page' => wiki_urlname($row['default_page'], $row['namespace']),
 			)),
 		);
 
