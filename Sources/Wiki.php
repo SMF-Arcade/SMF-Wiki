@@ -54,6 +54,9 @@ function Wiki($standalone = false)
 
 	loadWiki();
 
+	if (!isset($_REQUEST['page']))
+		$_REQUEST['page'] = '';
+
 	// Santise Namespace
 	if (strpos($_REQUEST['page'], ':'))
 		list ($_REQUEST['namespace'], $_REQUEST['page']) = explode(':', $_REQUEST['page'], 2);
