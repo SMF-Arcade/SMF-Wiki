@@ -65,10 +65,9 @@ function WikiMain()
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
 	);
 
-	if (!isset($_REQUEST['sa']) || !isset($subActions[$_REQUEST['sa']]))
-		$_REQUEST['sa'] = 'view';
+	$_REQUEST['sa'] = !isset($_REQUEST['sa']) || !isset($subActions[$_REQUEST['sa']]) ? 'view' : $_REQUEST['sa'];
 
-	// Menu
+	// Setup tabs
 	$context['wikimenu'] = array(
 		'view' => array(
 			'title' => $txt['wiki_view'],
@@ -107,15 +106,17 @@ function WikiMain()
 		),
 	);
 
-	// Template
-	loadTemplate('WikiPage');
-	$context['template_layers'][] = 'wikipage';
-
+	// Linktree
 	$context['linktree'][] = array(
 		'url' => $context['current_page']['url'],
 		'name' => $context['current_page']['title'],
 	);
 
+	// Template
+	loadTemplate('WikiPage');
+	$context['template_layers'][] = 'wikipage';
+
+	// Show error page if not found
 	if (!$context['current_page'] && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
 		return 'show_not_found_error';
 

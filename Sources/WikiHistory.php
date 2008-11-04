@@ -71,11 +71,10 @@ function ViewPageHistory()
 	}
 	$smcFunc['db_free_result']($request);
 
-	// Template
-	loadTemplate('WikiPage');
-	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['revision_history'], $context['current_page']['title']);
-	$context['wiki_title'] = sprintf($txt['revision_history'], $context['current_page']['title']);
+	$context['current_page_title'] = sprintf($txt['revision_history'], $context['current_page']['title']);
 
+	// Template
+	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['revision_history'], $context['current_page']['title']);
 	$context['sub_template'] = 'page_history';
 }
 

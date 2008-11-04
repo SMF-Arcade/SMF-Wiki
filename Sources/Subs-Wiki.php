@@ -378,7 +378,7 @@ function show_not_found_error($title = '')
 		'title' => !empty($title) ? $tite : $context['title'],
 	);
 
-	$context['wiki_title'] = !empty($title) ? $tite : $context['title'];
+	$context['current_page_title'] = !empty($title) ? $tite : $context['title'];
 
 	// Template
 	$context['sub_template'] = 'not_found';

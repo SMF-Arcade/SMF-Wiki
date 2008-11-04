@@ -22,7 +22,7 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 function ViewTalkPage()
 {
 	global $boarddir, $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
@@ -33,9 +33,10 @@ function ViewTalkPage()
 
 	$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic}', array('topic' => $context['current_page']['topic']), '', 'm.id_msg DESC', 'array');
 
+	$context['current_page_title'] = sprintf($txt['talk_page'], $context['current_page']['title']);
+
 	// Template
 	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['talk_page'], $context['current_page']['title']);
-	$context['wiki_title'] = sprintf($txt['talk_page'], $context['current_page']['title']);
 	$context['sub_template'] = 'talk_page';
 }
 
