@@ -70,9 +70,6 @@
 		<!-- CSS -->
 		<remove-file name="$themedir/css/wiki.css" />
 
-		<!-- Scripts -->
-		<remove-file name="$themedir/scripts/project.js" />
-
 		<!-- Languages -->
 		<remove-file name="$languagedir/Wiki.english.php" />
 	</uninstall>
