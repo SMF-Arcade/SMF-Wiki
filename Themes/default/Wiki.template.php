@@ -27,9 +27,12 @@ function template_wiki_above()
 
 function template_wiki_below()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt, $user_info, $wiki_version;
 
 	echo '
+	</div>
+	<div id="project_bottom" class="smalltext" style="text-align: center; clear: both;">
+		Powered by: SMF Wiki ', $wiki_version, '</a> &copy; <a href="http://www.madjoki.com/" target="_blank">Niko Pahajoki</a> 2008
 	</div>';
 }
 
