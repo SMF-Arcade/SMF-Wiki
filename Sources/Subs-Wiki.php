@@ -201,7 +201,7 @@ function do_toctable($tlevel, $toc, $main = true)
 
 function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 {
-	global $rep_temp, $wikiurl;
+	global $rep_temp;
 
 	$object = array(
 		'toc' => array(),
@@ -277,19 +277,19 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 function wikilink_callback($groups)
 {
-	global $wikiurl, $rep_temp;
+	global $rep_temp;
 
 	if (empty($groups[3]))
 		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
 	else
-		$link = '<a href="' . $wikiurl . '/' . wiki_urlname($groups[1]) . '">' . $groups[3] . $groups[4] . '</a>';
+		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . $groups[3] . $groups[4] . '</a>';
 
 	return $link . $groups[5];
 }
 
 function wikitemplate_callback($groups)
 {
-	global $context, $wikiurl, $wikiReplaces;
+	global $context, $wikiReplaces;
 	static $templateFunctions = array();
 
 	$page = $groups[1];
@@ -322,7 +322,7 @@ function wikitemplate_callback($groups)
 
 function wikitemplate_if_callback($groups)
 {
-	global $context, $wikiurl, $wikiReplaces;
+	global $context, $wikiReplaces;
 
 	if (!empty($wikiReplaces['@@' . $groups[2] . '@@']))
 		return $groups[4];
