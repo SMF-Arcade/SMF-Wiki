@@ -61,7 +61,7 @@ function Wiki($standalone = false)
 		$_REQUEST['namespace'] = '';
 
 	$namespace = ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}'), '_', $_REQUEST['namespace'])));
-	$page = $smcFunc['ucfirst'](str_replace(array(' ', '[', ']', '{', '}'), '_', $_REQUEST['page']));
+	$page = str_replace(array(' ', '[', ']', '{', '}'), '_', $_REQUEST['page']);
 
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
@@ -87,9 +87,7 @@ function Wiki($standalone = false)
 		$context['namespace'] = array(
 			'id' => $row['namespace'],
 			'prefix' => $row['ns_prefix'],
-			'url' => wiki_get_url(array(
-				'page' => wiki_urlname($row['default_page'], $row['namespace']),
-			)),
+			'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
 		);
 
 		if (empty($_REQUEST['page']))

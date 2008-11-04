@@ -33,8 +33,8 @@ function EditPage()
 	isAllowedTo('wiki_edit');
 
 	$context['form_url'] = wiki_get_url(array(
-		'sa' => 'edit2',
 		'page' => $context['current_page_name'],
+		'sa' => 'edit2',
 	));
 
 	$context['edit_section'] = 0;
@@ -97,7 +97,7 @@ function EditPage()
 
 	// Template
 	loadTemplate('WikiPage', array('article'));
-	$context['page_title'] = $txt['wiki_edit_page'] . ' - ' . sprintf($txt['edit_page'], $context['current_page']['title']);
+	$context['page_title'] = sprintf($txt['edit_page'], $context['current_page']['title']);
 	$context['current_page_title'] = sprintf($txt['edit_page'], $context['current_page']['title']);
 	$context['sub_template'] = 'edit_page';
 }
@@ -122,8 +122,8 @@ function EditPage2()
 		return EditPage();
 
 	$context['form_url'] = wiki_get_url(array(
-		'sa' => 'edit2',
 		'page' => $context['current_page_name'],
+		'sa' => 'edit2',
 	));
 
 	if (checkSession('post', '', false) != '')
@@ -234,9 +234,7 @@ function EditPage2()
 		)
 	);
 
-	redirectexit(wiki_get_url(array(
-		'page' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
-	)));
+	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'])));
 }
 
 ?>

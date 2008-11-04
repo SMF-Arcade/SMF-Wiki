@@ -43,6 +43,8 @@ require_once($sourcedir . '/Wiki.php');
 
 Wiki(true);
 
-obExit();
+$context['page_title_html_safe'] = $smcFunc['htmlspecialchars'](un_htmlspecialchars($context['page_title']));
+
+obExit(true);
 
 ?>

@@ -31,7 +31,10 @@ function WikiMain()
 	$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
 
 	// Name of current page
-	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']);
+	$context['current_page_name'] = $context['current_page']['name'];
+
+	if ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
+		redirectexit(wiki_get_url($context['current_page_name']));
 
 	// Base array for calling wiki_get_url for this page
 	$context['wiki_url'] = array(
@@ -78,8 +81,8 @@ function WikiMain()
 		'talk' => array(
 			'title' => $txt['wiki_talk'],
 			'url' => wiki_get_url(array(
-				'sa' => 'talk',
 				'page' => $context['current_page_name'],
+				'sa' => 'talk',
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('talk')),
 			'show' => true,
@@ -87,8 +90,8 @@ function WikiMain()
 		'edit' => array(
 			'title' => $txt['wiki_edit'],
 			'url' => wiki_get_url(array(
-				'sa' => 'edit',
 				'page' => $context['current_page_name'],
+				'sa' => 'edit',
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('edit', 'edit2')),
 			'show' => allowedTo('wiki_edit'),
@@ -97,8 +100,8 @@ function WikiMain()
 		'history' => array(
 			'title' => $txt['wiki_history'],
 			'url' => wiki_get_url(array(
-				'sa' => 'history',
 				'page' => $context['current_page_name'],
+				'sa' => 'history',
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('history', 'diff')),
 			'show' => true,

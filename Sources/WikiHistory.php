@@ -27,7 +27,10 @@ function ViewPageHistory()
 {
 	global $context, $scripturl, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
-	$context['form_url'] = wiki_get_url(array_merge(array('sa' => 'history')), $context['wiki_url']);
+	$context['form_url'] = wiki_get_url(array(
+		'page' => $context['current_page_name'],
+		'sa' => 'diff',
+	));
 
 	$request = $smcFunc['db_query']('', '
 		SELECT con.id_revision, con.id_page, con.timestamp, con.comment, mem.id_member, mem.real_name, MAX(prev.id_revision) AS id_prev_revision
@@ -58,17 +61,19 @@ function ViewPageHistory()
 			'comment' => $row['comment'],
 			'current' => $row['id_revision'] == $context['current_page']['current_revision'],
 			'previous' => $row['id_prev_revision'],
-			'href' => wiki_get_url(array_merge($context['wiki_url'], array('revision' => $row['id_revision']))),
-			'diff_current_href' => wiki_get_url(array_merge($context['wiki_url'], array(
-				'sa' => 'diff',
-				'revision' => null,
+			'href' => wiki_get_url(array(
+				'page' => $context['current_page_name'],
+				'revision' => $row['id_revision'],
+			)),
+			'diff_current_href' => wiki_get_url(array(
+				'page' => $context['current_page_name'],
 				'old_revision' => $row['id_revision'],
-			))),
-			'diff_prev_href' => wiki_get_url(array_merge($context['wiki_url'], array(
-				'sa' => 'diff',
+			)),
+			'diff_prev_href' => wiki_get_url(array(
+				'page' => $context['current_page_name'],
 				'revision' =>  $row['id_revision'],
-				'old_revision' => $row['id_revision'],
-			))),
+				'old_revision' => $row['id_prev_revision'],
+			)),
 		);
 	}
 	$smcFunc['db_free_result']($request);

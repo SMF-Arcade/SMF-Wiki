@@ -186,11 +186,11 @@ function wiki_urlname($page, $namespace = null)
 	}
 
 	$namespace = ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}'), '_', $namespace)));
-
-	$page = $smcFunc['ucfirst'](str_replace(array(' ', '[', ']', '{', '}'), '_', $page));
+	$page = str_replace(array(' ', '[', ']', '{', '}'), '_', $page);
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
+
 function make_html_safe($string)
 {
 	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
