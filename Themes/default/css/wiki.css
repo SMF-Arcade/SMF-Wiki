@@ -46,8 +46,7 @@
 }
 .wikiright
 {
-	float: left;
-	width: 85%;
+	margin-left: 15%;
 }
 
 .wikibg
