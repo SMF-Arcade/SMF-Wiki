@@ -20,10 +20,16 @@ if (!function_exists('build_replaces_wiki01'))
 	{
 		global $build_info;
 
-		if (in_array($filename, array('readme.txt', 'install.xml',  'package-info.xml', 'Sources/Wiki.php', 'Sources/WikiDatabase.php')))
+		if (in_array($filename, array('readme.txt', 'install.xml',  'package-info.xml')))
 		{
 			$content = strtr($content, array(
 				'{version}' => $rev ? $build_info['version_str'] . ' rev' . $rev : $build_info['version_str']
+			));
+		}
+		elseif ($rev && in_array($filename, array('Sources/Wiki.php', 'Sources/WikiDatabase.php')))
+		{
+			$content = strtr($content, array(
+				'$wiki_version = \'' . $build_info['version_str'] . '\'' => '$wiki_version = \'' . $build_info['version_str'] . ' rev' . $rev . '\'',
 			));
 		}
 	}

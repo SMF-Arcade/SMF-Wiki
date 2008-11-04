@@ -40,7 +40,7 @@ if (!defined('SMF'))
 
 global $boarddir, $boardurl, $smcFunc;
 
-$wiki_version = '{version}';
+$wiki_version = '0.1';
 
 // Settings array
 $addSettings = array(

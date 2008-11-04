@@ -30,7 +30,7 @@ function Wiki()
 	require_once($sourcedir . '/Subs-Wiki.php');
 
 	// Wiki Version
-	$wiki_version = '{version}';
+	$wiki_version = '0.1';
 
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
