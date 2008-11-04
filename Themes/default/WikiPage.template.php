@@ -137,7 +137,7 @@ function template_view_page()
 				echo '
 			<div class="wikitoc floatright">
 				<ul>',
-					output_toc($context['url'], '', $context['page_content']['toc']), '
+					output_toc($context['current_page']['url'], '', $context['page_content']['toc']), '
 				</ul>
 			</div>';
 		}
