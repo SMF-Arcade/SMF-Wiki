@@ -22,12 +22,12 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 function ViewPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
-	$context['can_edit_page'] = siteAllowed('wiki_edit');
+	$context['can_edit_page'] = allowedTo('wiki_edit');
 	$context['page_content'] = wikiparser($context['current_page']['title'], $context['current_page']['body'], true, $context['current_page']['namespace']);
 
 	// Don't index older versions please
