@@ -25,30 +25,72 @@ if (!defined('SMF'))
 
 function wiki_get_url($params)
 {
-	global $scripturl;
-
-	$return = '?action=wiki';
+	global $scripturl, $modSettings;
 
 	if (is_string($params))
 		$params = array('page' => $params);
 
-	foreach ($params as $p => $value)
+	// Running in "standalone" mode WITH rewrite
+	if (!empty($modSettings['wikiStandalone']) && $modSettings['wikiStandalone'] === 2)
 	{
-		if ($value === null)
-			continue;
+		$page = '';
 
-		if (!empty($return))
-			$return .= ';';
-		else
-			$return .= '?';
+		if (isset($params['page']))
+		{
+			$page = $params['page'];
+			unset($params['page']);
+		}
 
-		if (!empty($value))
-			$return .= $p . '=' . $value;
-		else
-			$return .= $p;
+		if (count($params) === 0)
+			return $modSettings['wikiStandaloneUrl'] . '/' . $page;		$query = '';
+
+		foreach ($params as $p => $value)
+		{
+			if ($value === null)
+				continue;
+
+			if (!empty($query))
+				$query .= ';';
+			else
+				$query .= '?';
+
+			if (!empty($value))
+				$query .= $p . '=' . $value;
+			else
+				$query .= $p;
+		}
+
+		return $modSettings['wikiStandaloneUrl'] . '/' . $page . $query;
 	}
+	//Running in "standalone" mode without rewrite or standard mode
+	else
+	{
+		if (!empty($modSettings['wikiStandalone']))
+			$return = '';
+		else
+			$return = '?action=wiki';
 
-	return $scripturl . $return;
+		foreach ($params as $p => $value)
+		{
+			if ($value === null)
+				continue;
+
+			if (!empty($return))
+				$return .= ';';
+			else
+				$return .= '?';
+
+			if (!empty($value))
+				$return .= $p . '=' . $value;
+			else
+				$return .= $p;
+		}
+
+		if (!empty($modSettings['wikiStandalone']))
+			return $modSettings['wikiStandaloneUrl'] . $return;
+		else
+			return $scripturl . $return;
+	}
 }
 
 function diff($old, $new)

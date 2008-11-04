@@ -48,7 +48,7 @@ function loadWiki($mode = '')
 	}
 }
 
-function Wiki()
+function Wiki($standalone = false)
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 

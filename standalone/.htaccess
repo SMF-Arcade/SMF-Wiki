@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^wiki\/(.*)$ wikxi.php?page=$1 [NC,QSA]

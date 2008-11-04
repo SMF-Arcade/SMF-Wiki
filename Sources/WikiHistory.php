@@ -58,7 +58,7 @@ function ViewPageHistory()
 			'comment' => $row['comment'],
 			'current' => $row['id_revision'] == $context['current_page']['current_revision'],
 			'previous' => $row['id_prev_revision'],
-			'href' => $context['url'] . '?revision=' . $row['id_revision'],
+			'href' => wiki_get_url(array_merge($context['wiki_url'], array('revision' => $row['id_revision']))),
 			'diff_current_href' => wiki_get_url(array_merge($context['wiki_url'], array(
 				'sa' => 'diff',
 				'revision' => null,

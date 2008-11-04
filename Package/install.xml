@@ -46,4 +46,13 @@
 		</operation>
 	</file>
 
+	<!-- Languages -->
+	<file name="$languagedir/Modifications.english.php">
+		<operation>
+			<search position="end" />
+			<add><![CDATA[// SMF Wiki
+$txt['wiki'] = 'Wiki';]]></add>
+		</operation>
+	</file>
+
 </modification>

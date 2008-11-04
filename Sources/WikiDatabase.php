@@ -45,6 +45,8 @@ $wiki_version = '0.1';
 // Settings array
 $addSettings = array(
 	'wikiEnabled' => array(1, false),
+	'wikiStandalone' => array(0, false),
+	'wikiStandaloneUrl' => array('', false),
 );
 
 // Permissions array
