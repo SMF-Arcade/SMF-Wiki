@@ -147,7 +147,7 @@ function wiki_urlname($page, $namespace = null)
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
-function make_html_safe()
+function make_html_safe($string)
 {
 	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
 }

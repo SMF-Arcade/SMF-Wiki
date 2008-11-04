@@ -32,7 +32,7 @@ function EditPage()
 
 	isAllowedTo('wiki_edit');
 
-	$context['edit_url'] = wiki_get_url(array_merge(array('sa' => 'edit2')), $context['wiki_url']);
+	$context['form_url'] = wiki_get_url(array_merge(array('sa' => 'edit2')), $context['wiki_url']);
 
 	$context['edit_section'] = 0;
 
@@ -118,7 +118,7 @@ function EditPage2()
 	if (isset($_REQUEST['preview']))
 		return EditPage();
 
-	$context['edit_url'] = wiki_get_url(array_merge(array('sa' => 'edit2')), $context['wiki_url']);
+	$context['form_url'] = wiki_get_url(array_merge(array('sa' => 'edit2')), $context['wiki_url']);
 
 	if (checkSession('post', '', false) != '')
 		$post_errors[] = 'session_timeout';
