@@ -102,7 +102,7 @@ function Wiki()
 	if ($namespace != 'Special')
 	{
 		require_once($sourcedir . '/WikiMain.php');
-		return WikiMain();
+		WikiMain();
 	}
 	// Special Namespace
 	elseif ($namespace == 'Special')
@@ -119,10 +119,9 @@ function Wiki()
 			fatal_lang_error('wiki_action_not_found', false, array($_REQUEST['page']));
 
 		require_once($sourcedir . '/' . $actionArray[$_REQUEST['page']][0]);
-		return $actionArray[$_REQUEST['page']][1];
-	}
 
-	fatal_error('Don\'t hack me plz');
+		$actionArray[$_REQUEST['page']][1]();
+	}
 }
 
 ?>

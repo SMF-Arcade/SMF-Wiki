@@ -39,6 +39,21 @@ function WikiMain()
 		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
 	);
 
+	$page_found = true;
+
+	if (!$context['current_page'])
+	{
+		$page_found = false;
+
+		$context['current_page'] = array(
+			'title' => read_urlname($_REQUEST['page'], true),
+			'namespace' => $_REQUEST['namespace'],
+			'name' => $_REQUEST['page'],
+			'content' => '',
+		);
+	}
+
+	$context['current_page']['url'] = wiki_get_url($context['wiki_url']);
 
 	$actionArray = array(
 		'view' => array('WikiPage.php', 'ViewPage'),
@@ -96,39 +111,16 @@ function WikiMain()
 	loadTemplate('WikiPage');
 	$context['template_layers'][] = 'wikipage';
 
+	$context['linktree'][] = array(
+		'url' => $context['current_page']['url'],
+		'name' => $context['current_page']['title'],
+	);
+
 	if (!$context['current_page'] && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
-	{
-		$context['linktree'][] = array(
-			'url' => $context['url'],
-			'name' => read_urlname($_REQUEST['page'], true),
-		);
-
 		return 'show_not_found_error';
-	}
-	elseif (!$context['current_page'])
-	{
-		$context['linktree'][] = array(
-			'url' => $context['url'],
-			'name' => read_urlname($_REQUEST['page'], true),
-		);
-
-		$context['current_page'] = array(
-			'title' => read_urlname($_REQUEST['page'], true),
-			'namespace' => $_REQUEST['namespace'],
-			'name' => $_REQUEST['page'],
-			'content' => '',
-		);
-	}
-	else
-	{
-		$context['linktree'][] = array(
-			'url' => $context['url'],
-			'name' => $context['current_page']['title'],
-		);
-	}
 
 	require_once($sourcedir . '/' . $actionArray[$_REQUEST['sa']][0]);
-	return $actionArray[$_REQUEST['sa']][1];
+	$actionArray[$_REQUEST['sa']][1]();
 }
 
 ?>

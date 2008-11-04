@@ -147,6 +147,10 @@ function wiki_urlname($page, $namespace = null)
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
+function make_html_safe()
+{
+	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
+}
 
 function do_toctable($tlevel, $toc, $main = true)
 {
@@ -276,9 +280,9 @@ function wikilink_callback($groups)
 	global $wikiurl, $rep_temp;
 
 	if (empty($groups[3]))
-		$link = '<a href="' . wiki_get_url(sanitise_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
+		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
 	else
-		$link = '<a href="' . $wikiurl . '/' . sanitise_urlname($groups[1]) . '">' . $groups[3] . $groups[4] . '</a>';
+		$link = '<a href="' . $wikiurl . '/' . wiki_urlname($groups[1]) . '">' . $groups[3] . $groups[4] . '</a>';
 
 	return $link . $groups[5];
 }

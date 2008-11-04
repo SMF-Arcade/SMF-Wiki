@@ -41,7 +41,7 @@ function output_toc($baseurl, $blevel, $toc)
 		list ($level, $title, $subtoc) = $x;
 
 		echo '
-		<li><a href="', $baseurl, '#', wikiurlname($title), '">', $blevel, !empty($blevel) ? '.' : '', $level, ' ', $title, '</a>';
+		<li><a href="', $baseurl, '#', make_html_safe($title), '">', $blevel, !empty($blevel) ? '.' : '', $level, ' ', $title, '</a>';
 
 		if (!empty($subtoc))
 		{
@@ -117,7 +117,7 @@ function template_view_page()
 		elseif ($section['level'] >= 5)
 		{
 			echo '
-			<h6 id="', wikiurlname($section['title']), '" class="clearfix">
+			<h6 id="', make_html_safe($section['title']), '" class="clearfix">
 				<span class="floatleft">', $section['title'], '</span>';
 
 			if (!empty($context['can_edit_page']))
@@ -278,7 +278,7 @@ function template_edit_page()
 	}
 
 	echo '
-	<form action="', $context['base_url'], '?action=edit2" method="post" accept-charset="', $context['character_set'], '" name="editarticle" id="editarticle" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
+	<form action="', $context['edit_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editarticle" id="editarticle" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
 		<div style="width: 95%; margin: auto">
 			<div>
 				', template_control_richedit($context['post_box_name'], 'bbc'), '
