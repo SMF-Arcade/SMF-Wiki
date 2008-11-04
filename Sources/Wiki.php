@@ -23,7 +23,7 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
-function Wiki()
+function loadWiki($mode = '')
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
 
@@ -35,6 +35,25 @@ function Wiki()
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
 
+	if ($mode == '')
+	{
+		// Linktree
+		$context['linktree'][] = array(
+			'url' => wiki_get_url('Main_Page'),
+			'name' => $txt['wiki'],
+		);
+
+		// Template
+		$context['template_layers'][] = 'wiki';
+	}
+}
+
+function Wiki()
+{
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+
+	loadWiki();
+
 	// Santise Namespace
 	if (strpos($_REQUEST['page'], ':'))
 		list ($_REQUEST['namespace'], $_REQUEST['page']) = explode(':', $_REQUEST['page'], 2);
@@ -45,18 +64,7 @@ function Wiki()
 	$page = $smcFunc['ucfirst'](str_replace(array(' ', '[', ']', '{', '}'), '_', $_REQUEST['page']));
 
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
-		redirectexit(wiki_get_url(array(
-			'page' => wiki_urlname($page, $namespace),
-		)));
-
-	// Linktree
-	$context['linktree'][] = array(
-		'url' => wiki_get_url('Main_Page'),
-		'name' => $txt['wiki'],
-	);
-
-	// Template
-	$context['template_layers'][] = 'wiki';
+		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
 
 	// Load Namespace unless it's Special
 	if ($namespace != 'Special')
@@ -95,8 +103,6 @@ function Wiki()
 			);
 		}
 	}
-
-	$context['title'] = str_replace('_', ' ', $page);
 
 	// Normal Namespace
 	if ($namespace != 'Special')

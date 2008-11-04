@@ -381,7 +381,6 @@ function show_not_found_error($title = '')
 	$context['wiki_title'] = !empty($title) ? $tite : $context['title'];
 
 	// Template
-	loadTemplate('WikiPage');
 	$context['sub_template'] = 'not_found';
 }
 

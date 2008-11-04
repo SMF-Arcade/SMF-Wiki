@@ -95,7 +95,7 @@ function EditPage()
 	// Template
 	loadTemplate('WikiPage', array('article'));
 	$context['page_title'] = $txt['wiki_edit_page'] . ' - ' . sprintf($txt['edit_page'], $context['current_page']['title']);
-	$context['wiki_title'] = sprintf($txt['edit_page'], $context['current_page']['title']);
+	$context['current_page_title'] = sprintf($txt['edit_page'], $context['current_page']['title']);
 	$context['sub_template'] = 'edit_page';
 }
 

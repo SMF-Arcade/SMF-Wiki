@@ -55,7 +55,7 @@ function WikiMain()
 
 	$context['current_page']['url'] = wiki_get_url($context['wiki_url']);
 
-	$actionArray = array(
+	$subActions = array(
 		'view' => array('WikiPage.php', 'ViewPage'),
 		'talk' => array('WikiTalkPage.php', 'ViewTalkPage'),
 		'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2'),
@@ -65,7 +65,7 @@ function WikiMain()
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
 	);
 
-	if (!isset($_REQUEST['sa']) || !isset($actionArray[$_REQUEST['sa']]))
+	if (!isset($_REQUEST['sa']) || !isset($subActions[$_REQUEST['sa']]))
 		$_REQUEST['sa'] = 'view';
 
 	// Menu
@@ -119,8 +119,8 @@ function WikiMain()
 	if (!$context['current_page'] && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
 		return 'show_not_found_error';
 
-	require_once($sourcedir . '/' . $actionArray[$_REQUEST['sa']][0]);
-	$actionArray[$_REQUEST['sa']][1]();
+	require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
+	$subActions[$_REQUEST['sa']][1]();
 }
 
 ?>

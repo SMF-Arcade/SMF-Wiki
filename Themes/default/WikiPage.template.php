@@ -28,7 +28,7 @@ function template_wikipage_above()
 	echo '
 	</ul>
 	<div class="wikicontent">
-		<h2>', $context['wiki_title'], '</h2>
+		<h2>', $context['current_page_title'], '</h2>
 		<div class="post">';
 }
 

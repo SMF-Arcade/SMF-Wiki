@@ -45,7 +45,7 @@ foreach ($tbl as $id => $table)
 db_extend('packages');
 db_extend('extra');
 
-doTables($tbl, $tables, $columnRename, true, $largeUpg);
+doTables($tbl, $tables);
 doSettings($addSettings);
 doPermission($permissions);
 installDefaultData();
