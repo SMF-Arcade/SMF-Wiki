@@ -1,0 +1,15 @@
+Changes go downward, months go upward.  Please scroll to the bottom for a legend.
+Changelog started November 4, 2008.
+
+SMF Wiki 0.1                                                                   ?
+================================================================================
+November 2008
+--------------------------------------------------------------------------------
+
+Legend:
+--------------------------------------------------------------------------------
+ ! Minor change or bugfix. (don't bother to log typos except between releases.)
+ * Change like above, but affects templates.
+ & Change that affects a language file. (make two if it affects templates too.)
+ + Feature addition or improvement.
+ - Feature or option removal.
