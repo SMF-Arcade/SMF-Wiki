@@ -44,10 +44,12 @@ $wiki_version = '0.1';
 
 // Settings array
 $addSettings = array(
+	'wikiEnabled' => array(1, false),
 );
 
 // Permissions array
 $permissions = array(
+	'wiki_access' => array(-1, 0, 2),
 );
 
 // Tables array

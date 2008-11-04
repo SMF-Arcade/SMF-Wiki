@@ -29,4 +29,21 @@
 		</operation>
 	</file>
 
+	<file name="$sourcedir/Subs.php">
+		<operation>
+			<search position="before"><![CDATA[	$context['allow_calendar'] = allowedTo('calendar_view') && !empty($modSettings['cal_enabled']);]]></search>
+			<add><![CDATA[	$context['allow_wiki'] = !empty($modSettings['wikiEnabled']) && allowedTo('wiki_access');]]></add>
+		</operation>
+
+		<operation>
+			<search position="after"><![CDATA[			'search' => array(]]></search>
+			<add><![CDATA[			'wiki' => array(
+				'title' => $txt['wiki'],
+				'href' => $scripturl . '?action=wiki',
+				'show' => $context['allow_wiki'],
+				'sub_buttons' => array(),
+			),]]></add>
+		</operation>
+	</file>
+
 </modification>
