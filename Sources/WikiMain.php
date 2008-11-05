@@ -30,9 +30,6 @@ function WikiMain()
 	// Load page
 	$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
 
-	// Name of current page
-	$context['current_page_name'] = $context['current_page']['name'];
-
 	$page_found = true;
 
 	if (!$context['current_page'])
@@ -46,7 +43,11 @@ function WikiMain()
 			'content' => '',
 		);
 	}
-	elseif ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
+
+	// Name of current page
+	$context['current_page_name'] = $context['current_page']['name'];
+
+	if ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
 		redirectexit(wiki_get_url($context['current_page_name']));
 
 	// Base array for calling wiki_get_url for this page
