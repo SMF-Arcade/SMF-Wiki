@@ -69,6 +69,20 @@ function Wiki($standalone = false)
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
 
+	// Wiki Menu
+	$context['wiki_navigation'] = array(
+		array(
+			'url' => '#',
+			'title' => $txt['wiki_navigation'],
+			'items' => array(
+				array(
+					'url' => wiki_get_url('Main_Page'),
+					'title' => $txt['wiki_main_page'],
+				)
+			)
+		),
+	);
+
 	// Load Namespace unless it's Special
 	if ($namespace != 'Special')
 	{

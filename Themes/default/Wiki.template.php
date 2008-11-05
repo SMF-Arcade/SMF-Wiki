@@ -6,21 +6,25 @@ function template_wiki_above()
 	global $context, $modSettings, $txt, $user_info;
 
 	echo '
-	<div class="floatleft wikileft"><div>
-		<h3><a href="#">', $txt['wiki_navigation'], '</a></h3>
-		<ul>
-			<li><a href="', wiki_get_url(array('page' => 'Main_Page')), '">', $txt['wiki_main_page'], '</a></li>
-		</ul>
-		<h3><a href="', wiki_get_url(array('page' => 'Arcade_2.0:Index')),'">SMF Arcade 2.0</a></h3>
-		<ul>
-			<li><a href="', wiki_get_url(array('page' => 'Arcade_2.0:Index')),'">Index</a></li>
-			<li><a href="', wiki_get_url(array('page' => 'Arcade_2.0:Install')),'">Install</a></li>
-		</ul>
-		<h3><a href="', wiki_get_url(array('page' => 'Arcade_2.5:Index')),'">SMF Arcade 2.5</a></h3>
-		<ul>
-			<li><a href="', wiki_get_url(array('page' => 'Arcade_2.5:Index')),'">Index</a></li>
-			<li><a href="', wiki_get_url(array('page' => 'Arcade_2.5:Install')),'">Install</a></li>
-		</ul>
+	<div class="floatleft wikileft"><div>';
+
+	foreach ($context['wiki_navigation'] as $group)
+	{
+		echo '
+		<h3><a href="', $group['url'], '">', $group['title'], '</a></h3>
+		<ul>';
+
+		foreach ($group['items'] as $item)
+		{
+			echo '
+			<li><a href="', $item['url'], '">', $item['title'], '</a>';
+		}
+
+		echo '
+		</ul>';
+	}
+
+	echo '
 	</div></div>
 	<div class="wikiright">';
 }
