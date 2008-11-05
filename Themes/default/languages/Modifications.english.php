@@ -7,7 +7,7 @@
 $txt['wiki'] = 'Wiki';
 $txt['admin_wiki'] = 'Wiki';
 $txt['admin_wiki_main'] = 'Main';
-$txt['admin_wiki_settings'] = 'Wiki';
+$txt['admin_wiki_settings'] = 'Settings';
 
 // Wiki Settings
 $txt['wikiEnabled'] = 'Enable Wiki';
