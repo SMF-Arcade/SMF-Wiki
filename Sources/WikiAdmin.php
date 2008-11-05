@@ -36,7 +36,7 @@ function WikiAdmin()
 	$context[$context['admin_menu_name']]['tab_data']['title'] = &$txt['wiki_admin_title'];
 	$context[$context['admin_menu_name']]['tab_data']['description'] = $txt['wiki_admin_desc'];
 
-	$context['page_title'] = $txt['projectSettings'];
+	$context['page_title'] = $txt['admin_wiki'];
 
 	$subActions = array(
 		'main' => array('WikiAdminMain'),
