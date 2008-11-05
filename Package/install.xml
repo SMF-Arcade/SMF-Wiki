@@ -69,7 +69,13 @@
 		<operation>
 			<search position="end" />
 			<add><![CDATA[// SMF Wiki
-$txt['wiki'] = 'Wiki';]]></add>
+$txt['wiki'] = 'Wiki';
+$txt['admin_wiki'] = 'Wiki';
+$txt['admin_wiki_main'] = 'Main';
+$txt['admin_wiki_settings'] = 'Wiki';
+
+// Wiki Settings
+$txt['wikiEnabled'] = 'Enable Wiki';]]></add>
 		</operation>
 	</file>
 
