@@ -37,7 +37,7 @@ function WikiRecentChanges()
 			page.title, page.namespace
 		FROM {db_prefix}wiki_content AS con
 			INNER JOIN {db_prefix}wiki_pages AS page ON (page.id_page = con.id_page)
-			LEFT JOIN {db_prefix}wiki_content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = {int:page})
+			LEFT JOIN {db_prefix}wiki_content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = con.id_page)
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = con.id_author)
 		GROUP BY con.id_revision
 		ORDER BY id_revision DESC',
@@ -64,15 +64,15 @@ function WikiRecentChanges()
 			'current' => $row['id_revision'] == $context['current_page']['current_revision'],
 			'previous' => $row['id_prev_revision'],
 			'href' => wiki_get_url(array(
-				'page' => $context['current_page_name'],
+				'page' => wiki_urlname($row['title'], $row['namespace']),
 				'revision' => $row['id_revision'],
 			)),
 			'diff_current_href' => wiki_get_url(array(
-				'page' => $context['current_page_name'],
+				'page' => wiki_urlname($row['title'], $row['namespace']),
 				'old_revision' => $row['id_revision'],
 			)),
 			'diff_prev_href' => wiki_get_url(array(
-				'page' => $context['current_page_name'],
+				'page' => wiki_urlname($row['title'], $row['namespace']),
 				'revision' =>  $row['id_revision'],
 				'old_revision' => $row['id_prev_revision'],
 			)),
@@ -81,6 +81,7 @@ function WikiRecentChanges()
 	$smcFunc['db_free_result']($request);
 
 	// Template
+	loadTemplate('WikiPage');
 	$context['page_title'] = sprintf($txt['wiki_recent_changes_title'], $context['forum_name']);
 	$context['sub_template'] = 'recent_changes';
 }

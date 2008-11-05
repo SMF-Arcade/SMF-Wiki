@@ -208,8 +208,8 @@ function template_recent_changes()
 					<input type="radio" name="old_revision" value="', $item['revision'], '" ', $item['current'] ? 'disabled="disabled" ' : '', '/>
 				</span>
 				<span class="date"><a href="', $item['href'], '">', $item['date'], '</a></span>
-				<span class="page">', $item['link'], '</span>
 				<span class="author">', $item['author']['link'], '</span>
+				<span class="page">', $item['link'], '</span>
 				<span class="comment">', $item['comment'], '</span>
 			</li>';
 	}

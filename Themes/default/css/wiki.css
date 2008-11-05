@@ -235,7 +235,7 @@ ul.wikihistory li span.author, ul.recent_changes li span.author
 ul.wikihistory li span.page, ul.recent_changes li span.page
 {
 	padding-left: 0.5em;
-	min-width: 9em;
+	min-width: 15em;
 }
 ul.wikihistory li span.comment, ul.recent_changes li span.comment
 {

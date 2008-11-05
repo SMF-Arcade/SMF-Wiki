@@ -45,6 +45,12 @@
 		<!-- CSS -->
 		<require-file name="Themes/default/css/wiki.css" destination="$themedir/css" />
 
+		<!-- Images -->
+		<require-file name="Themes/default/images/wiki/edit.png" destination="$imagesdir/wiki" />
+		<require-file name="Themes/default/images/wiki/history.png" destination="$imagesdir/wiki" />
+		<require-file name="Themes/default/images/wiki/talk.png" destination="$imagesdir/wiki" />
+		<require-file name="Themes/default/images/wiki/view.png" destination="$imagesdir/wiki" />
+
 		<!-- Langauges -->
 		<require-file name="Themes/default/languages/Wiki.english.php" destination="$languagedir" />
 
