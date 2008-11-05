@@ -1,5 +1,5 @@
 <?php
-// Version 2.0 Beta 4; Wiki
+// Version 0.1; Wiki
 
 $txt['wiki'] = 'Wiki';
 $txt['wiki_view'] = 'view';
@@ -28,6 +28,11 @@ $txt['revision_history'] = 'Revision history of %s';
 $txt['wiki_diff_cur'] = 'cur';
 $txt['wiki_diff_prev'] = 'prev';
 $txt['compare_versions'] = 'Compare Selected Versions';
+
+// Admin
+$txt['wiki_settings'] = 'Wiki Settings';
+$txt['wiki_admin_title'] = 'Wiki';
+$txt['wiki_admin_desc'] = 'Here you can edit settings of Wiki';
 
 // Error
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';

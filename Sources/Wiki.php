@@ -35,6 +35,7 @@ function loadWiki($mode = '')
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
 
+	// Normal mode
 	if ($mode == '')
 	{
 		// Linktree
@@ -45,6 +46,11 @@ function loadWiki($mode = '')
 
 		// Template
 		$context['template_layers'][] = 'wiki';
+	}
+	// Admin Mode
+	elseif ($mode == 'admin')
+	{
+
 	}
 }
 
