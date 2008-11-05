@@ -62,7 +62,9 @@ function WikiAdminSettings($return_config = false)
 
 	$config_vars = array(
 			array('check', 'wikiEnabled'),
-		'',
+		$txt['wiki_standalone_mode'],
+			array('select', 'wikiStandalone', array(&$txt['wikiStandalone_0'], &$txt['wikiStandalone_1'], &$txt['wikiStandalone_2'])),
+			array('select', 'wikiStandaloneUrl'),
 	);
 
 	if ($return_config)

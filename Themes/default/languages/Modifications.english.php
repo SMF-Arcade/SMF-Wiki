@@ -11,5 +11,11 @@ $txt['admin_wiki_settings'] = 'Settings';
 
 // Wiki Settings
 $txt['wikiEnabled'] = 'Enable Wiki';
+$txt['wiki_standalone_mode'] = 'Standalone Mode';
+$txt['wikiStandalone'] = 'Enable Standalone Mode';
+$txt['wikiStandalone_0'] = 'Disabled';
+$txt['wikiStandalone_1'] = 'Enabled';
+$txt['wikiStandalone_2'] = 'Enabled (Friendly URLs)';
+$txt['wikiStandaloneUrl'] = 'Standalone URL';
 
 ?>
