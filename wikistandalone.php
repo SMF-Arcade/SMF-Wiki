@@ -37,6 +37,7 @@ $section = 'wiki';
 
 // Path to SSI or file which includes SSI.php
 require_once(dirname(__FILE__) . '/SSI.php');
+$ssi_on_error_method = true;
 
 // DON'T modify anything below unless you are sure what your doing
 require_once($sourcedir . '/Wiki.php');
