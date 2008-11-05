@@ -411,21 +411,4 @@ function wiki_template_get($namespace, $page, $revision = 0)
 	);
 }
 
-function show_not_found_error($title = '')
-{
-	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
-
-	header('HTTP/1.0 404 Not Found');
-	$context['robot_no_index'] = true;
-
-	$context['current_page'] = array(
-		'title' => !empty($title) ? $tite : $context['title'],
-	);
-
-	$context['current_page_title'] = !empty($title) ? $tite : $context['title'];
-
-	// Template
-	$context['sub_template'] = 'not_found';
-}
-
 ?>

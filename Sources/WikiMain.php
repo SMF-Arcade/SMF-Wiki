@@ -33,15 +33,6 @@ function WikiMain()
 	// Name of current page
 	$context['current_page_name'] = $context['current_page']['name'];
 
-	if ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
-		redirectexit(wiki_get_url($context['current_page_name']));
-
-	// Base array for calling wiki_get_url for this page
-	$context['wiki_url'] = array(
-		'page' => $context['current_page_name'],
-		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
-	);
-
 	$page_found = true;
 
 	if (!$context['current_page'])
@@ -55,6 +46,14 @@ function WikiMain()
 			'content' => '',
 		);
 	}
+	elseif ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
+		redirectexit(wiki_get_url($context['current_page_name']));
+
+	// Base array for calling wiki_get_url for this page
+	$context['wiki_url'] = array(
+		'page' => $context['current_page_name'],
+		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
+	);
 
 	$context['current_page']['url'] = wiki_get_url($context['wiki_url']);
 
@@ -120,11 +119,24 @@ function WikiMain()
 	$context['template_layers'][] = 'wikipage';
 
 	// Show error page if not found
-	if (!$context['current_page'] && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
-		return 'show_not_found_error';
+	if (!$page_found && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
+	{
+		$context['robot_no_index'] = true;
 
-	require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
-	$subActions[$_REQUEST['sa']][1]();
+		$context['current_page'] = array(
+			'title' => !empty($title) ? $tite : $context['title'],
+		);
+
+		$context['current_page_title'] = !empty($title) ? $tite : $context['title'];
+
+		// Template
+		$context['sub_template'] = 'not_found';
+	}
+	else
+	{
+		require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
+		$subActions[$_REQUEST['sa']][1]();
+	}
 }
 
 ?>
