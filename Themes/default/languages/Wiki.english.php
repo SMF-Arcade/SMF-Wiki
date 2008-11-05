@@ -34,6 +34,9 @@ $txt['wiki_settings'] = 'Wiki Settings';
 $txt['wiki_admin_title'] = 'Wiki';
 $txt['wiki_admin_desc'] = 'Here you can edit settings of Wiki';
 
+// Recent Changes
+$txt['wiki_recent_changes_title'] = '%s - Recent Changes';
+
 // Error
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
 $txt['wiki_namespace_not_found'] = 'There is no namespace "%s" in this wiki .';

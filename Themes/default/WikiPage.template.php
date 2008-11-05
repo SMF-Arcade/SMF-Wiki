@@ -187,6 +187,38 @@ function template_talk_page()
 	</form>';
 }
 
+function template_recent_changes()
+{
+	global $context, $modSettings, $txt, $user_info;
+
+	echo '
+	<form action="', $context['form_url'], '">
+		<ul class="recent_changes">';
+
+	foreach ($context['recent_changes'] as $item)
+	{
+		echo '
+			<li>
+				<span class="difflinks">
+					(', !$item['current'] ? '<a href="' . $item['diff_current_href'] . '">' . $txt['wiki_diff_cur'] . '</a>' : $txt['wiki_diff_cur'], ')
+					(', !empty($item['previous']) ? '<a href="' . $item['diff_prev_href'] . '">' . $txt['wiki_diff_prev'] . '</a>' : $txt['wiki_diff_prev'], ')
+				</span>
+				<span class="diffselect">
+					<input type="radio" name="revision" value="', $item['revision'], '" />
+					<input type="radio" name="old_revision" value="', $item['revision'], '" ', $item['current'] ? 'disabled="disabled" ' : '', '/>
+				</span>
+				<span class="date"><a href="', $item['href'], '">', $item['date'], '</a></span>
+				<span class="page">', $item['link'], '</span>
+				<span class="author">', $item['author']['link'], '</span>
+				<span class="comment">', $item['comment'], '</span>
+			</li>';
+	}
+
+	echo '
+		</ul>
+	</form>';
+}
+
 function template_page_history()
 {
 	global $context, $modSettings, $txt, $user_info;
@@ -217,7 +249,7 @@ function template_page_history()
 		</ul>
 
 		<input type="submit" value="', $txt['compare_versions'], '" />
-		<input type="hidden" name="action" value="diff" />
+		<input type="hidden" name="sa" value="diff" />
 	</form>';
 }
 

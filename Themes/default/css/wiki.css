@@ -201,38 +201,43 @@ ul.wikimenu li
 /* ************************************* */
 /* Styles from WikiHistory.template      */
 /* ************************************* */
-ul.wikihistory
+ul.wikihistory, ul.recent_changes
 {
 	padding-left: 0.5em;
 }
-ul.wikihistory li
+ul.wikihistory li, ul.recent_changes li
 {
 	list-style: none;
 }
-ul.wikihistory li span.difflinks
+ul.wikihistory li span.difflinks, ul.recent_changes li span.difflinks
 {
 }
-ul.wikihistory li span.diffselect
+ul.wikihistory li span.diffselect, ul.recent_changes li span.diffselect
 {
 	padding-left: 0.5em;
 }
-ul.wikihistory li span.diffselect input[type=radio]
+ul.wikihistory li span.diffselect input[type=radio], ul.recent_changes li span.diffselect input[type=radio]
 {
 	padding: 0 5px;
 }
-ul.wikihistory li span.date
+ul.wikihistory li span.date, ul.recent_changes li span.date
 {
 	padding-left: 0.5em;
 	display: inline-block;
 	min-width: 15em;
 }
-ul.wikihistory li span.author
+ul.wikihistory li span.author, ul.recent_changes li span.author
 {
 	padding-left: 0.5em;
 	display: inline-block;
 	min-width: 7.5em;
 }
-ul.wikihistory li span.comment
+ul.wikihistory li span.page, ul.recent_changes li span.page
+{
+	padding-left: 0.5em;
+	min-width: 9em;
+}
+ul.wikihistory li span.comment, ul.recent_changes li span.comment
 {
 	padding-left: 0.5em;
 }

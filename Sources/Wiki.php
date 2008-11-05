@@ -135,19 +135,24 @@ function Wiki($standalone = false)
 	elseif ($namespace == 'Special')
 	{
 		if (strpos($_REQUEST['page'], '/'))
-			list ($_REQUEST['params'], $_REQUEST['page']) = explode('/', $_REQUEST['page'], 2);
+			list ($_REQUEST['special'], $_REQUEST['page']) = explode('/', $_REQUEST['page'], 2);
 		else
-			$_REQUEST['params'] = '';
+		{
+			$_REQUEST['special'] = $_REQUEST['page'];
+			$_REQUEST['page'] = '';
+		}
 
-		$actionArray = array(
+		$specialArray = array(
+			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
 		);
 
-		if (!isset($_REQUEST['page']) || !isset($actionArray[$_REQUEST['page']]))
-			fatal_lang_error('wiki_action_not_found', false, array($_REQUEST['page']));
+		if (!isset($_REQUEST['special']) || !isset($specialArray[$_REQUEST['special']]))
+			fatal_lang_error('wiki_action_not_found', false, array($_REQUEST['special']));
 
-		require_once($sourcedir . '/' . $actionArray[$_REQUEST['page']][0]);
+		$context['current_page_name'] = 'Special:' . $_REQUEST['special'];
 
-		$actionArray[$_REQUEST['page']][1]();
+		require_once($sourcedir . '/' . $specialArray[$_REQUEST['special']][0]);
+		$specialArray[$_REQUEST['special']][1]();
 	}
 }
 

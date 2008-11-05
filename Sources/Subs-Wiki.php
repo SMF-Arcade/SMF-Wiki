@@ -23,6 +23,7 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
+// Function to make all links
 function wiki_get_url($params)
 {
 	global $scripturl, $modSettings;
@@ -95,6 +96,7 @@ function wiki_get_url($params)
 	}
 }
 
+// Diff
 function diff($old, $new)
 {
 	$maxlen = 0;
@@ -167,12 +169,15 @@ function loadWikiPage($name, $namespace = '', $revision = null)
 	);
 }
 
-function read_urlname($url, $last = false)
+// Makes Readable name form urlname
+function read_urlname($url)
 {
 	global $smcFunc;
 
 	return $smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', $url));
 }
+
+// Makes link from page title and namespace
 function wiki_urlname($page, $namespace = null)
 {
 	global $smcFunc;
@@ -191,11 +196,13 @@ function wiki_urlname($page, $namespace = null)
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
 
+// Makes string safe to use as id for html element
 function make_html_safe($string)
 {
 	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
 }
 
+// Makes table of contents
 function do_toctable($tlevel, $toc, $main = true)
 {
 	$stack = array(
@@ -243,6 +250,7 @@ function do_toctable($tlevel, $toc, $main = true)
 	return $mainToc;
 }
 
+// Parses wiki page
 function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 {
 	global $rep_temp;
@@ -319,6 +327,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 	return $object;
 }
 
+// Callback for making wikilinks
 function wikilink_callback($groups)
 {
 	global $rep_temp;
@@ -331,6 +340,7 @@ function wikilink_callback($groups)
 	return $link . $groups[5];
 }
 
+// Callback for templates
 function wikitemplate_callback($groups)
 {
 	global $context, $wikiReplaces;
@@ -364,6 +374,7 @@ function wikitemplate_callback($groups)
 	);
 }
 
+// Callback for condtional IF
 function wikitemplate_if_callback($groups)
 {
 	global $context, $wikiReplaces;
@@ -374,6 +385,7 @@ function wikitemplate_if_callback($groups)
 		return '';
 }
 
+// Gets template
 function wiki_template_get($namespace, $page, $revision = 0)
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
