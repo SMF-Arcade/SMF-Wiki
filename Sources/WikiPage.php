@@ -34,10 +34,7 @@ function ViewPage()
 	if (!$context['current_page']['is_current'])
 		$context['robot_no_index'] = true;
 
-	$context['current_page_title'] = $context['current_page']['title'];
-
 	// Template
-	$context['page_title'] = $context['forum_name'] . ' - ' . $context['current_page']['title'];
 	$context['sub_template'] = 'view_page';
 }
 

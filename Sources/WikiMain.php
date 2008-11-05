@@ -114,6 +114,10 @@ function WikiMain()
 		'name' => $context['current_page']['title'],
 	);
 
+	// Page title
+	$context['page_title'] = $context['forum_name'] . ' - ' . $context['current_page']['title'];
+	$context['current_page_title'] = $context['current_page']['title'];
+
 	// Template
 	loadTemplate('WikiPage');
 	$context['template_layers'][] = 'wikipage';
@@ -122,14 +126,6 @@ function WikiMain()
 	if (!$page_found && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
 	{
 		$context['robot_no_index'] = true;
-
-		$context['current_page'] = array(
-			'title' => !empty($title) ? $tite : $context['title'],
-		);
-
-		$context['current_page_title'] = !empty($title) ? $tite : $context['title'];
-
-		// Template
 		$context['sub_template'] = 'not_found';
 	}
 	else
