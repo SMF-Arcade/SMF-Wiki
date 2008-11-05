@@ -31,6 +31,7 @@
 		<!-- These files goes to Sources directory -->
 		<require-file name="Sources/Subs-Wiki.php" destination="$sourcedir" />
 		<require-file name="Sources/Wiki.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiAdmin.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiEditPage.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiHistory.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiMain.php" destination="$sourcedir" />

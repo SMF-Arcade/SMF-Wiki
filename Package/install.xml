@@ -29,6 +29,24 @@
 		</operation>
 	</file>
 
+	<!-- Source files -->
+	<file name="$sourcedir/Admin.php">
+		<operation>
+			<search position="after"><![CDATA['current_theme' => array(]]></search>
+			<add><![CDATA[
+				'wiki' => array(
+					'label' => $txt['admin_wiki'],
+					'file' => 'WikiAdmin.php',
+					'function' => 'WikiAdmin',
+					'subsections' => array(
+						'main' => array($txt['admin_wiki_main']),
+						'settings' => array($txt['admin_wiki_settings']),
+					),
+				),
+				]]></add>
+		</operation>
+	</file>
+
 	<file name="$sourcedir/Subs.php">
 		<operation>
 			<search position="before"><![CDATA[	$context['allow_calendar'] = allowedTo('calendar_view') && !empty($modSettings['cal_enabled']);]]></search>
