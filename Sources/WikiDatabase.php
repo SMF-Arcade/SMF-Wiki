@@ -56,6 +56,128 @@ $permissions = array(
 
 // Tables array
 $tables = array(
+	// Namespaces
+	'wiki_namespace' => array(
+		'name' => 'wiki_namespace',
+		'columns' => array(
+			array(
+				'name' => 'namespace',
+				'type' => 'varchar',
+				'size' => '30',
+				'default' => '',
+			),
+			array(
+				'name' => 'ns_prefix',
+				'type' => 'varchar',
+				'size' => '45',
+				'default' => '',
+			),
+			array(
+				'name' => 'page_header',
+				'type' => 'text',
+			),
+			array(
+				'name' => 'page_footer',
+				'type' => 'text',
+			),
+			array(
+				'name' => 'default_page',
+				'type' => 'varchar',
+				'size' => '255',
+				'default' => 'Index',
+			),
+		),
+		'indexes' => array(
+			array(
+				'type' => 'primary',
+				'columns' => array('namespace')
+			),
+		)
+	),
+	// Page names
+	'wiki_pages' => array(
+		'name' => 'wiki_pages',
+		'columns' => array(
+			array(
+				'name' => 'id_page',
+				'type' => 'int',
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'title',
+				'type' => 'varchar',
+				'size' => '255',
+				'default' => '',
+			),
+			array(
+				'name' => 'namespace',
+				'type' => 'varchar',
+				'size' => '30',
+				'default' => '',
+			),
+			array(
+				'name' => 'id_revision_current',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'id_member',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+		),
+		'indexes' => array(
+			array(
+				'type' => 'primary',
+				'columns' => array('id_page')
+			),
+		)
+	),
+	// Page Content
+	'wiki_content' => array(
+		'name' => 'wiki_content',
+		'columns' => array(
+			array(
+				'name' => 'id_revision',
+				'type' => 'int',
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'id_page',
+				'type' => 'int',
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'id_author',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'content',
+				'type' => 'text',
+			),
+			array(
+				'name' => 'comment',
+				'type' => 'varchar',
+				'size' => '255',
+				'default' => '',
+			),
+		),
+		'indexes' => array(
+			array(
+				'type' => 'primary',
+				'columns' => array('id_revision')
+			),
+			array(
+				'name' => 'id_page',
+				'type' => 'index',
+				'columns' => array('id_page')
+			),
+		)
+	),
 );
 
 function doTables($tbl, $tables, $columnRename = array(), $smf2 = true, $remove = false)
@@ -220,7 +342,44 @@ function installDefaultData($forced = false)
 		);
 	}
 
+	$request = $smcFunc['db_query']('', '
+		SELECT COUNT(*)
+		FROM {db_prefix}wiki_namespace',
+		array(
+		)
+	);
+
+	$smcFunc['db_insert']('ignore',
+		'{db_prefix}wiki_namespace',
+		array(
+			'namespace' => 'string',
+			'ns_prefix' => 'string',
+			'page_header' => 'string',
+			'page_footer' => 'string',
+			'default_page' => 'string',
+		),
+		array(
+			array(
+				'',
+				'',
+				'',
+				'',
+				'Main_Page',
+			),
+			array(
+				'Template',
+				'Templates',
+				'',
+				'',
+				'Index',
+			),
+		),
+		array()
+	);
+
 	updateSettings(array('wikiVersion' => $wiki_version));
+
+
 }
 
 ?>
