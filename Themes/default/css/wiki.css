@@ -11,51 +11,22 @@
 	margin: 0 10px 0 5px;
 	border: 1px solid #AAAAAA;
 }
-.wikileft h3
-{
-
-}
 .wikileft h3 a
 {
-	border-bottom: 1px solid black;
-	background: url(../images/catbg.jpg);
-	color: white;
-	padding: 5px;
 	display: block;
-	font-size: small;
-	text-decoration: none;
-}
-.wikileft ul
-{
-}
-.wikileft li
-{
 }
 .wikileft li a
 {
 	border-bottom: 1px solid black;
-	background: url(../images/menubg.png);
 	display: block;
 	font-size: small;
 	padding: 5px;
 	text-decoration: none;
 }
-.wikileft li a:hover
-{
-	background: url(../images/menubg2.png);
-}
+
 .wikiright
 {
 	margin-left: 15%;
-}
-
-.wikibg
-{
-	background: #F6F6F6;
-}
-.wikibg2
-{
-	background: #ECEDF3;
 }
 
 /* ************************************* */

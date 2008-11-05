@@ -11,7 +11,7 @@ function template_wiki_above()
 	foreach ($context['wiki_navigation'] as $group)
 	{
 		echo '
-		<h3><a href="', $group['url'], '">', $group['title'], '</a></h3>
+		<h3 class="catbg3 headerpadding"><a href="', $group['url'], '">', $group['title'], '</a></h3>
 		<ul>';
 
 		foreach ($group['items'] as $item)
