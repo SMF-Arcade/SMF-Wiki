@@ -68,7 +68,7 @@ function WikiMain()
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
 	);
 
-	$_REQUEST['sa'] = !isset($_REQUEST['sa']) || !isset($subActions[$_REQUEST['sa']]) ? 'view' : $_REQUEST['sa'];
+	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
 	// Setup tabs
 	$context['wikimenu'] = array(
