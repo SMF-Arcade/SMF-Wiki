@@ -302,14 +302,14 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		)),
 	);
 
-	$message = preg_replace_callback('%{{([a-zA-Z]+(:(.+?))?)}}%', 'wikivariable_callback', $message);
+	$message = preg_replace_callback('%{{([a-zA-Z]+(:(.+?))?)}}(<br( />)?)?%', 'wikivariable_callback', $message);
 	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
 
 	if ($parse_bbc)
 		$message = parse_bbc($message);
 
-	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br \/>|<)/', 'wikilink_callback', $message);
-	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br />)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
+	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
+	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br( /)?>)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
 
 	$i = 0;
 
