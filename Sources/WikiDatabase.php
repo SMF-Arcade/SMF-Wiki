@@ -469,7 +469,7 @@ function createPage($namespace, $name, $body, $exists = 'ignore')
 		SET id_revision_current = {int:revision}
 		WHERE id_page = {int:page}',
 		array(
-			'page' => $context['current_page']['id'],
+			'page' => $id_page,
 			'revision' => $id_revision,
 		)
 	);
