@@ -38,9 +38,10 @@ $txt['wiki_admin_desc'] = 'Here you can edit settings of Wiki';
 $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 
 // Error
+$txt['template_not_found'] = 'Error: Template &quot;%s&quot; not found!';
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
-$txt['wiki_namespace_not_found'] = 'There is no namespace "%s" in this wiki .';
-$txt['wiki_action_not_found'] = 'There is no action "%s"';
+$txt['wiki_namespace_not_found'] = 'There is no namespace &quot;%s&quot; in this wiki .';
+$txt['wiki_action_not_found'] = 'There is no action &quot;%s&quot;';
 $txt['cannot_site_wiki_edit'] = 'You have no permission to edit this page';
 
 ?>

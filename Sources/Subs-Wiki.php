@@ -357,7 +357,10 @@ function wikitemplate_callback($groups)
 		$context['wiki_template'] = array();
 
 	if (!isset($context['wiki_template'][$namespace . ':' . $page]))
-		$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs.php', 'wiki_template_get', array($namespace, $page));
+		$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs-Wiki.php', 'wiki_template_get', array($namespace, $page));
+
+	if ($context['wiki_template'][$namespace . ':' . $page] === false)
+		return '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
 
 	$wikiReplaces = array(
 		'@@content@@' => $groups[3]
@@ -410,7 +413,7 @@ function wiki_template_get($namespace, $page, $revision = 0)
 
 		return array(
 			'expires' => time() + 360,
-			'data' => '<span style="color: red">' . (!empty($namespace) ? $namespace . ':' . $page : $page) . ' not found!</span>',
+			'data' => false,
 			'refresh_eval' => 'return isset($_REQUEST[\'purge\']);',
 		);
 	}
