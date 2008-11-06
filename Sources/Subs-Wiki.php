@@ -190,8 +190,8 @@ function wiki_urlname($page, $namespace = null)
 			$namespace = '';
 	}
 
-	$namespace = ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}'), '_', $namespace)));
-	$page = str_replace(array(' ', '[', ']', '{', '}'), '_', $page);
+	$namespace = clean_pagename($namespace, true);
+	$page = clean_pagename($page);
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
@@ -199,6 +199,16 @@ function wiki_urlname($page, $namespace = null)
 // Makes string safe to use as id for html element
 function make_html_safe($string)
 {
+	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
+}
+
+function clean_pagename($string, $namespace = false)
+{
+	global $smcFunc;
+
+	if ($namespace)
+		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':'), '_', $string)));
+
 	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
 }
 

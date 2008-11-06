@@ -69,8 +69,8 @@ function Wiki($standalone = false)
 	else
 		$_REQUEST['namespace'] = '';
 
-	$namespace = ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $_REQUEST['namespace'])));
-	$page = str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $_REQUEST['page']);
+	$namespace = clean_pagename($_REQUEST['namespace'], true);
+	$page = clean_pagename($_REQUEST['page']);
 
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
@@ -78,7 +78,7 @@ function Wiki($standalone = false)
 	// Wiki Menu
 	$menu = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'wiki_template_get', array('Template', 'Navigation'));
 	$context['wiki_navigation'] = array();
-	
+
 	if ($menu)
 	{
 		$menu = preg_split('~<br( /)?' . '>~', $menu);
@@ -90,7 +90,12 @@ function Wiki($standalone = false)
 			$item = trim($item);
 
 			if (strpos($item, '|') !== false)
+			{
 				list ($url, $title) = explode('|', $item, 2);
+
+				if (!substr($url, 4) == 'http')
+					$url = wiki_get_url(wiki_urlname($url));
+			}
 			else
 			{
 				$url = '';
