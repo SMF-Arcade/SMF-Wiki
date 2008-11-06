@@ -381,7 +381,7 @@ function installDefaultData($forced = false)
 		array(
 			'namespace' => 'Template',
 			'name' => 'Navigation',
-			'body' => '__navigation__' . "\n" . 'Main_Page|__main_page__',
+			'body' => '__navigation__' . "\n" . ':Main_Page|__main_page__',
 		),
 	);
 
