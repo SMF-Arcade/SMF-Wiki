@@ -115,7 +115,7 @@ function WikiMain()
 	);
 
 	// Page title
-	$context['page_title'] = $context['forum_name'] . ' - ' . $context['current_page']['title'];
+	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['current_page']['title']);
 	$context['current_page_title'] = $context['current_page']['title'];
 
 	// Template

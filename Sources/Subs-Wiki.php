@@ -156,9 +156,16 @@ function loadWikiPage($name, $namespace = '', $revision = null)
 	}
 	$smcFunc['db_free_result']($request);
 
+	$title = read_urlname($row['title']);
+
+	$variables = wikiparse_variables($row['content']);
+
+	if (!empty($variables['title']))
+		$title = $variables['title'];
+
 	return array(
 		'id' => $row['id_page'],
-		'title' => read_urlname($row['title']),
+		'title' => $title,
 		'name' => wiki_urlname($row['title'], $row['namespace']),
 		'namespace' => $row['namespace'],
 		'topic' => $row['id_topic'],
@@ -166,6 +173,7 @@ function loadWikiPage($name, $namespace = '', $revision = null)
 		'revision' => $row['id_revision'],
 		'current_revision' => $row['id_revision_current'],
 		'body' => $row['content'],
+		'variables' => $variables,
 	);
 }
 
@@ -260,18 +268,28 @@ function do_toctable($tlevel, $toc, $main = true)
 	return $mainToc;
 }
 
+function wikiparse_variables($message)
+{
+	global $rep_temp, $pageVariables;
+
+	$pageVariables = array();
+
+	$message = preg_replace_callback('%{{([a-zA-Z]+):(.+?)}}%', 'wikivariable_callback', $message);
+
+	$temp = $pageVariables;
+	unset($pageVariables);
+
+	return $temp;
+}
+
 // Parses wiki page
 function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 {
-	global $rep_temp, $pageVariables;
+	global $rep_temp;
 
 	$wikiPageObject = array(
 		'toc' => array(),
 		'sections' => array(),
-	);
-
-	// Default variables for this page
-	$pageVariables = array(
 	);
 
 	$curSection = array(
@@ -284,7 +302,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		)),
 	);
 
-	$message = preg_replace_callback('%{{([a-zA-Z]+)(:(.+?))?}}%', 'wikivariable_callback', $message);
+	$message = preg_replace_callback('%{{([a-zA-Z]+(:(.+?))?)}}%', 'wikivariable_callback', $message);
 	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
 
 	if ($parse_bbc)
@@ -335,10 +353,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 	$trees = array();
 
 	$wikiPageObject['toc'] = do_toctable(2, $toc);
-	$wikiPageObject['variables'] = $pageVariables;
 	$wikiPageObject['sections'][] = $curSection;
-
-	unset($pageVariables);
 
 	return $wikiPageObject;
 }
@@ -357,7 +372,8 @@ function wikivariable_callback($groups)
 	}
 	else
 	{
-		$pageVariables[$groups[1]] = $groups[3];
+		if (isset($pageVariables))
+			$pageVariables[$groups[1]] = $groups[2];
 		return '';
 	}
 
