@@ -284,7 +284,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		)),
 	);
 
-	$message = preg_replace_callback('%{{([a-zA-Z]+)(:(.+))?}}%', 'wikivariable_callback', $message);
+	$message = preg_replace_callback('%{{([a-zA-Z]+)(:(.+?))?}}%', 'wikivariable_callback', $message);
 	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
 
 	if ($parse_bbc)
@@ -356,7 +356,10 @@ function wikivariable_callback($groups)
 			return $context['wiki_variables'][$groups[1]];
 	}
 	else
+	{
 		$pageVariables[$groups[1]] = $groups[3];
+		return '';
+	}
 
 	return $groups[0];
 }

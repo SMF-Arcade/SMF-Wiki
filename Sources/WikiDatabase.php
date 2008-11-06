@@ -378,7 +378,7 @@ function installDefaultData($forced = false)
 		array(
 			'namespace' => '',
 			'name' => 'Main_Page',
-			'body' => 'SMF Wiki ' . $wiki_version . ' installed!',
+			'body' => 'SMF Wiki {{wikiversion}} installed!',
 		),
 		array(
 			'namespace' => 'Template',
@@ -406,7 +406,7 @@ function createPage($namespace, $name, $body, $exists = 'ignore')
 	$comment = 'SMF Wiki default page';
 
 	$request = $smcFunc['db_query']('', '
-		SELECT info.id_page, con.comment
+		SELECT info.id_page, con.content, con.comment
 		FROM {db_prefix}wiki_pages AS info
 			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = info.id_revision_current
 				AND con.id_page = info.id_page)
@@ -421,11 +421,14 @@ function createPage($namespace, $name, $body, $exists = 'ignore')
 
 	if ($smcFunc['db_num_rows']($request) > 0)
 	{
-		list ($id_page, $comment2) = $smcFunc['db_fetch_row']($request);
+		list ($id_page, $content, $comment2) = $smcFunc['db_fetch_row']($request);
 		$smcFunc['db_free_result']($request);
 
 		if ($comment2 != $comment && $exists != 'update')
 			return false;
+
+		if ($content == $body)
+			return true;
 	}
 	else
 	{
