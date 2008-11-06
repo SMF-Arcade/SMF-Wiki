@@ -40,13 +40,12 @@ if (!defined('SMF'))
 
 global $boarddir, $boardurl, $smcFunc;
 
-$wiki_version = '0.1';
-
 // Settings array
 $addSettings = array(
 	'wikiEnabled' => array(1, false),
 	'wikiStandalone' => array(0, false),
 	'wikiStandaloneUrl' => array('', false),
+	'wikiVersion' => array($wiki_version, true),
 );
 
 // Permissions array
@@ -394,8 +393,6 @@ function installDefaultData($forced = false)
 
 		createPage($page['namespace'], $page['name'], $page['body']);
 	}
-
-	updateSettings(array('wikiVersion' => $wiki_version));
 }
 
 // Function to create page
