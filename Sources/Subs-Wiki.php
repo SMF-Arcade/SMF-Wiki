@@ -174,7 +174,7 @@ function read_urlname($url)
 {
 	global $smcFunc;
 
-	return $smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', $url));
+	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', un_htmlspecialchars($url))));
 }
 
 // Makes link from page title and namespace
