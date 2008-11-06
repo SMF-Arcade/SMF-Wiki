@@ -107,10 +107,8 @@ function Wiki($standalone = false)
 			{
 				list ($url, $title) = explode('|', $item, 2);
 
-				if (!substr($url, 4) == 'http')
+				if (substr($url, 4) != 'http')
 				{
-					$url = wiki_urlname($url);
-
 					if ($url == $context['current_page_name'])
 						$selected = true;
 					$url = wiki_get_url($url);
@@ -130,6 +128,7 @@ function Wiki($standalone = false)
 				$context['wiki_navigation'][] = array(
 					'url' => $url,
 					'title' => $title,
+					'selected' => $selected,
 					'items' => array(),
 				);
 

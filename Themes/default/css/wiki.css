@@ -9,19 +9,28 @@
 .wikileft div
 {
 	margin: 0 10px 0 5px;
-	border: 1px solid #AAAAAA;
+	border: 1px solid #ADADAD;
 }
 .wikileft h3 a
 {
 	display: block;
 }
-.wikileft li a
+.wikileft ul
 {
 	border-bottom: 1px solid black;
+	line-height: 1.3;
+	padding: 4px;
+	padding-bottom: 15px;
+}
+.wikileft li a
+{
 	display: block;
-	font-size: small;
-	padding: 5px;
+	font-size: x-small;
 	text-decoration: none;
+}
+.wikileft li.selected a
+{
+	font-weight: bold;
 }
 
 .wikiright
