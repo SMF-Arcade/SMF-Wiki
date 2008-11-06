@@ -77,6 +77,8 @@ function Wiki($standalone = false)
 	$namespace = clean_pagename($_REQUEST['namespace'], true);
 	$page = clean_pagename($_REQUEST['page']);
 
+	$context['current_page_name'] = wiki_urlname($page, $namespace);
+
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
 
@@ -93,13 +95,26 @@ function Wiki($standalone = false)
 		foreach ($menu as $item)
 		{
 			$item = trim($item);
+			$selected = false;
+			$subItem = false;
+
+			$subItem = substr($item, 0, 1) == ':';
+
+			if ($subItem)
+				$item = substr($item, 1);
 
 			if (strpos($item, '|') !== false)
 			{
 				list ($url, $title) = explode('|', $item, 2);
 
 				if (!substr($url, 4) == 'http')
-					$url = wiki_get_url(wiki_urlname($url));
+				{
+					$url = wiki_urlname($url);
+
+					if ($url == $context['current_page_name'])
+						$selected = true;
+					$url = wiki_get_url($url);
+				}
 			}
 			else
 			{
@@ -110,7 +125,7 @@ function Wiki($standalone = false)
 			if (substr($title, 0, 2) == '__' || substr($title, -2, 2) == '__')
 				$title = isset($txt['wiki_' . substr($title, 2, -2)]) ? $txt['wiki_' . substr($title, 2, -2)] : $title;
 
-			if (substr($item, 0, 1) != ':')
+			if (!$subItem)
 			{
 				$context['wiki_navigation'][] = array(
 					'url' => $url,
@@ -123,8 +138,9 @@ function Wiki($standalone = false)
 			else
 			{
 				$current_menu['items'][] = array(
-					'url' => substr($url, 1),
+					'url' => $url,
 					'title' => $title,
+					'selected' => $selected,
 				);
 			}
 		}
