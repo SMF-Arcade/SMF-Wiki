@@ -388,7 +388,9 @@ function installDefaultData($forced = false)
 	foreach ($defaultPages as $page)
 	{
 		$page['body'] = $smcFunc['htmlspecialchars']($page['body'], ENT_QUOTES);
-		preparsecode($_POST['arcontent']);
+		preparsecode($page['body']);
+
+		createPage($page['namespace'], $page['name'], $page['body']);
 	}
 
 	updateSettings(array('wikiVersion' => $wiki_version));
