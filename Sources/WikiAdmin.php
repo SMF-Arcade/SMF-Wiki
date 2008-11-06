@@ -64,7 +64,7 @@ function WikiAdminSettings($return_config = false)
 			array('check', 'wikiEnabled'),
 		$txt['wiki_standalone_mode'],
 			array('select', 'wikiStandalone', array(&$txt['wikiStandalone_0'], &$txt['wikiStandalone_1'], &$txt['wikiStandalone_2'])),
-			array('select', 'wikiStandaloneUrl'),
+			array('text', 'wikiStandaloneUrl'),
 	);
 
 	if ($return_config)
@@ -77,10 +77,10 @@ function WikiAdminSettings($return_config = false)
 
 		writeLog();
 
-		redirectexit('action=admin;area=wiki');
+		redirectexit('action=admin;area=wiki;sa=settings');
 	}
 
-	$context['post_url'] = $scripturl . '?action=admin;area=wiki;save';
+	$context['post_url'] = $scripturl . '?action=admin;area=wiki;sa=settings;save';
 	$context['settings_title'] = $txt['wiki_settings'];
 	$context['sub_template'] = 'show_settings';
 
