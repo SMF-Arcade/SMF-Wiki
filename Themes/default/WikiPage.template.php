@@ -98,6 +98,13 @@ function template_view_page()
 	</div>';
 	}
 
+	template_wiki_content();
+}
+
+function template_wiki_content()
+{
+	global $context, $modSettings, $txt, $user_info;
+
 	foreach ($context['page_content']['sections'] as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
@@ -273,37 +280,7 @@ function template_edit_page()
 
 	if (isset($context['page_content']))
 	{
-		foreach ($context['page_content']['sections'] as $section)
-		{
-			if ($section['level'] > 1 && $section['level'] < 5)
-				echo '
-				<h', $section['level'] + 1, ' id="', wikiurlname($section['title']), '" class="clearfix">
-					<span class="floatleft">', $section['title'], '</span>
-				</h', $section['level'] + 1, '>';
-			// Replace this
-			elseif ($section['level'] >= 5)
-				echo '
-				<h6 id="', wikiurlname($section['title']), '" class="clearfix">
-					<span class="floatleft">', $section['title'], '</span>
-				</h6>';
-
-			if ($section['level'] == 1)
-			{
-				$current_level = -1;
-				$current_levels = array();
-
-				if (!empty($context['page_content']['toc']))
-					echo '
-				<div class="wikitoc floatright">
-					<ul>',
-						output_toc($context['url'], '', $context['page_content']['toc']), '
-					</ul>
-				</div>';
-			}
-
-			echo '
-				', $section['content'];
-		}
+		template_wiki_content();
 
 		echo '
 		<hr />';
