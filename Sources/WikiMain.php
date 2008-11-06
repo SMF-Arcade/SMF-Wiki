@@ -69,6 +69,14 @@ function WikiMain()
 
 	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
+	if ($_REQUEST['sa'] == 'edit2' && isset($_POST['arcontent']))
+	{
+		$context['current_page']['variables'] = wikiparse_variables($_POST['arcontent']);
+
+		if (isset($context['current_page']['variables']['title']))
+			$context['current_page']['title'] = $context['current_page']['variables']['title'];
+	}
+
 	// Setup tabs
 	$context['wikimenu'] = array(
 		'view' => array(
