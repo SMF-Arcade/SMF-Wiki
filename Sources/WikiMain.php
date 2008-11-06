@@ -38,8 +38,7 @@ function WikiMain()
 
 		$context['current_page'] = array(
 			'title' => read_urlname($_REQUEST['page'], true),
-			'namespace' => $_REQUEST['namespace'],
-			'name' => $_REQUEST['page'],
+			'name' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
 			'content' => '',
 		);
 	}
