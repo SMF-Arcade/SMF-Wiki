@@ -69,25 +69,56 @@ function Wiki($standalone = false)
 	else
 		$_REQUEST['namespace'] = '';
 
-	$namespace = ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}'), '_', $_REQUEST['namespace'])));
-	$page = str_replace(array(' ', '[', ']', '{', '}'), '_', $_REQUEST['page']);
+	$namespace = ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $_REQUEST['namespace'])));
+	$page = str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $_REQUEST['page']);
 
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
 
 	// Wiki Menu
-	$context['wiki_navigation'] = array(
-		array(
-			'url' => '#',
-			'title' => $txt['wiki_navigation'],
-			'items' => array(
-				array(
-					'url' => wiki_get_url('Main_Page'),
-					'title' => $txt['wiki_main_page'],
-				)
-			)
-		),
-	);
+	$menu = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'wiki_template_get', array('Template', 'Navigation'));
+	$context['wiki_navigation'] = array();
+	
+	if ($menu)
+	{
+		$menu = preg_split('~<br( /)?' . '>~', $menu);
+
+		$current_menu = false;
+
+		foreach ($menu as $item)
+		{
+			$item = trim($item);
+
+			if (strpos($item, '|') !== false)
+				list ($url, $title) = explode('|', $item, 2);
+			else
+			{
+				$url = '';
+				$title = $item;
+			}
+
+			if (substr($title, 0, 2) == '__' || substr($title, -2, 2) == '__')
+				$title = isset($txt['wiki_' . substr($title, 2, -2)]) ? $txt['wiki_' . substr($title, 2, -2)] : $title;
+
+			if (substr($item, 0, 1) != ':')
+			{
+				$context['wiki_navigation'][] = array(
+					'url' => $url,
+					'title' => $title,
+					'items' => array(),
+				);
+
+				$current_menu = &$context['wiki_navigation'][count($context['wiki_navigation']) - 1];
+			}
+			else
+			{
+				$current_menu['items'][] = array(
+					'url' => substr($url, 1),
+					'title' => $title,
+				);
+			}
+		}
+	}
 
 	// Load Namespace unless it's Special
 	if ($namespace != 'Special')

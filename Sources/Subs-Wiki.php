@@ -422,7 +422,7 @@ function wiki_template_get($namespace, $page, $revision = 0)
 	return array(
 		'data' => $row['content'],
 		'expires' => time() + 3600,
-		'refresh_eval' => 'return isset($_REQUEST[\'purge\']);',
+		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 	);
 }
 

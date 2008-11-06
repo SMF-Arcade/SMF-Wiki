@@ -419,7 +419,7 @@ function createPage($namespace, $name, $body, $exists = 'ignore')
 		)
 	);
 
-	if ($smcFunc['db_num_rows']($request) != 0)
+	if ($smcFunc['db_num_rows']($request) > 0)
 	{
 		list ($id_page, $comment2) = $smcFunc['db_fetch_row']($request);
 		$smcFunc['db_free_result']($request);
