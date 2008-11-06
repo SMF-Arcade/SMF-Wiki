@@ -207,9 +207,9 @@ function clean_pagename($string, $namespace = false)
 	global $smcFunc;
 
 	if ($namespace)
-		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':'), '_', $string)));
+		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':', '|'), '_', $string)));
 
-	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
+	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
 }
 
 // Makes table of contents
@@ -458,6 +458,78 @@ function wiki_template_get($namespace, $page, $revision = 0)
 
 	return array(
 		'data' => $row['content'],
+		'expires' => time() + 3600,
+		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+	);
+}
+
+// LoadWikiMenu
+function loadWikiMenu()
+{
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+
+	$return = array();
+
+	$template = wiki_template_get('Template', 'Navigation');
+
+	$menu = preg_split('~<br( /)?' . '>~', $template['data']);
+
+	$current_menu = false;
+
+	foreach ($menu as $item)
+	{
+		$item = trim($item);
+		$selected = false;
+		$subItem = false;
+
+		$subItem = substr($item, 0, 1) == ':';
+
+		if ($subItem)
+			$item = substr($item, 1);
+
+		if (strpos($item, '|') !== false)
+		{
+			list ($url, $title) = explode('|', $item, 2);
+
+			if (substr($url, 4) != 'http')
+			{
+				if ($url == $context['current_page_name'])
+					$selected = true;
+				$url = wiki_get_url($url);
+			}
+		}
+		else
+		{
+			$url = '';
+			$title = $item;
+		}
+
+		if (substr($title, 0, 2) == '__' || substr($title, -2, 2) == '__')
+			$title = isset($txt['wiki_' . substr($title, 2, -2)]) ? $txt['wiki_' . substr($title, 2, -2)] : $title;
+
+		if (!$subItem)
+		{
+			$return[] = array(
+				'url' => $url,
+				'title' => $title,
+				'selected' => $selected,
+				'items' => array(),
+			);
+
+			$current_menu = &$return[count($return) - 1];
+		}
+		else
+		{
+			$current_menu['items'][] = array(
+				'url' => $url,
+				'title' => $title,
+				'selected' => $selected,
+			);
+		}
+	}
+
+	return array(
+		'data' => $return,
 		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 	);
