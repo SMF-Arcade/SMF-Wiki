@@ -312,7 +312,9 @@ function doPermission($permissions, $smf2 = true)
 
 function installDefaultData($forced = false)
 {
-	global $smcFunc, $wiki_version, $modSettings;
+	global $smcFunc, $wiki_version, $modSettings, $sourcedir;
+
+	require_once($sourcedir . '/Subs-Post.php');
 
 	$request = $smcFunc['db_query']('', '
 		SELECT COUNT(*)
@@ -342,13 +344,6 @@ function installDefaultData($forced = false)
 		);
 	}
 
-	$request = $smcFunc['db_query']('', '
-		SELECT COUNT(*)
-		FROM {db_prefix}wiki_namespace',
-		array(
-		)
-	);
-
 	$smcFunc['db_insert']('ignore',
 		'{db_prefix}wiki_namespace',
 		array(
@@ -374,12 +369,110 @@ function installDefaultData($forced = false)
 				'Index',
 			),
 		),
-		array()
+		array('namespace')
 	);
 
+	$defaultPages = array(
+		array(
+			'namespace' => '',
+			'name' => 'Main_Page',
+			'body' => 'SMF Wiki ' . $wiki_version . ' installed!',
+		),
+		array(
+			'namespace' => 'Template',
+			'name' => 'Navigation',
+			'body' => '__navigation__' . "\n" . 'Main_Page|__main_page__',
+		),
+	);
+
+	foreach ($defaultPages as $page)
+	{
+		$page['body'] = $smcFunc['htmlspecialchars']($page['body'], ENT_QUOTES);
+		preparsecode($_POST['arcontent']);
+	}
+
 	updateSettings(array('wikiVersion' => $wiki_version));
+}
 
+// Function to create page
+function createPage($namespace, $name, $body, $exists = 'ignore')
+{
+	global $smcFunc, $wiki_version, $user_info, $modSettings;
 
+	$comment = 'SMF Wiki default page';
+
+	$request = $smcFunc['db_query']('', '
+		SELECT info.id_page, con.comment
+		FROM {db_prefix}wiki_pages AS info
+			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = info.id_revision_current
+				AND con.id_page = info.id_page)
+		WHERE info.title = {string:article}
+			AND info.namespace = {string:namespace}',
+		array(
+			'article' => $name,
+			'namespace' => $namespace,
+			'revision' => !empty($revision) ? $revision : 'info.id_revision_current',
+		)
+	);
+
+	if ($smcFunc['db_num_rows']($request) != 0)
+	{
+		list ($id_page, $comment2) = $smcFunc['db_fetch_row']($request);
+		$smcFunc['db_free_result']($request);
+
+		if ($comment2 != $comment && $exists != 'update')
+			return false;
+	}
+	else
+	{
+		$smcFunc['db_insert']('insert',
+			'{db_prefix}wiki_pages',
+			array(
+				'title' => 'string-255',
+				'namespace' => 'string-255',
+			),
+			array(
+				$name,
+				$namespace,
+			),
+			array('id_page')
+		);
+
+		$id_page = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
+	}
+
+	$smcFunc['db_insert']('insert',
+		'{db_prefix}wiki_content',
+		array(
+			'id_page' => 'int',
+			'id_author' => 'int',
+			'timestamp' => 'int',
+			'content' => 'string',
+			'comment' => 'string-255',
+		),
+		array(
+			$id_page,
+			$user_info['id'],
+			time(),
+			$body,
+			$comment,
+		),
+		array('id_revision')
+	);
+
+	$id_revision = $smcFunc['db_insert_id']('{db_prefix}articles_content', 'id_revision');
+
+	$smcFunc['db_query']('' ,'
+		UPDATE {db_prefix}wiki_pages
+		SET id_revision_current = {int:revision}
+		WHERE id_page = {int:page}',
+		array(
+			'page' => $context['current_page']['id'],
+			'revision' => $id_revision,
+		)
+	);
+
+	return true;
 }
 
 ?>

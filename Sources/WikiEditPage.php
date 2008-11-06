@@ -192,7 +192,7 @@ function EditPage2()
 				$_REQUEST['page'],
 				$_REQUEST['namespace'],
 			),
-			'id_page'
+			array('id_page')
 		);
 
 		$context['current_page'] = array(
@@ -218,7 +218,7 @@ function EditPage2()
 			$body,
 			$_POST['comment']
 		),
-		'id_revision'
+		array('id_revision')
 	);
 
 	$id_revision = $smcFunc['db_insert_id']('{db_prefix}articles_content', 'id_revision');
