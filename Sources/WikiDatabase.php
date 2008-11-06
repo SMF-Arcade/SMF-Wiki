@@ -101,6 +101,7 @@ $tables = array(
 			array(
 				'name' => 'id_page',
 				'type' => 'int',
+				'auto' => true,
 				'unsigned' => true,
 			),
 			array(
@@ -142,6 +143,7 @@ $tables = array(
 			array(
 				'name' => 'id_revision',
 				'type' => 'int',
+				'auto' => true,
 				'unsigned' => true,
 			),
 			array(

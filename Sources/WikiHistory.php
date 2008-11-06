@@ -40,7 +40,7 @@ function WikiRecentChanges()
 			LEFT JOIN {db_prefix}wiki_content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = con.id_page)
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = con.id_author)
 		GROUP BY con.id_revision
-		ORDER BY id_revision DESC',
+		ORDER BY con.id_revision DESC',
 		array(
 		)
 	);
