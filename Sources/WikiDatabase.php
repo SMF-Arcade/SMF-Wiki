@@ -40,6 +40,8 @@ if (!defined('SMF'))
 
 global $boarddir, $boardurl, $smcFunc;
 
+$wiki_version = '0.1';
+
 // Settings array
 $addSettings = array(
 	'wikiEnabled' => array(1, false),
