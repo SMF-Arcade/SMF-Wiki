@@ -44,6 +44,11 @@ function loadWiki($mode = '')
 			'name' => $txt['wiki'],
 		);
 
+		// Wiki Variables
+		$context['wiki_variables'] = array(
+			'wikiversion' => $wiki_version,
+		);
+
 		// Template
 		$context['template_layers'][] = 'wiki';
 	}

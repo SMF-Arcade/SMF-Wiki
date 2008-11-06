@@ -263,11 +263,15 @@ function do_toctable($tlevel, $toc, $main = true)
 // Parses wiki page
 function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 {
-	global $rep_temp;
+	global $rep_temp, $pageVariables;
 
-	$object = array(
+	$wikiPageObject = array(
 		'toc' => array(),
 		'sections' => array(),
+	);
+
+	// Default variables for this page
+	$pageVariables = array(
 	);
 
 	$curSection = array(
@@ -280,13 +284,13 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		)),
 	);
 
+	$message = preg_replace_callback('%{{([a-zA-Z]+)(:(.+))?}}%', 'wikivariable_callback', $message);
+	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
 
 	if ($parse_bbc)
-	{
-		$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%s', 'wikitemplate_callback', $message);
 		$message = parse_bbc($message);
-		$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br \/>|<)/', 'wikilink_callback', $message);
-	}
+
+	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br \/>|<)/', 'wikilink_callback', $message);
 	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br />)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
 
 	$i = 0;
@@ -300,7 +304,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 			if (str_replace('=', '', $parts[$i]) == '')
 			{
 				$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
-				$object['sections'][] = $curSection;
+				$wikiPageObject['sections'][] = $curSection;
 
 				$curSection = array(
 					'title' => $parts[$i + 1],
@@ -330,11 +334,31 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 	$trees = array();
 
-	$object['toc'] = do_toctable(2, $toc);
+	$wikiPageObject['toc'] = do_toctable(2, $toc);
+	$wikiPageObject['variables'] = $pageVariables;
+	$wikiPageObject['sections'][] = $curSection;
 
-	$object['sections'][] = $curSection;
+	unset($pageVariables);
 
-	return $object;
+	return $wikiPageObject;
+}
+
+// Callback for wikivariables
+function wikivariable_callback($groups)
+{
+	global $context, $pageVariables;
+
+	if (empty($groups[2]))
+	{
+		if (isset($pageVariables[$groups[1]]))
+			return $pageVariables[$groups[1]];
+		elseif (isset($context['wiki_variables'][$groups[1]]))
+			return $context['wiki_variables'][$groups[1]];
+	}
+	else
+		$pageVariables[$groups[1]] = $groups[3];
+
+	return $groups[0];
 }
 
 // Callback for making wikilinks
