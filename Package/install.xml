@@ -45,6 +45,24 @@
 				),
 				]]></add>
 		</operation>
+
+		<operation>
+			<search position="before"><![CDATA[	$language_files = array(]]></search>
+			<add><![CDATA[
+	'Wiki', ]]></add>
+		</operation>
+
+		<operation>
+			<search position="before"><![CDATA[	$include_files = array(]]></search>
+			<add><![CDATA[
+	'WikiAdmin', ]]></add>
+		</operation>
+
+		<operation>
+			<search position="before"><![CDATA[		array('ModifyCacheSettings', 'area=serversettings;sa=cache'),]]></search>
+			<add><![CDATA[
+		array('WikiAdminSettings', 'area=wiki;sa=settings'),]]></add>
+		</operation>
 	</file>
 
 	<file name="$sourcedir/Subs.php">
