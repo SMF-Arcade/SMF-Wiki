@@ -635,4 +635,28 @@ function removeWikiRevision($revision)
 	return true;
 }
 
+function removeWikiPages($page)
+{
+	global $smcFunc;
+
+	if (!is_array($page))
+		$page = array((int) $page);
+
+	$smcFunc['db_query']('', '
+		DELETE FROM {db_prefix}wiki_
+		WHERE id_page IN({array_int:page})',
+		array(
+			'page' => $page,
+		)
+	);
+	$smcFunc['db_query']('', '
+		DELETE FROM {db_prefix}wiki_content
+		WHERE id_page IN({array_int:page})',
+		array(
+			'page' => $page,
+		)
+	);
+
+	return true;
+}
 ?>
