@@ -61,8 +61,9 @@ ul.wikimenu li
 	float: left;
 	list-style: none;
 }
-.wikimenu li.margin
+.wikimenu li.selected
 {
+	border-color: #FABD23;
 }
 .wikimenu li a
 {
@@ -70,23 +71,13 @@ ul.wikimenu li
 	padding: 4px 5px 4px 25px;
 	font-size: small;
 }
-.wikimenu li a:hover
-{
-	text-decoration: none;
-}
-.wikimenu li.selected
-{
-	border-color: #FABD23;
-}
-.wikimenu li:hover
-{
-}
-.wikimenu li a:hover
+.wikimenu li.selected a
 {
 	background-color: #F6F6F6;
 }
-.wikimenu li.selected a
+.wikimenu li a:hover
 {
+	text-decoration: none;
 	background-color: #F6F6F6;
 }
 .wikimenu li.view a

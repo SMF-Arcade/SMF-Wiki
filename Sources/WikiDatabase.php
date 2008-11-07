@@ -47,6 +47,7 @@ $addSettings = array(
 	'wikiEnabled' => array(1, false),
 	'wikiStandalone' => array(0, false),
 	'wikiStandaloneUrl' => array('', false),
+	'wikiTalkBoard' => array(0, false),
 	'wikiVersion' => array($wiki_version, true),
 );
 

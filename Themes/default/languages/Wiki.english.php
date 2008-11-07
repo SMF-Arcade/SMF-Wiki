@@ -34,6 +34,16 @@ $txt['wiki_settings'] = 'Wiki Settings';
 $txt['wiki_admin_title'] = 'Wiki';
 $txt['wiki_admin_desc'] = 'Here you can edit settings of Wiki';
 
+// Admin Settings
+$txt['wikiEnabled'] = 'Enable Wiki';
+$txt['wiki_standalone_mode'] = 'Standalone Mode';
+$txt['wikiStandalone'] = 'Enable Standalone Mode';
+$txt['wikiStandalone_0'] = 'Disabled';
+$txt['wikiStandalone_1'] = 'Enabled';
+$txt['wikiStandalone_2'] = 'Enabled (Friendly URLs)';
+$txt['wikiStandaloneUrl'] = 'Standalone URL';
+$txt['wikiTalkBoard'] = 'Talk Board';
+
 // Recent Changes
 $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 

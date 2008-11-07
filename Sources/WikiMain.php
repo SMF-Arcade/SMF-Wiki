@@ -92,7 +92,7 @@ function WikiMain()
 				'sa' => 'talk',
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('talk')),
-			'show' => true,
+			'show' => !empty($modSettings['wikiTalkBoard']),
 		),
 		'edit' => array(
 			'title' => $txt['wiki_edit'],
@@ -102,7 +102,6 @@ function WikiMain()
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('edit', 'edit2')),
 			'show' => allowedTo('wiki_edit'),
-			'class' => 'margin',
 		),
 		'history' => array(
 			'title' => $txt['wiki_history'],
@@ -112,7 +111,6 @@ function WikiMain()
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('history', 'diff')),
 			'show' => true,
-			'class' => allowedTo('wiki_edit') ? '' : 'margin',
 		),
 	);
 

@@ -35,7 +35,7 @@ function ViewTalkPage()
 		'page' => $context['current_page_name'],
 		'sa' => 'talk2',
 	));
-	
+
 	$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic}', array('topic' => $context['current_page']['topic']), '', 'm.id_msg DESC', 'array');
 
 	$context['current_page_title'] = sprintf($txt['talk_page'], $context['current_page']['title']);
@@ -68,7 +68,7 @@ function ViewTalkPage2()
 		'body' => $message,
 	);
 	$topicOptions = array(
-		'board' => 80,
+		'board' => $modSettings['wikiTalkBoard'],
 	);
 
 	if (!empty($context['current_page']['topic']))

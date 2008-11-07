@@ -19,8 +19,7 @@ function template_wikipage_above()
 
 		if ($item['selected'])
 			$classes[] = 'selected';
-		if (!empty($item['class']))
-			$classes[] = $item['class'];
+
 		echo '
 		<li class="',  implode(' ', $classes), '"><a href="', $item['url'], '">', $item['title'], '</a></li>';
 	}

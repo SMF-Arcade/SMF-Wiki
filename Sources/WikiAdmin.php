@@ -65,6 +65,7 @@ function WikiAdminSettings($return_config = false)
 		$txt['wiki_standalone_mode'],
 			array('select', 'wikiStandalone', array(&$txt['wikiStandalone_0'], &$txt['wikiStandalone_1'], &$txt['wikiStandalone_2'])),
 			array('text', 'wikiStandaloneUrl'),
+			array('text', 'wikiTalkBoard'),
 	);
 
 	if ($return_config)
