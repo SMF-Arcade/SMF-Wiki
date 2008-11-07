@@ -551,4 +551,88 @@ function loadWikiMenu()
 	);
 }
 
+// Remove a single revision. (permissions are NOT checked in this function!)
+function removeWikiRevision($revision)
+{
+	global $smcFunc;
+
+	if (empty($revision) || !is_numeric($revision))
+		return false;
+
+	// Get the page where this revision belongs to.
+	$request = $smcFunc['db_query']('', '
+		SELECT id_page
+		FROM {db_prefix}wiki_pages
+		WHERE id_revision_current = {int:revision}
+		LIMIT 1',
+		array(
+			'revision' => $revision,
+		)
+	);
+	list ($page) = $smcFunc['db_fetch_row']($request);
+	$smcFunc['db_free_result']($request);
+
+	if (empty($page))
+		return false;
+
+	// Get the count of other revisions.
+	$request = $smcFunc['db_query']('', '
+		SELECT COUNT(*)
+		FROM {db_prefix}wiki_content
+		WHERE id_page = {int:page}
+			AND id_revision != {int:revision}
+		LIMIT 1',
+		array(
+			'page' => $page,
+			'revision' => $revision,
+		)
+	);
+	list ($revisions) = $smcFunc['db_fetch_row']($request);
+	$smcFunc['db_free_result']($request);
+
+	// No other? Delete whole page.
+	if (empty($revisions))
+		removeWikiPages($page);
+	else
+	{
+		// Get the most recent revision other than this.
+		$request = $smcFunc['db_query']('', '
+			SELECT id_revision
+			FROM {db_prefix}wiki_content
+			WHERE id_page = {int:page}
+				AND id_revision != {int:revision}
+			ORDER BY id_revision DESC
+			LIMIT 1',
+			array(
+				'page' => $page,
+				'revision' => $revision,
+			)
+		);
+		list ($new_revision) = $smcFunc['db_fetch_row']($request);
+		$smcFunc['db_free_result']($request);
+
+		// Set it as the current for our page.
+		$smcFunc['db_query']('', '
+			UPDATE {db_prefix}wiki_pages
+			SET id_revision_current = {int:new_revision}
+			WHERE id_page = {int:page}',
+			array(
+				'page' => $page,
+				'new_revision' => $new_revision,
+			)
+		);
+	}
+
+	// Lastly, delete the revision.
+	$smcFunc['db_query']('', '
+		DELETE FROM {db_prefix}wiki_content
+		WHERE id_revision = {int:revision}',
+		array(
+			'revision' => $revision,
+		)
+	);
+
+	return true;
+}
+
 ?>
