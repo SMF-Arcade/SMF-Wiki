@@ -129,6 +129,12 @@ $tables = array(
 				'default' => 0,
 				'unsigned' => true,
 			),
+			array(
+				'name' => 'id_topic',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
 		),
 		'indexes' => array(
 			array(
@@ -154,6 +160,12 @@ $tables = array(
 			),
 			array(
 				'name' => 'id_author',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'timestamp',
 				'type' => 'int',
 				'default' => 0,
 				'unsigned' => true,
