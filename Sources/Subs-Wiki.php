@@ -643,7 +643,7 @@ function removeWikiPages($page)
 		$page = array((int) $page);
 
 	$smcFunc['db_query']('', '
-		DELETE FROM {db_prefix}wiki_
+		DELETE FROM {db_prefix}wiki_pages
 		WHERE id_page IN({array_int:page})',
 		array(
 			'page' => $page,
