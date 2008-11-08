@@ -302,9 +302,15 @@ function template_edit_page()
 				', template_control_richedit($context['post_box_name'], 'buttons'), '
 			</div>
 			<div>
-				Edit Comment: <br />
-				<input type="text" name="comment" value="', $context['comment'], '" size="65" />
-			</div>
+				', $txt['edit_summary'], ': <br />
+				<input type="text" name="comment" value="', $context['comment'], '" size="65" /><br />';
+
+			if ($context['can_lock_page'])
+				echo '
+				<input type="checkbox" name="lock_page" value="1"', $context['current_page']['is_locked'] ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
+
+			echo '
+				</div>
 		</div>
 
 		<input type="hidden" name="section" value="', $context['edit_section'], '" />

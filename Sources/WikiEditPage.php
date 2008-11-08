@@ -127,11 +127,6 @@ function EditPage2()
 	if (isset($_REQUEST['preview']))
 		return EditPage();
 
-	$context['form_url'] = wiki_get_url(array(
-		'page' => $context['current_page_name'],
-		'sa' => 'edit2',
-	));
-
 	if (checkSession('post', '', false) != '')
 		$post_errors[] = 'session_timeout';
 	if (htmltrim__recursive(htmlspecialchars__recursive($_POST['arcontent'])) == '')
@@ -232,10 +227,12 @@ function EditPage2()
 	$smcFunc['db_query']('' ,'
 		UPDATE {db_prefix}wiki_pages
 		SET
-			id_revision_current = {int:revision}
+			id_revision_current = {int:revision}' . ($context['can_lock_page'] ? ',
+			is_locked = {int:lock}' : '') . '
 		WHERE id_page = {int:page}',
 		array(
 			'page' => $context['current_page']['id'],
+			'lock' => !empty($_REQUEST['lock_page']) ? 1 : 0,
 			'revision' => $id_revision,
 		)
 	);

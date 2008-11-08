@@ -18,6 +18,8 @@ $txt['wiki_edit_section'] = 'edit';
 
 // Edit
 $txt['edit_page'] = 'Edit page %s';
+$txt['edit_summary'] = 'Edit Summary';
+$txt['lock_page'] = 'Lock Page';
 
 // Talk
 $txt['talk_page'] = 'Comments for page %s';
