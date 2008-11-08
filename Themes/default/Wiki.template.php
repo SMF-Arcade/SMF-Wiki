@@ -50,7 +50,7 @@ function template_wiki_below()
 	echo '
 	</div>
 	<div id="project_bottom" class="smalltext" style="text-align: center; clear: both;">
-		Powered by: SMF Wiki ', $wiki_version, '</a> &copy; <a href="http://www.madjoki.com/" target="_blank">Niko Pahajoki</a> 2008
+		Powered by: SMF Wiki ', $wiki_version, ' &copy; <a href="http://www.madjoki.com/" target="_blank">Niko Pahajoki</a> 2008
 	</div>';
 }
 
