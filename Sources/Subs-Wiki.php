@@ -565,8 +565,8 @@ function removeWikiRevisions($revisions)
 	// Get the pages which revisions belong to, if they are.
 	$request = $smcFunc['db_query']('', '
 		SELECT id_page
-		FROM {db_prefix}wiki_pages
-		WHERE id_revision_current IN ({array_int:revisions})',
+		FROM {db_prefix}wiki_content
+		WHERE id_revision IN ({array_int:revisions})',
 		array(
 			'revisions' => $revisions,
 		)
@@ -574,6 +574,9 @@ function removeWikiRevisions($revisions)
 	while ($row = $smcFunc['db_fetch_assoc']($request))
 		$pages[] = $row['id_page'];
 	$smcFunc['db_free_result']($request);
+
+	// Remove duplicates
+	$pages = array_unique($pages);
 
 	// Anything to do for pages?
 	if (!empty($pages))
