@@ -399,11 +399,13 @@ function installDefaultData($forced = false)
 			'namespace' => '',
 			'name' => 'Main_Page',
 			'body' => 'SMF Wiki {{wikiversion}} installed!',
+			'locked' => true,
 		),
 		array(
 			'namespace' => 'Template',
 			'name' => 'Navigation',
 			'body' => '__navigation__' . "\n" . ':Main_Page|__main_page__',
+			'locked' => true,
 		),
 	);
 
@@ -412,12 +414,12 @@ function installDefaultData($forced = false)
 		$page['body'] = $smcFunc['htmlspecialchars']($page['body'], ENT_QUOTES);
 		preparsecode($page['body']);
 
-		createPage($page['namespace'], $page['name'], $page['body']);
+		createPage($page['namespace'], $page['name'], $page['body'], $page['locked']);
 	}
 }
 
 // Function to create page
-function createPage($namespace, $name, $body, $exists = 'ignore')
+function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore')
 {
 	global $smcFunc, $wiki_version, $user_info, $modSettings;
 
@@ -455,10 +457,12 @@ function createPage($namespace, $name, $body, $exists = 'ignore')
 			array(
 				'title' => 'string-255',
 				'namespace' => 'string-255',
+				'is_locked' => 'int',
 			),
 			array(
 				$name,
 				$namespace,
+				$locked ? 1 : 0,
 			),
 			array('id_page')
 		);
