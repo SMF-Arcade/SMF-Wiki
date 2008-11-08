@@ -551,84 +551,78 @@ function loadWikiMenu()
 	);
 }
 
-// Remove a single revision. (permissions are NOT checked in this function!)
-function removeWikiRevision($revision)
+// Remove an array of revisions. (permissions are NOT checked in this function!)
+function removeWikiRevisions($revisions)
 {
 	global $smcFunc;
 
-	if (empty($revision) || !is_numeric($revision))
-		return false;
+	if (empty($revisions))
+		return;
+	// Only a single revision.
+	elseif (!is_array($revisions))
+		$revisions = array((int) $revisions);
 
-	// Get the page where this revision belongs to.
+	// Get the pages which revisions belong to, if they are.
 	$request = $smcFunc['db_query']('', '
 		SELECT id_page
 		FROM {db_prefix}wiki_pages
-		WHERE id_revision_current = {int:revision}
-		LIMIT 1',
+		WHERE id_revision_current IN ({array_int:revisions})',
 		array(
-			'revision' => $revision,
+			'revisions' => $revisions,
 		)
 	);
-	list ($page) = $smcFunc['db_fetch_row']($request);
+	while ($row = $smcFunc['db_fetch_assoc']($request))
+		$pages[] = $row['id_page'];
 	$smcFunc['db_free_result']($request);
 
-	if (empty($page))
-		return false;
-
-	// Get the count of other revisions.
-	$request = $smcFunc['db_query']('', '
-		SELECT COUNT(*)
-		FROM {db_prefix}wiki_content
-		WHERE id_page = {int:page}
-			AND id_revision != {int:revision}
-		LIMIT 1',
-		array(
-			'page' => $page,
-			'revision' => $revision,
-		)
-	);
-	list ($revisions) = $smcFunc['db_fetch_row']($request);
-	$smcFunc['db_free_result']($request);
-
-	// No other? Delete whole page.
-	if (empty($revisions))
-		removeWikiPages($page);
-	else
+	// Anything to do for pages?
+	if (!empty($pages))
 	{
-		// Get the most recent revision other than this.
+		// Get other revisions for each page.
 		$request = $smcFunc['db_query']('', '
-			SELECT id_revision
+			SELECT id_page, id_revision
 			FROM {db_prefix}wiki_content
-			WHERE id_page = {int:page}
-				AND id_revision != {int:revision}
-			ORDER BY id_revision DESC
+			WHERE id_page IN ({array_int:pages})
+				AND id_revision NOT IN ({array_int:revisions})
 			LIMIT 1',
 			array(
-				'page' => $page,
-				'revision' => $revision,
+				'pages' => $pages,
+				'revisions' => $revisions,
 			)
 		);
-		list ($new_revision) = $smcFunc['db_fetch_row']($request);
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+			$other_revisions[$row['id_page']][] = $row['id_revision'];
 		$smcFunc['db_free_result']($request);
 
-		// Set it as the current for our page.
-		$smcFunc['db_query']('', '
-			UPDATE {db_prefix}wiki_pages
-			SET id_revision_current = {int:new_revision}
-			WHERE id_page = {int:page}',
-			array(
-				'page' => $page,
-				'new_revision' => $new_revision,
-			)
-		);
+		// Delete the page? Or change current revision...
+		foreach ($pages as $page)
+		{
+			if (!isset($other_revisions[$page]))
+				$remove_pages[] = $page;
+			else
+				$smcFunc['db_query']('', '
+					UPDATE {db_prefix}wiki_pages
+					SET id_revision_current = {int:new_revision}
+					WHERE id_page = {int:page}
+					LIMIT 1',
+					array(
+						'page' => $page,
+						'new_revision' => max($other_revisions[$page]),
+					)
+				);
+		}
 	}
 
-	// Lastly, delete the revision.
+	// Any pages to remove?
+	if (!empty($remove_pages))
+		removeWikiPages($remove_pages);
+
+	// Lastly, delete the revisions.
 	$smcFunc['db_query']('', '
 		DELETE FROM {db_prefix}wiki_content
-		WHERE id_revision = {int:revision}',
+		WHERE id_revision IN ({array_int:revisions})',
 		array(
-			'revision' => $revision,
+			'revisions' => $revisions,
 		)
 	);
 
