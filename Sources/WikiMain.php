@@ -29,6 +29,7 @@ function WikiMain()
 
 	// Load page
 	$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
+	$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['current_page']['is_locked']);
 
 	$page_found = true;
 
@@ -101,7 +102,7 @@ function WikiMain()
 				'sa' => 'edit',
 			)),
 			'selected' => in_array($_REQUEST['sa'], array('edit', 'edit2')),
-			'show' => allowedTo('wiki_edit'),
+			'show' => $context['can_edit_page'],
 		),
 		'history' => array(
 			'title' => $txt['wiki_history'],

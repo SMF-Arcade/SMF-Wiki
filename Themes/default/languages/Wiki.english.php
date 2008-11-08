@@ -52,6 +52,6 @@ $txt['template_not_found'] = 'Error: Template &quot;%s&quot; not found!';
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
 $txt['wiki_namespace_not_found'] = 'There is no namespace &quot;%s&quot; in this wiki .';
 $txt['wiki_action_not_found'] = 'There is no action &quot;%s&quot;';
-$txt['cannot_site_wiki_edit'] = 'You have no permission to edit this page';
+$txt['cannot_wiki_edit_current_page'] = 'You are not allowed to this page.';
 
 ?>

@@ -119,6 +119,12 @@ $tables = array(
 				'default' => '',
 			),
 			array(
+				'name' => 'is_locked',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
 				'name' => 'id_revision_current',
 				'type' => 'int',
 				'default' => 0,

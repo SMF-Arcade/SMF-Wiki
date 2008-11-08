@@ -32,6 +32,9 @@ function EditPage()
 
 	isAllowedTo('wiki_edit');
 
+	if (empty($context['can_edit_page']))
+		fatal_lang_error('cannot_wiki_edit_current_page', false);
+
 	$context['form_url'] = wiki_get_url(array(
 		'page' => $context['current_page_name'],
 		'sa' => 'edit2',
@@ -107,6 +110,9 @@ function EditPage2()
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
 	isAllowedTo('wiki_edit');
+
+	if (empty($context['can_edit_page']))
+		fatal_lang_error('cannot_wiki_edit_current_page', false);
 
 	require_once($sourcedir . '/Subs-Editor.php');
 	require_once($sourcedir . '/Subs-Post.php');
