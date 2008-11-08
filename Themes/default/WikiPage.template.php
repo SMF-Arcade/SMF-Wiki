@@ -136,9 +136,6 @@ function template_wiki_content()
 
 		if ($section['level'] == 1)
 		{
-			$current_level = -1;
-			$current_levels = array();
-
 			if (!empty($context['page_content']['toc']))
 				echo '
 			<div class="wikitoc floatright">

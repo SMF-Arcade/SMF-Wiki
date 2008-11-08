@@ -310,7 +310,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		$message = parse_bbc($message);
 
 	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
-	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br( /)?>)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
+	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br />)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
 
 	$i = 0;
 
