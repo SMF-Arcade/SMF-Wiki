@@ -496,7 +496,6 @@ function loadWikiMenu()
 	foreach ($menu as $item)
 	{
 		$item = trim($item);
-		$selected = false;
 		$subItem = false;
 
 		$subItem = substr($item, 0, 1) == ':';
@@ -506,14 +505,12 @@ function loadWikiMenu()
 
 		if (strpos($item, '|') !== false)
 		{
-			list ($url, $title) = explode('|', $item, 2);
+			list ($page, $title) = explode('|', $item, 2);
 
 			if (substr($url, 4) != 'http')
-			{
-				if ($url == $context['current_page_name'])
-					$selected = true;
-				$url = wiki_get_url($url);
-			}
+				$url = wiki_get_url($page);
+			else
+				$url = $page;
 		}
 		else
 		{
@@ -527,9 +524,9 @@ function loadWikiMenu()
 		if (!$subItem)
 		{
 			$return[] = array(
+				'page' => $page,
 				'url' => $url,
 				'title' => $title,
-				'selected' => $selected,
 				'items' => array(),
 			);
 
@@ -538,9 +535,9 @@ function loadWikiMenu()
 		else
 		{
 			$current_menu['items'][] = array(
+				'page' => $page,
 				'url' => $url,
 				'title' => $title,
-				'selected' => $selected,
 			);
 		}
 	}

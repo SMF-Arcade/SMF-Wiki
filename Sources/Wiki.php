@@ -80,10 +80,22 @@ function Wiki($standalone = false)
 	$context['current_page_name'] = wiki_urlname($page, $namespace);
 
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
-		redirectexit(wiki_get_url(wiki_urlname($page, $namespace)));
+		redirectexit(wiki_get_url($context['current_page_name']));
 
 	// Load Navigation
 	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
+
+	foreach ($context['wiki_navigation'] as $id => $grp)
+	{
+		if ($grp['page'] == $context['current_page_name'])
+			$context['wiki_navigation'][$id]['selected'] = true;
+
+		foreach ($grp['items'] as $subid => $item)
+		{
+			if ($item['page'] == $context['current_page_name'])
+				$context['wiki_navigation'][$id]['items'][$subid]['selected'] = true;
+		}
+	}
 
 	// Load Namespace unless it's Special
 	if ($namespace != 'Special')
