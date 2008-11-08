@@ -583,8 +583,7 @@ function removeWikiRevisions($revisions)
 			SELECT id_page, id_revision
 			FROM {db_prefix}wiki_content
 			WHERE id_page IN ({array_int:pages})
-				AND id_revision NOT IN ({array_int:revisions})
-			LIMIT 1',
+				AND id_revision NOT IN ({array_int:revisions})',
 			array(
 				'pages' => $pages,
 				'revisions' => $revisions,
