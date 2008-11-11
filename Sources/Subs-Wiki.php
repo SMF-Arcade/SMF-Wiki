@@ -84,9 +84,9 @@ function wiki_get_url($params)
 				$return .= '?';
 
 			if (is_int($p))
-				$query .= $value;
+				$return .= $value;
 			else
-				$query .= $p . '=' . $value;		
+				$return .= $p . '=' . $value;
 		}
 
 		if (!empty($modSettings['wikiStandalone']))
