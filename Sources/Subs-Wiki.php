@@ -57,10 +57,10 @@ function wiki_get_url($params)
 			else
 				$query .= '?';
 
-			if (!empty($value))
-				$query .= $p . '=' . $value;
+			if (is_int($p))
+				$query .= $value;
 			else
-				$query .= $p;
+				$query .= $p . '=' . $value;
 		}
 
 		return $modSettings['wikiStandaloneUrl'] . '/' . $page . $query;
@@ -83,10 +83,10 @@ function wiki_get_url($params)
 			else
 				$return .= '?';
 
-			if (!empty($value))
-				$return .= $p . '=' . $value;
+			if (is_int($p))
+				$query .= $value;
 			else
-				$return .= $p;
+				$query .= $p . '=' . $value;		
 		}
 
 		if (!empty($modSettings['wikiStandalone']))
