@@ -34,7 +34,6 @@
 		<require-file name="Sources/WikiAdmin.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiEditPage.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiHistory.php" destination="$sourcedir" />
-		<require-file name="Sources/WikiMain.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiPage.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiTalkPage.php" destination="$sourcedir" />
 

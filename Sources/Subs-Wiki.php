@@ -175,6 +175,7 @@ function loadWikiPage($name, $namespace = '', $revision = null)
 		'current_revision' => $row['id_revision_current'],
 		'body' => $row['content'],
 		'variables' => $variables,
+		'found' => true,
 	);
 }
 
