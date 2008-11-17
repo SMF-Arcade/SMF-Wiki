@@ -220,7 +220,7 @@ function WikiMain()
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	// Load page
-	$page_found = empty($context['current_page']['found']);
+	$page_found = !empty($context['current_page']['found']);
 
 	$subActions = array(
 		'view' => array('WikiPage.php', 'ViewPage'),

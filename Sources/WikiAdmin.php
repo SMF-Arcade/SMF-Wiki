@@ -60,12 +60,26 @@ function WikiAdminSettings($return_config = false)
 {
 	global $context, $smcFunc, $sourcedir, $scripturl, $user_info, $txt;
 
+	$request = $smcFunc['db_query']('', '
+		SELECT b.id_board, b.name, c.name AS cat_name
+		FROM {db_prefix}boards AS b
+			LEFT JOIN {db_prefix}categories AS c ON (c.id_cat = b.id_cat)
+		WHERE b.redirect = {string:blank_redirect}',
+		array(
+			'blank_redirect' => '',
+		)
+	);
+	$boards = array(0 => '');
+	while ($row = $smcFunc['db_fetch_assoc']($request))
+		$boards[$row['id_board']] = strip_tags($row['cat_name']) . ' - ' . strip_tags($row['name']);
+	$smcFunc['db_free_result']($request);
+
 	$config_vars = array(
 			array('check', 'wikiEnabled'),
 		$txt['wiki_standalone_mode'],
 			array('select', 'wikiStandalone', array(&$txt['wikiStandalone_0'], &$txt['wikiStandalone_1'], &$txt['wikiStandalone_2'])),
 			array('text', 'wikiStandaloneUrl'),
-			array('text', 'wikiTalkBoard'),
+			array('select', 'wikiTalkBoard', $boards),
 	);
 
 	if ($return_config)
