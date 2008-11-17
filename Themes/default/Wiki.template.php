@@ -11,7 +11,7 @@ function template_wiki_above()
 	foreach ($context['wiki_navigation'] as $group)
 	{
 		echo '
-		<h3 class="catbg headerpadding', $item['selected'] ? ' selected' : '', '">';
+		<h3 class="catbg headerpadding', $group['selected'] ? ' selected' : '', '">';
 
 		if (!empty($group['url']))
 			echo '
