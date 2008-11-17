@@ -517,6 +517,7 @@ function loadWikiMenu()
 		{
 			$url = '';
 			$title = $item;
+			$page = $item;
 		}
 
 		if (substr($title, 0, 2) == '__' || substr($title, -2, 2) == '__')
@@ -529,6 +530,7 @@ function loadWikiMenu()
 				'url' => $url,
 				'title' => $title,
 				'items' => array(),
+				'selected' => false,
 			);
 
 			$current_menu = &$return[count($return) - 1];
@@ -539,6 +541,7 @@ function loadWikiMenu()
 				'page' => $page,
 				'url' => $url,
 				'title' => $title,
+				'selected' => false,
 			);
 		}
 	}
