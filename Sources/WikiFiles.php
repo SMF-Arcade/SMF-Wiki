@@ -98,7 +98,7 @@ function WikiFileView()
 			@ob_end_clean();
 		}
 
-		$fp = fopen($filepath, 'rb');
+		$fp = fopen($filename, 'rb');
 		while (!feof($fp))
 		{
 			if (isset($callback))
@@ -111,7 +111,7 @@ function WikiFileView()
 	}
 	// On some of the less-bright hosts, readfile() is disabled.  It's just a faster, more byte safe, version of what's in the if.
 	elseif (isset($callback) || @readfile($filepath) == null)
-		echo isset($callback) ? $callback(file_get_contents($filepath)) : file_get_contents($filepath);
+		echo isset($callback) ? $callback(file_get_contents($filename)) : file_get_contents($filename);
 
 	obExit(false);
 }
