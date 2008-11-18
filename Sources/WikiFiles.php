@@ -27,13 +27,17 @@ function WikiFileView()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
-	$filepath = $modSettings['wikiAttachmentsDir'] . '/' . $context['current_file']['local_name'];
+	$context['no_last_modified'] = true;
+
+	$filename = $modSettings['wikiAttachmentsDir'] . '/' . $context['current_file']['local_name'];
+	$mime_type = $context['current_file']['mime_type'];
+	$file_ext = $context['current_file']['extension'];
 
 	// This is logged because it should be there
-	if (!file_exists($filepath))
+	if (!file_exists($filename))
 		fatal_lang_error('wiki_file_not_found', 'general', $context['current_file']['local_name']);
 
-	$filesize = filesize($filepath);
+	$filesize = filesize($filename);
 
 	// This is based on attachments code form SMF
 	$do_gzip = !empty($modSettings['enableCompressedOutput']) && $filesize <= 4194304;
@@ -47,8 +51,31 @@ function WikiFileView()
 		header('Content-Encoding: none');
 	}
 
+	// Check if it's not modified
+	if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']))
+	{
+		list($modified_since) = explode(';', $_SERVER['HTTP_IF_MODIFIED_SINCE']);
+		if (strtotime($modified_since) >= filemtime($filename))
+		{
+			ob_end_clean();
+
+			// Answer the question - no, it hasn't been modified ;).
+			header('HTTP/1.1 304 Not Modified');
+			exit;
+		}
+	}
+
 	header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 525600 * 60) . ' GMT');
-	header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($filepath)) . ' GMT');
+	header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($filename)) . ' GMT');
+
+	if ($mime_type && (isset($_REQUEST['image']) || !in_array($file_ext, array('jpg', 'gif', 'jpeg', 'bmp', 'png', 'psd', 'tiff', 'iff'))))
+		header('Content-Type: ' . $mime_type);
+	else
+	{
+		header('Content-Type: ' . $context['browser']['is_ie'] || $context['browser']['is_opera'] ? 'application/octetstream' : 'application/octet-stream');
+		if (isset($_REQUEST['image']))
+			unset($_REQUEST['image']);
+	}
 
 	if (!$do_gzip)
 		header('Content-Length: ' . $filesize);

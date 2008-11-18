@@ -338,7 +338,7 @@ function WikiFiles()
 	);
 
 	$request = $smcFunc['db_query']('', '
-		SELECT localname
+		SELECT localname, mime_type, file_ext
 		FROM {db_prefix}wiki_files
 		WHERE filename = {string:filename}
 			AND is_current = {int:is_current}',
@@ -356,6 +356,8 @@ function WikiFiles()
 
 	$context['current_file'] = array(
 		'local_name' => $row['localname'],
+		'mime_type' => $row['mime_type'],
+		'file_ext' => $row['file_ext'],
 	);
 
 	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'info';

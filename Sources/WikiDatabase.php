@@ -220,7 +220,19 @@ $tables = array(
 			array(
 				'name' => 'localname',
 				'type' => 'varchar',
-				'size' => '30',
+				'size' => '255',
+				'default' => '',
+			),
+			array(
+				'name' => 'mime_type',
+				'type' => 'varchar',
+				'size' => '35',
+				'default' => '',
+			),
+			array(
+				'name' => 'file_ext',
+				'type' => 'varchar',
+				'size' => '10',
 				'default' => '',
 			),
 			array(
