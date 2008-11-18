@@ -134,7 +134,7 @@ function Wiki($standalone = false)
 		$context['namespace'] = array(
 			'id' => $namespace,
 			'prefix' => '',
-			'url' => wiki_get_url(wiki_urlname('Index', $namespace)),
+			'url' => wiki_get_url(wiki_urlname('Special', 'Files')),
 		);
 
 		if (empty($page))
@@ -332,11 +332,35 @@ function WikiFiles()
 	$context['current_page_name'] = wiki_urlname($_REQUEST['file'], $context['namespace']['id']);
 
 	$subActions = array(
-		'list' => array('WikiFiles.php', 'WikiFileList'),
 		'info' => array('WikiFiles.php', 'WikiFileInfo'),
 		'view' => array('WikiFiles.php', 'WikiFileView'),
 	);
 
+	$request = $smcFunc['db_query']('', '
+		SELECT localname
+		FROM {db_prefix}wiki_files
+		WHERE filename = {string:filename}
+			AND is_current = {int:is_current}',
+		array(
+			'filename' => $_REQUEST['page'],
+			'is_current' => 1,
+		)
+	);
+
+	$row = $smcFunc['db_fetch_assoc']($request);
+	$smcFunc['db_free_result']($request);
+
+	if (!$row)
+		fatal_lang_error('wiki_file_not_found', false);
+
+	$context['current_file'] = array(
+		'local_name' => $row['localname'],
+	);
+
+	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'info';
+
+	require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
+	$subActions[$_REQUEST['sa']][1]();
 }
 
 ?>

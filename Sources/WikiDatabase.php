@@ -45,6 +45,7 @@ $wiki_version = '0.1';
 // Settings array
 $addSettings = array(
 	'wikiEnabled' => array(1, false),
+	'wikiAttachmentsDir' => array('', false),
 	'wikiStandalone' => array(0, false),
 	'wikiStandaloneUrl' => array('', false),
 	'wikiTalkBoard' => array(0, false),
@@ -197,6 +198,58 @@ $tables = array(
 				'name' => 'id_page',
 				'type' => 'index',
 				'columns' => array('id_page')
+			),
+		)
+	),
+	// Files
+	'wiki_files' => array(
+		'name' => 'wiki_files',
+		'columns' => array(
+			array(
+				'name' => 'id_file',
+				'type' => 'int',
+				'auto' => true,
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'filename',
+				'type' => 'varchar',
+				'size' => '255',
+				'default' => '',
+			),
+			array(
+				'name' => 'localname',
+				'type' => 'varchar',
+				'size' => '30',
+				'default' => '',
+			),
+			array(
+				'name' => 'is_current',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'id_member',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'timestamp',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+		),
+		'indexes' => array(
+			array(
+				'type' => 'primary',
+				'columns' => array('id_file')
+			),
+			array(
+				'type' => 'index',
+				'columns' => array('filename', 'is_current')
 			),
 		)
 	),

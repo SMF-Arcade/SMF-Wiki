@@ -80,6 +80,8 @@ function WikiAdminSettings($return_config = false)
 			array('select', 'wikiStandalone', array(&$txt['wikiStandalone_0'], &$txt['wikiStandalone_1'], &$txt['wikiStandalone_2'])),
 			array('text', 'wikiStandaloneUrl'),
 			array('select', 'wikiTalkBoard', $boards),
+		'',
+			array('text', 'wikiAttachmentsDir'),
 	);
 
 	if ($return_config)
