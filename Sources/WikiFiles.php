@@ -110,7 +110,7 @@ function WikiFileView()
 		fclose($fp);
 	}
 	// On some of the less-bright hosts, readfile() is disabled.  It's just a faster, more byte safe, version of what's in the if.
-	elseif (isset($callback) || @readfile($filepath) == null)
+	elseif (isset($callback) || @readfile($filename) == null)
 		echo isset($callback) ? $callback(file_get_contents($filename)) : file_get_contents($filename);
 
 	obExit(false);
