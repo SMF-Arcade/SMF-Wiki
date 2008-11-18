@@ -126,7 +126,6 @@ function ViewPageHistory()
 			'previous' => $row['id_prev_revision'],
 			'href' => wiki_get_url(array(
 				'page' => $context['current_page_name'],
-				'sa' => 'diff',
 				'revision' => $row['id_revision'],
 			)),
 			'diff_current_href' => wiki_get_url(array(
