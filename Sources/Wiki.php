@@ -102,8 +102,6 @@ function Wiki($standalone = false)
 	// Load Namespace unless it's Special
 	if ($namespace != 'Special' && $namespace != 'Files' && $namespace != 'Image')
 	{
-		require_once($sourcedir . '/WikiMain.php');
-
 		$request = $smcFunc['db_query']('', '
 			SELECT namespace, ns_prefix, page_header, page_footer, default_page
 			FROM {db_prefix}wiki_namespace
