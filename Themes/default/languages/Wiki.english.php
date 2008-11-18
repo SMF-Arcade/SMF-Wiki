@@ -52,6 +52,7 @@ $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 // Error
 $txt['template_not_found'] = 'Error: Template &quot;%s&quot; not found!';
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
+$txt['wiki_file_not_found'] = 'File was not found.';
 $txt['wiki_namespace_not_found'] = 'There is no namespace &quot;%s&quot; in this wiki .';
 $txt['wiki_action_not_found'] = 'There is no action &quot;%s&quot;';
 $txt['cannot_wiki_edit_current_page'] = 'You are not allowed to this page.';

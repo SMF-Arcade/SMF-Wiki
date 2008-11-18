@@ -27,9 +27,6 @@ function WikiFileView()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
-	if (empty($modSettings['wikiAttachmentsDir']))
-		fatal_lang_error('wiki_file_not_found', false);
-
 	$filepath = $modSettings['wikiAttachmentsDir'] . '/' . $context['current_file']['local_name'];
 
 	// This is logged because it should be there
@@ -50,32 +47,14 @@ function WikiFileView()
 		header('Content-Encoding: none');
 	}
 
-	header('Pragma: ');
-	if (!$context['browser']['is_gecko'])
-		header('Content-Transfer-Encoding: binary');
 	header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 525600 * 60) . ' GMT');
 	header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($filepath)) . ' GMT');
-
-	header('Accept-Ranges: bytes');
-	header('Connection: close');
-	header('Content-Type: application/octet-stream');
 
 	if (!$do_gzip)
 		header('Content-Length: ' . $filesize);
 
 	// Try to buy some time...
 	@set_time_limit(0);
-
-	// For text files.....
-	if (in_array($file_ext, array('txt', 'css', 'htm', 'html', 'php', 'xml')))
-	{
-		if (strpos($_SERVER['HTTP_USER_AGENT'], 'Windows') !== false)
-			$callback = create_function('$buffer', 'return preg_replace(\'~[\r]?\n~\', "\r\n", $buffer);');
-		elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'Mac') !== false)
-			$callback = create_function('$buffer', 'return preg_replace(\'~[\r]?\n~\', "\r", $buffer);');
-		else
-			$callback = create_function('$buffer', 'return preg_replace(\'~\r~\', "\r\n", $buffer);');
-	}
 
 	if (!$do_gzip)
 	{

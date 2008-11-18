@@ -327,6 +327,9 @@ function WikiFiles()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
+	if (empty($modSettings['wikiAttachmentsDir']))
+		fatal_lang_error('wiki_file_not_found', false);
+
 	$context['current_page_name'] = wiki_urlname($_REQUEST['file'], $context['namespace']['id']);
 
 	$subActions = array(
@@ -340,7 +343,7 @@ function WikiFiles()
 		WHERE filename = {string:filename}
 			AND is_current = {int:is_current}',
 		array(
-			'filename' => $_REQUEST['page'],
+			'filename' => $_REQUEST['file'],
 			'is_current' => 1,
 		)
 	);
