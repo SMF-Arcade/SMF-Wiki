@@ -349,7 +349,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 				$para_open = false;
 
-				$i += 2;
+				$i += 1;
 			}
 		}
 		// New Paragraph?
