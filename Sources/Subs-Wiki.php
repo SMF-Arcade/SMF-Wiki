@@ -294,6 +294,20 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		'sections' => array(),
 	);
 
+
+	$message = preg_replace_callback('%{{([a-zA-Z]+(:(.+?))?)}}(<br( />)?)?%', 'wikivariable_callback', $message);
+	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
+
+	if ($parse_bbc)
+		$message = parse_bbc($message);
+
+	$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', 'wiki_image_callback', $message);
+	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
+	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />)|(<!!!>)|(</!!!>)|(<div)|(</div>)%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
+
+	$i = 0;
+
+	$toc = array();
 	$curSection = array(
 		'title' => $page_title,
 		'level' => 1,
@@ -304,19 +318,11 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		)),
 	);
 
-	$message = preg_replace_callback('%{{([a-zA-Z]+(:(.+?))?)}}(<br( />)?)?%', 'wikivariable_callback', $message);
-	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
+	$para_open = false;
+	// Can paragraph be opened?
+	$can_para = true;
 
-	if ($parse_bbc)
-		$message = parse_bbc($message);
-
-	$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', 'wiki_image_callback', $message);
-	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
-	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br />)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
-
-	$i = 0;
-
-	$toc = array();
+	//(print_r($parts));
 
 	while ($i < count($parts))
 	{
@@ -324,8 +330,11 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 		{
 			if (str_replace('=', '', $parts[$i]) == '')
 			{
-				$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
+				if ($para_open)
+					$curSection['content'] .= '</p>';
 				$wikiPageObject['sections'][] = $curSection;
+
+				$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
 
 				$curSection = array(
 					'title' => $parts[$i + 1],
@@ -338,14 +347,63 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 					)),
 				);
 
-				$i += 3;
+				$para_open = false;
+
+				$i += 2;
 			}
 		}
+		// New Paragraph?
+		elseif ($parts[$i] == '<br /><br />')
+		{
+			if ($para_open)
+				$curSection['content'] .= '</p>';
+			$para_open = false;
+		}
+		// Div can't be in paragraph
+		elseif ($parts[$i] == '<div')
+		{
+			if ($para_open)
+				$curSection['content'] .= '</p>';
+			$para_open = false;
 
-		if (!isset($parts[$i]))
-			break;
+			// Don't start new paragraph
+			$can_para = false;
 
-		$curSection['content'] .= $parts[$i];
+			$curSection['content'] .= $parts[$i];
+		}
+		elseif ($parts[$i] == '</div>')
+		{
+			// Now new paragraph can be started again
+			$can_para = true;
+
+			$curSection['content'] .= $parts[$i];
+		}
+		elseif ($parts[$i] == '<!!!>')
+		{
+			if ($para_open)
+				$curSection['content'] .= '</p>';
+			$para_open = false;
+
+			// Don't start new paragraph
+			$can_para = false;
+		}
+		elseif ($parts[$i] == '</!!!>')
+		{
+			// Now new paragraph can be started again
+			$can_para = true;
+		}
+		elseif (!empty($parts[$i]))
+		{
+			// Open new paragraph if one isn't open
+			if (!$para_open && $can_para)
+			{
+				$curSection['content'] .= '<p>';
+				$para_open = true;
+			}
+
+			$curSection['content'] .= $parts[$i];
+		}
+
 		$i++;
 	}
 
@@ -356,6 +414,11 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 	$trees = array();
 
 	$wikiPageObject['toc'] = do_toctable(2, $toc);
+
+	// Close last paragraph
+	if ($para_open)
+		$curSection['content'] .= '</p>';
+
 	$wikiPageObject['sections'][] = $curSection;
 
 	return $wikiPageObject;
