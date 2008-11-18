@@ -100,7 +100,7 @@ function Wiki($standalone = false)
 	$namespace_main = 'WikiMain';
 
 	// Load Namespace unless it's Special
-	if ($namespace != 'Special' && $namespace != 'Files')
+	if ($namespace != 'Special' && $namespace != 'Files' && $namespace != 'Image')
 	{
 		require_once($sourcedir . '/WikiMain.php');
 
@@ -129,12 +129,12 @@ function Wiki($standalone = false)
 			redirectexit($context['namespace']['url']);
 	}
 	// Files Namespace
-	elseif ($namespace == 'Files')
+	elseif ($namespace == 'Files' || $namespace == 'Image')
 	{
 		$context['namespace'] = array(
-			'id' => 'Files',
+			'id' => $namespace,
 			'prefix' => '',
-			'url' => wiki_get_url(wiki_urlname('Index', 'Files')),
+			'url' => wiki_get_url(wiki_urlname('Index', $namespace)),
 		);
 
 		if (empty($page))
@@ -142,8 +142,6 @@ function Wiki($standalone = false)
 
 		$_REQUEST['file'] = $_REQUEST['page'];
 		unset($page, $_REQUEST['page']);
-
-		$context['current_page_name'] = 'Files:' . $_REQUEST['file'];
 
 		$namespace_main = 'WikiFiles';
 	}
@@ -215,6 +213,7 @@ function Wiki($standalone = false)
 	$namespace_main();
 }
 
+// Handles Main namespaces
 function WikiMain()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
@@ -306,12 +305,14 @@ function WikiMain()
 	}
 }
 
+// Handles Special pages (such as RecentChanges)
 function WikiSpecial()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	$specialArray = array(
 		'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
+		'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
 	);
 
 	if (!isset($_REQUEST['special']) || !isset($specialArray[$_REQUEST['special']]))
@@ -321,6 +322,21 @@ function WikiSpecial()
 
 	require_once($sourcedir . '/' . $specialArray[$_REQUEST['special']][0]);
 	$specialArray[$_REQUEST['special']][1]();
+}
+
+// Handles Files namespace
+function WikiFiles()
+{
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+
+	$context['current_page_name'] = wiki_urlname($_REQUEST['file'], $context['namespace']['id']);
+
+	$subActions = array(
+		'list' => array('WikiFiles.php', 'WikiFileList'),
+		'info' => array('WikiFiles.php', 'WikiFileInfo'),
+		'view' => array('WikiFiles.php', 'WikiFileView'),
+	);
+
 }
 
 ?>
