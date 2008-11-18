@@ -72,7 +72,7 @@ function WikiFileView()
 		header('Content-Type: ' . $mime_type);
 	else
 	{
-		header('Content-Type: ' . $context['browser']['is_ie'] || $context['browser']['is_opera'] ? 'application/octetstream' : 'application/octet-stream');
+		//header('Content-Type: ' . $context['browser']['is_ie'] || $context['browser']['is_opera'] ? 'application/octetstream' : 'application/octet-stream');
 		if (isset($_REQUEST['image']))
 			unset($_REQUEST['image']);
 	}

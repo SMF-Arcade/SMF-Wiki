@@ -310,6 +310,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 	if ($parse_bbc)
 		$message = parse_bbc($message);
 
+	$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', 'wiki_image_callback', $message);
 	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
 	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}(<br />)?%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
 
@@ -382,11 +383,64 @@ function wikivariable_callback($groups)
 	return $groups[0];
 }
 
+// Callback for images
+function wiki_image_callback($groups)
+{
+	if (!empty($groups[3]))
+	{
+		$options = explode('|', $groups[3]);
+		$align = '';
+		$size = '';
+		$caption = '';
+		$alt = '';
+
+		// Size
+		if (!empty($options[0]))
+		{
+			if ($options[0] == 'thumb')
+				$size = ' width="180"';
+			elseif (is_numeric($options[0]))
+				$size = ' width="' . $options[0] . '"';
+			elseif (strpos($options[0], 'x') !== false)
+			{
+				list ($width, $height) = explode('x', $options[0], 2);
+
+				if (is_numeric($width) && is_numeric($height))
+				{
+					$size = ' width="' . $width . '" height="' . $height. '"';
+				}
+			}
+		}
+
+		// Align
+		if (!empty($options[1]) && ($options[1] == 'left' || $options[1] == 'right'))
+			$align = $options[1];
+
+		// Alt
+		if (!empty($options[2]))
+			$alt = $options[2];
+
+		// Caption
+		if (!empty($options[3]))
+			$caption = $options[3];
+
+		if (!empty($align) || !empty($caption))
+			$code = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
+
+		$code .= '<a href="' . wiki_get_url(wiki_urlname($groups[1], 'Image')) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1], 'Image'), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
+
+		if (!empty($align) || !empty($caption))
+			$code .= '</div>';
+
+		return $code;
+	}
+
+	return '<a href="' . wiki_get_url(wiki_urlname($groups[1], 'Image')) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1], 'Image'), 'image')) . '" alt="" /></a>';
+}
+
 // Callback for making wikilinks
 function wikilink_callback($groups)
 {
-	global $rep_temp;
-
 	if (empty($groups[3]))
 		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
 	else

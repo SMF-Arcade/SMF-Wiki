@@ -360,7 +360,10 @@ function WikiFiles()
 		'file_ext' => $row['file_ext'],
 	);
 
-	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'info';
+	if (isset($_REQUEST['image']) && empty($_REQUEST['sa']))
+		$_REQUEST['sa'] = 'view';
+	else
+		$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'info';
 
 	require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
 	$subActions[$_REQUEST['sa']][1]();
