@@ -303,7 +303,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 	$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', 'wiki_image_callback', $message);
 	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
-	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />)|(<!!!>)|(</!!!>)|(<div)|(</div>)%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
+	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />)|(<!!!>)|(</!!!>)|(<div|<ul|<table|<code)|(</div>|</ul>|</table>|</code>)%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
 
 	$i = 0;
 
@@ -359,8 +359,8 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 				$curSection['content'] .= '</p>';
 			$para_open = false;
 		}
-		// Div can't be in paragraph
-		elseif ($parts[$i] == '<div')
+		// Block tags can't be in paragraph
+		elseif (in_array($parts[$i], array('<div', '<ul', '<table', '<code')))
 		{
 			if ($para_open)
 				$curSection['content'] .= '</p>';
@@ -371,7 +371,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 			$curSection['content'] .= $parts[$i];
 		}
-		elseif ($parts[$i] == '</div>')
+		elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code')))
 		{
 			// Now new paragraph can be started again
 			$can_para = true;
