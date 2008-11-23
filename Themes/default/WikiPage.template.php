@@ -307,7 +307,7 @@ function template_edit_page()
 				<input type="checkbox" name="lock_page" value="1"', $context['current_page']['is_locked'] ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
 
 			echo '
-				</div>
+			</div>
 		</div>
 
 		<input type="hidden" name="section" value="', $context['edit_section'], '" />
