@@ -62,9 +62,9 @@ function EditPage()
 		}
 	}
 
-	if (isset($_POST['arcontent']))
+	if (isset($_POST['wiki_content']))
 	{
-		$body = $smcFunc['htmlspecialchars']( $_POST['arcontent'], ENT_QUOTES);
+		$body = $smcFunc['htmlspecialchars']( $_POST['wiki_content'], ENT_QUOTES);
 	}
 	else
 		$body = un_preparsecode($body);
@@ -86,7 +86,7 @@ function EditPage()
 		$context['comment'] = $_POST['comment'];
 
 	$editorOptions = array(
-		'id' => 'arcontent',
+		'id' => 'wiki_content',
 		'value' => rtrim($context['form_content']),
 		'labels' => array(
 			'post_button' => $txt['wiki_save'],
@@ -96,7 +96,7 @@ function EditPage()
 	);
 	create_control_richedit($editorOptions);
 
-	$context['post_box_name'] = 'arcontent';
+	$context['post_box_name'] = 'wiki_content';
 
 	// Template
 	loadTemplate('WikiPage', array('article'));
@@ -117,11 +117,11 @@ function EditPage2()
 	require_once($sourcedir . '/Subs-Editor.php');
 	require_once($sourcedir . '/Subs-Post.php');
 
-	if (!empty($_REQUEST['arcontent_mode']) && isset($_REQUEST['arcontent']))
+	if (!empty($_REQUEST['wiki_content_mode']) && isset($_REQUEST['wiki_content']))
 	{
-		$_REQUEST['arcontent'] = html_to_bbc($_REQUEST['arcontent']);
-		$_REQUEST['arcontent'] = un_htmlspecialchars($_REQUEST['arcontent']);
-		$_POST['arcontent'] = $_REQUEST['arcontent'];
+		$_REQUEST['wiki_content'] = html_to_bbc($_REQUEST['wiki_content']);
+		$_REQUEST['wiki_content'] = un_htmlspecialchars($_REQUEST['wiki_content']);
+		$_POST['wiki_content'] = $_REQUEST['wiki_content'];
 	}
 
 	if (isset($_REQUEST['preview']))
@@ -129,16 +129,16 @@ function EditPage2()
 
 	if (checkSession('post', '', false) != '')
 		$post_errors[] = 'session_timeout';
-	if (htmltrim__recursive(htmlspecialchars__recursive($_POST['arcontent'])) == '')
-		$_POST['arcontent'] = '';
+	if (htmltrim__recursive(htmlspecialchars__recursive($_POST['wiki_content'])) == '')
+		$_POST['wiki_content'] = '';
 	else
 	{
-		$_POST['arcontent'] = $smcFunc['htmlspecialchars']($_POST['arcontent'], ENT_QUOTES);
+		$_POST['wiki_content'] = $smcFunc['htmlspecialchars']($_POST['wiki_content'], ENT_QUOTES);
 
 		if (!empty($_REQUEST['section']))
-			$_POST['arcontent'] .= "\n";
+			$_POST['wiki_content'] .= "\n";
 
-		preparsecode($_POST['arcontent']);
+		preparsecode($_POST['wiki_content']);
 	}
 
 	if (!empty($post_errors))
@@ -158,13 +158,13 @@ function EditPage2()
 
 	// Handle sections
 	if (empty($_REQUEST['section']))
-		$body = $_POST['arcontent'];
+		$body = $_POST['wiki_content'];
 	else
 	{
 		$b = wikiparser($context['current_page']['title'], $context['current_page']['body'], false);
 
 		if (!isset($b['sections'][$_REQUEST['section']]))
-			$body = $_POST['arcontent'];
+			$body = $_POST['wiki_content'];
 		else
 		{
 			$body = '';
@@ -176,7 +176,7 @@ function EditPage2()
 				elseif ($id != $_REQUEST['section'])
 					$body .= str_repeat('=', $sect['level']) . ' ' . $sect['title'] . ' ' . str_repeat('=', $sect['level']) . '<br />' . $sect['content'];
 				else
-					$body .= $_POST['arcontent'];
+					$body .= $_POST['wiki_content'];
 			}
 		}
 	}
