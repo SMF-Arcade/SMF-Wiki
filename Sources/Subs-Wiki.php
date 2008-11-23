@@ -303,7 +303,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 	$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', 'wiki_image_callback', $message);
 	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
-	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />)|(<!!!>)|(</!!!>)|(<div|<ul|<table|<code)|(</div>|</ul>|</table>|</code>)%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
+	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />)|(<br />)|(<!!!>)|(</!!!>)|(<div|<ul|<table|<code)|(</div>|</ul>|</table>|</code>)%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
 
 	$i = 0;
 
@@ -378,6 +378,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 
 			$curSection['content'] .= $parts[$i];
 		}
+		// No paragraphs area
 		elseif ($parts[$i] == '<!!!>')
 		{
 			if ($para_open)
@@ -387,10 +388,17 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 			// Don't start new paragraph
 			$can_para = false;
 		}
+		// No paragraphs area
 		elseif ($parts[$i] == '</!!!>')
 		{
 			// Now new paragraph can be started again
 			$can_para = true;
+		}
+		// Avoid starting paragraph with newline
+		elseif ($parts[$i] == '<br />')
+		{
+			if ($para_open || !$can_para)
+				$curSection['content'] .= $parts[$i];
 		}
 		elseif (!empty($parts[$i]))
 		{

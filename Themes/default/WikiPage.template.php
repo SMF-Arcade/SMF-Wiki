@@ -168,7 +168,7 @@ function template_talk_page()
 
 	echo '
 	</div>
-	<form action="', $context['form_url'], '?action=talk2" method="post">';
+	<form action="', $context['form_url'], '" method="post">';
 
 	if (!empty($context['talk_errors']))
 	{
