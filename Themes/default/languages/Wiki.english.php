@@ -36,6 +36,13 @@ $txt['wiki_settings'] = 'Wiki Settings';
 $txt['wiki_admin_title'] = 'Wiki';
 $txt['wiki_admin_desc'] = 'Here you can edit settings of Wiki';
 
+// Admin Information
+$txt['wiki_latest_news'] = 'Latest News';
+$txt['wiki_news_unable_to_connect'] = 'Unable to connect to <a href="http://www.smfarcade.info">SMFArcade.info</a> for latest news...';
+$txt['wiki_version_info'] = 'Version Information';
+$txt['wiki_installed_version'] = 'Installed version';
+$txt['wiki_latest_version'] = 'Latest version';
+
 // Admin Settings
 $txt['wikiEnabled'] = 'Enable Wiki';
 $txt['wiki_standalone_mode'] = 'Standalone Mode';

@@ -6,7 +6,7 @@
 // SMF Wiki
 $txt['wiki'] = 'Wiki';
 $txt['admin_wiki'] = 'Wiki';
-$txt['admin_wiki_main'] = 'Main';
+$txt['admin_wiki_information'] = 'Information';
 $txt['admin_wiki_settings'] = 'Settings';
 
 // Permission Names

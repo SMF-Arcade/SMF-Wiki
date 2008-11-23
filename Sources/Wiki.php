@@ -55,7 +55,7 @@ function loadWiki($mode = '')
 	// Admin Mode
 	elseif ($mode == 'admin')
 	{
-
+		loadTemplate('WikiAdmin');
 	}
 }
 

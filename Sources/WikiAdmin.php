@@ -51,9 +51,11 @@ function WikiAdmin()
 	$subActions[$_REQUEST['sa']][0]();
 }
 
-function WikiAdminMain($return_config = false)
+function WikiAdminMain()
 {
+	global $context, $smcFunc, $sourcedir, $scripturl, $user_info, $txt;
 
+	$context['sub_template'] = 'wiki_admin_main';
 }
 
 function WikiAdminSettings($return_config = false)
