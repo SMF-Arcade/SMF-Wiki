@@ -104,7 +104,7 @@ function ViewTalkPage2()
 		);
 	}
 
-	redirectexit($context['base_url'] . '?action=talk');
+	redirectexit($context['current_page']['url'] . ';sa=talk');
 }
 
 ?>

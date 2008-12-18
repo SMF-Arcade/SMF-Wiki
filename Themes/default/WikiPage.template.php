@@ -203,16 +203,12 @@ function template_recent_changes()
 		echo '
 			<li>
 				<span class="difflinks">
-					(', !$item['current'] ? '<a href="' . $item['diff_current_href'] . '">' . $txt['wiki_diff_cur'] . '</a>' : $txt['wiki_diff_cur'], ')
-					(', !empty($item['previous']) ? '<a href="' . $item['diff_prev_href'] . '">' . $txt['wiki_diff_prev'] . '</a>' : $txt['wiki_diff_prev'], ')
+					(', $item['previous'] ? '<a href="' . $item['diff_href'] . '">' . $txt['wiki_diff_short'] . '</a>' : $txt['wiki_diff_short'], ')
+					(<a href="' . $item['history_href'] . '">', $txt['wiki_history_short'], '</a>)
 				</span>
-				<span class="diffselect">
-					<input type="radio" name="revision" value="', $item['revision'], '" />
-					<input type="radio" name="old_revision" value="', $item['revision'], '" ', $item['current'] ? 'disabled="disabled" ' : '', '/>
-				</span>
-				<span class="date"><a href="', $item['href'], '">', $item['date'], '</a></span>
-				<span class="author">', $item['author']['link'], '</span>
 				<span class="page">', $item['link'], '</span>
+				<span class="author">', $item['author']['link'], '</span>
+				<span class="date">', $item['date'], '</span>
 				<span class="comment">', $item['comment'], '</span>
 			</li>';
 	}
@@ -227,7 +223,7 @@ function template_page_history()
 	global $context, $modSettings, $txt, $user_info;
 
 	echo '
-	<form action="', $context['form_url'], '">
+	<form action="', $context['form_url'], '" method="post">
 		<ul class="wikihistory">';
 
 	foreach ($context['history'] as $item)

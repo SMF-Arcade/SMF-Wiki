@@ -30,6 +30,8 @@ $txt['revision_history'] = 'Revision history of %s';
 $txt['wiki_diff_cur'] = 'cur';
 $txt['wiki_diff_prev'] = 'prev';
 $txt['compare_versions'] = 'Compare Selected Versions';
+$txt['wiki_history_short'] = 'hist';
+$txt['wiki_diff_short'] = 'diff';
 
 // Admin
 $txt['wiki_settings'] = 'Wiki Settings';
@@ -52,6 +54,7 @@ $txt['wikiStandalone_1'] = 'Enabled';
 $txt['wikiStandalone_2'] = 'Enabled (Friendly URLs)';
 $txt['wikiStandaloneUrl'] = 'Standalone URL';
 $txt['wikiTalkBoard'] = 'Talk Board';
+$txt['wikiAttachmentsDir'] = 'File Upload Directory';
 
 // Recent Changes
 $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
@@ -62,6 +65,7 @@ $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
 $txt['wiki_file_not_found'] = 'File was not found.';
 $txt['wiki_namespace_not_found'] = 'There is no namespace &quot;%s&quot; in this wiki .';
 $txt['wiki_action_not_found'] = 'There is no action &quot;%s&quot;';
-$txt['cannot_wiki_edit_current_page'] = 'You are not allowed to this page.';
+$txt['wiki_old_revision_not_selected'] = 'You didn\'t select an old revision.';
+$txt['cannot_wiki_edit_current_page'] = 'You are not allowed to edit this page.';
 
 ?>

@@ -46,6 +46,9 @@ function DiffPage()
 	// This is pretty much duplicate content
 	$context['robot_no_index'] = true;
 
+	if (empty($_REQUEST['old_revision']))
+		fatal_lang_error('wiki_old_revision_not_selected', false);
+
 	if (!empty($_REQUEST['revision']) && $_REQUEST['revision'] < $_REQUEST['old_revision'])
 	{
 		$context['diff_page'] = $context['current_page'];

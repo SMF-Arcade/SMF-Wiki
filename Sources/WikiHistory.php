@@ -61,20 +61,19 @@ function WikiRecentChanges()
 				'link' => '<a href="' . $scripturl . '?action=profile;u=' . $row['id_member'] . '">' . $row['real_name'] . '</a>'
 			),
 			'comment' => $row['comment'],
-			'current' => $row['id_revision'] == $context['current_page']['current_revision'],
 			'previous' => $row['id_prev_revision'],
 			'href' => wiki_get_url(array(
 				'page' => wiki_urlname($row['title'], $row['namespace']),
 				'revision' => $row['id_revision'],
 			)),
-			'diff_current_href' => wiki_get_url(array(
+			'diff_href' => wiki_get_url(array(
 				'page' => wiki_urlname($row['title'], $row['namespace']),
-				'old_revision' => $row['id_revision'],
-			)),
-			'diff_prev_href' => wiki_get_url(array(
-				'page' => wiki_urlname($row['title'], $row['namespace']),
-				'revision' =>  $row['id_revision'],
+				'sa' => 'diff',
 				'old_revision' => $row['id_prev_revision'],
+			)),
+			'history_href' => wiki_get_url(array(
+				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'sa' => 'history',
 			)),
 		);
 	}
