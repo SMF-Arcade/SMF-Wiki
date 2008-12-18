@@ -30,7 +30,7 @@ $build_info = array(
 		'changelog.txt',
 		'modification.xsl' => 'Package/modification.xsl',
 		'package-info.xsl' => 'Package/package-info.xsl',
-		'Themes/default/languages/Modifications.english.php',
+		'extra/Themes/default/languages/Modifications.english.php' => 'Themes/default/languages/Modifications.english.php',
 	),
 );
 
