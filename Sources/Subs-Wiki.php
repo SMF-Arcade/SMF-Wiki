@@ -343,7 +343,7 @@ function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
 					'edit_url' => wiki_get_url(array(
 						'page' => wiki_urlname($page_title, $namespace),
 						'sa' => 'edit',
-						'section' => count($object['sections']),
+						'section' => count($wikiPageObject['sections']),
 					)),
 				);
 
