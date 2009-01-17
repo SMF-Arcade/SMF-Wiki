@@ -28,7 +28,7 @@ function template_wikipage_above()
 	</ul>
 	<div class="wikicontent">
 		<h2>', $context['current_page_title'], '</h2>
-		<div class="post">';
+		<div class="post" style="clear: right;"><div class="inner">';
 }
 
 function output_toc($baseurl, $blevel, $toc)
@@ -324,7 +324,7 @@ function template_wikipage_below()
 	global $context, $modSettings, $txt, $user_info;
 
 	echo '
-		</div>
+		</div></div>
 	</div>';
 }
 

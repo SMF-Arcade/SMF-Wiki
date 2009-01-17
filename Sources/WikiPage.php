@@ -29,8 +29,8 @@ function ViewPage()
 
 	$context['page_content'] = wikiparser($context['current_page']['title'], $context['current_page']['body'], true, $context['current_page']['namespace']);
 
-	// Don't index older versions please
-	if (!$context['current_page']['is_current'])
+	// Don't index older versions please or links to ceratin version
+	if (!$context['current_page']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
 		$context['robot_no_index'] = true;
 
 	// Template

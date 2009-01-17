@@ -114,12 +114,16 @@ ul.wikimenu li
 	height: 1.4em;
 	margin-bottom: -1.8em;
 }
+.wikicontent p
+{
+	margin: 8px 0 8px 0;
+}
 
 .post h3, h4, h5, h6
 {
 	clear: both;
 	margin-top: 9px;
-	margin-bottom: 7px;
+	margin-bottom: 9px;
 }
 .post h3
 {
