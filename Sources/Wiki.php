@@ -99,59 +99,43 @@ function Wiki($standalone = false)
 
 	$namespace_main = 'WikiMain';
 
-	// Load Namespace unless it's Special
-	if ($namespace != 'Special' && $namespace != 'Files' && $namespace != 'Image')
-	{
-		$request = $smcFunc['db_query']('', '
-			SELECT namespace, ns_prefix, page_header, page_footer, default_page
-			FROM {db_prefix}wiki_namespace
-			WHERE namespace = {string:namespace}',
-			array(
-				'namespace' => $namespace,
-			)
-		);
+	// Load Namespace
+	$request = $smcFunc['db_query']('', '
+		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
+		FROM {db_prefix}wiki_namespace
+		WHERE namespace = {string:namespace}',
+		array(
+			'namespace' => $namespace,
+		)
+	);
 
-		$row = $smcFunc['db_fetch_assoc']($request);
-		$smcFunc['db_free_result']($request);
+	$row = $smcFunc['db_fetch_assoc']($request);
+	$smcFunc['db_free_result']($request);
 
-		if (!$row)
-			fatal_lang_error('wiki_namespace_not_found', false, array(read_urlname($namespace)));
+	if (!$row)
+		fatal_lang_error('wiki_namespace_not_found', false, array(read_urlname($namespace)));
 
-		$context['namespace'] = array(
-			'id' => $row['namespace'],
-			'prefix' => $row['ns_prefix'],
-			'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
-		);
+	$context['namespace'] = array(
+		'id' => $row['namespace'],
+		'prefix' => $row['ns_prefix'],
+		'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
+		'type' => $row['namespace_type'],
+	);
 
-		if (empty($page))
-			redirectexit($context['namespace']['url']);
-	}
+	if (empty($page))
+		redirectexit($context['namespace']['url']);
+
 	// Files Namespace
-	elseif ($namespace == 'Files' || $namespace == 'Image')
+	if ($context['namespace']['type'] == 2 || $context['namespace']['type'] == 3)
 	{
-		$context['namespace'] = array(
-			'id' => $namespace,
-			'prefix' => '',
-			'url' => wiki_get_url(wiki_urlname('Special', 'Files')),
-		);
-
-		if (empty($page))
-			redirectexit($context['namespace']['url']);
-
 		$_REQUEST['file'] = $_REQUEST['page'];
 		unset($page, $_REQUEST['page']);
 
 		$namespace_main = 'WikiFiles';
 	}
 	// Special Namespace
-	elseif ($namespace == 'Special')
+	elseif ($context['namespace']['type'] == 1)
 	{
-		$context['namespace'] = array(
-			'id' => 'Special',
-			'prefix' => '',
-			'url' => wiki_get_url(wiki_urlname('Index', 'Special')),
-		);
-
 		if (strpos($_REQUEST['page'], '/'))
 			list ($_REQUEST['special'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
 		else
@@ -187,7 +171,7 @@ function Wiki($standalone = false)
 
 		// Name of current page
 		$context['current_page_name'] = $context['current_page']['name'];
-		
+
 		if ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
 			redirectexit(wiki_get_url($context['current_page_name']));
 

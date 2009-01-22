@@ -89,6 +89,12 @@ $tables = array(
 				'size' => '255',
 				'default' => 'Index',
 			),
+			array(
+				'name' => 'namespace_type',
+				'type' => 'int',
+				'auto' => true,
+				'unsigned' => true,
+			),
 		),
 		'indexes' => array(
 			array(
@@ -439,6 +445,7 @@ function installDefaultData($forced = false)
 			'page_header' => 'string',
 			'page_footer' => 'string',
 			'default_page' => 'string',
+			'namespace_type' => 'int',
 		),
 		array(
 			array(
@@ -447,6 +454,7 @@ function installDefaultData($forced = false)
 				'',
 				'',
 				'Main_Page',
+				0,
 			),
 			array(
 				'Template',
@@ -454,6 +462,31 @@ function installDefaultData($forced = false)
 				'',
 				'',
 				'Index',
+				0,
+			),
+			array(
+				'Special',
+				'',
+				'',
+				'',
+				'',
+				1,
+			),
+			array(
+				'Files',
+				'',
+				'',
+				'',
+				'',
+				2,
+			),
+			array(
+				'Image',
+				'',
+				'',
+				'',
+				'',
+				3,
 			),
 		),
 		array('namespace')

@@ -25,7 +25,7 @@ if (!defined('SMF'))
 
 function WikiFileView()
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc;
 
 	$context['no_last_modified'] = true;
 
@@ -114,6 +114,14 @@ function WikiFileView()
 		echo isset($callback) ? $callback(file_get_contents($filename)) : file_get_contents($filename);
 
 	obExit(false);
+}
+
+function WikiFileUpload()
+{
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc;
+
+	loadTemplate('WikiFiles');
+	$context['sub_template'] = 'wiki_file_upload';
 }
 
 ?>
