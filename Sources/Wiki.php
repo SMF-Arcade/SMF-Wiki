@@ -97,8 +97,6 @@ function Wiki($standalone = false)
 		}
 	}
 
-	$namespace_main = 'WikiMain';
-
 	// Load Namespace
 	$request = $smcFunc['db_query']('', '
 		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
@@ -122,77 +120,33 @@ function Wiki($standalone = false)
 		'type' => $row['namespace_type'],
 	);
 
-	if (empty($page))
-		redirectexit($context['namespace']['url']);
-
-	// Files Namespace
-	if ($context['namespace']['type'] == 2 || $context['namespace']['type'] == 3)
-	{
-		$_REQUEST['file'] = $_REQUEST['page'];
-		unset($page, $_REQUEST['page']);
-
-		$namespace_main = 'WikiFiles';
-	}
-	// Special Namespace
-	elseif ($context['namespace']['type'] == 1)
-	{
-		if (strpos($_REQUEST['page'], '/'))
-			list ($_REQUEST['special'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
-		else
-		{
-			$_REQUEST['special'] = $_REQUEST['page'];
-			$_REQUEST['sub_page'] = '';
-		}
-
-		$namespace_main = 'WikiSpecial';
-	}
-
-	// Load current page if needed
-	if (!empty($page))
-	{
-		$context['current_page'] = loadWikiPage($page, $namespace, isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
-
-		// Not found
-		if (!$context['current_page'])
-		{
-			$page_found = false;
-
-			$context['current_page'] = array(
-				'title' => read_urlname($_REQUEST['page'], true),
-				'name' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
-				'is_locked' => false,
-				'content' => '',
-				'found' => false,
-			);
-		}
-
-		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['current_page']['is_locked']);
-		$context['can_lock_page'] = allowedTo('wiki_admin');
-
-		// Name of current page
-		$context['current_page_name'] = $context['current_page']['name'];
-
-		if ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
-			redirectexit(wiki_get_url($context['current_page_name']));
-
-		// Base array for calling wiki_get_url for this page
-		$context['wiki_url'] = array(
-			'page' => $context['current_page_name'],
-			'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
-		);
-
-		$context['current_page']['url'] = wiki_get_url($context['wiki_url']);
-	}
-
+	// Add namespace to linktree if necassary
 	if (!empty($context['namespace']['prefix']))
-	{
 		$context['linktree'][] = array(
 			'url' =>  $context['namespace']['url'],
 			'name' => $context['namespace']['prefix'],
 		);
-	}
 
-	$namespace_main();
+	if (empty($page))
+		redirectexit($context['namespace']['url']);
+
+	// Default page
+	$context['current_page'] = array(
+		'title' => read_urlname($_REQUEST['page'], true),
+		'name' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
+		'is_locked' => false,
+		'content' => '',
+	);
+
+	// Main Namesapce
+	if ($context['namespace']['type'] == 0)
+		WikiMain();
+	// Special Namespace
+	elseif ($context['namespace']['type'] == 1)
+		WikiSpecial();
+	// Files Namespace
+	elseif ($context['namespace']['type'] == 2 || $context['namespace']['type'] == 3)
+		WikiFiles();
 }
 
 // Handles Main namespaces
@@ -200,8 +154,39 @@ function WikiMain()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
-	// Load page
-	$page_found = !empty($context['current_page']['found']);
+	$page_found = true;
+
+	$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : 0);
+
+	// Not found
+	if (!$context['current_page'])
+	{
+		$page_found = false;
+
+		$context['current_page'] = array(
+			'title' => read_urlname($_REQUEST['page'], true),
+			'name' => wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']),
+			'is_locked' => false,
+			'content' => '',
+		);
+	}
+
+	$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['current_page']['is_locked']);
+	$context['can_lock_page'] = allowedTo('wiki_admin');
+
+	// Name of current page
+	$context['current_page_name'] = $context['current_page']['name'];
+
+	if ($context['current_page']['name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
+		redirectexit(wiki_get_url($context['current_page_name']));
+
+	// Base array for calling wiki_get_url for this page
+	$context['wiki_url'] = array(
+		'page' => $context['current_page_name'],
+		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
+	);
+
+	$context['current_page']['url'] = wiki_get_url($context['wiki_url']);
 
 	$subActions = array(
 		'view' => array('WikiPage.php', 'ViewPage'),
@@ -292,6 +277,14 @@ function WikiSpecial()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
+	if (strpos($_REQUEST['page'], '/'))
+		list ($_REQUEST['special'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
+	else
+	{
+		$_REQUEST['special'] = $_REQUEST['page'];
+		$_REQUEST['sub_page'] = '';
+	}
+
 	$specialArray = array(
 		'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
 		'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
@@ -313,6 +306,9 @@ function WikiFiles()
 
 	if (empty($modSettings['wikiAttachmentsDir']))
 		fatal_lang_error('wiki_file_not_found', false);
+
+	$_REQUEST['file'] = $_REQUEST['page'];
+	unset($page, $_REQUEST['page']);
 
 	$context['current_page_name'] = wiki_urlname($_REQUEST['file'], $context['namespace']['id']);
 
