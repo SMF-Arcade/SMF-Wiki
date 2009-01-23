@@ -92,7 +92,6 @@ $tables = array(
 			array(
 				'name' => 'namespace_type',
 				'type' => 'int',
-				'auto' => true,
 				'unsigned' => true,
 			),
 		),
