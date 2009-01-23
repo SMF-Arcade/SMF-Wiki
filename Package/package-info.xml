@@ -41,6 +41,7 @@
 		<!-- These files goest to Theme directory -->
 		<require-file name="Themes/default/Wiki.template.php" destination="$themedir" />
 		<require-file name="Themes/default/WikiAdmin.template.php" destination="$themedir" />
+		<require-file name="Themes/default/WikiFiles.template.php" destination="$themedir" />
 		<require-file name="Themes/default/WikiPage.template.php" destination="$themedir" />
 
 		<!-- CSS -->
@@ -74,6 +75,7 @@
 		<!-- Templates -->
 		<remove-file name="$themedir/Wiki.template.php" />
 		<remove-file name="$themedir/WikiAdmin.template.php" />
+		<remove-file name="$themedir/WikiFiles.template.php" />
 		<remove-file name="$themedir/WikiPage.template.php" />
 
 		<!-- CSS -->

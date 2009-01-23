@@ -72,6 +72,7 @@
 			<add><![CDATA[
 			'wiki_access' => array(false, 'wiki', 'wiki'),
 			'wiki_edit' => array(false, 'wiki', 'wiki'),
+			'wiki_upload' => array(false, 'wiki', 'wiki'),
 			'wiki_delete' => array(false, 'wiki', 'administrate'),
 			'wiki_admin' => array(false, 'wiki', 'administrate'),]]></add>
 		</operation>

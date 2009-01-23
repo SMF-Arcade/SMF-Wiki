@@ -3,7 +3,7 @@
 
 function template_wikipage_above()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	echo '
 	<ul class="wikimenu">';
@@ -33,7 +33,7 @@ function template_wikipage_above()
 
 function output_toc($baseurl, $blevel, $toc)
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	foreach ($toc as $x)
 	{
@@ -60,7 +60,7 @@ function output_toc($baseurl, $blevel, $toc)
 
 function template_view_page()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	if (isset($context['diff']))
 	{
@@ -102,7 +102,7 @@ function template_view_page()
 
 function template_wiki_content()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	foreach ($context['page_content']['sections'] as $section)
 	{
@@ -134,16 +134,13 @@ function template_wiki_content()
 			</h6>';
 		}
 
-		if ($section['level'] == 1)
-		{
-			if (!empty($context['page_content']['toc']))
-				echo '
+		if ($section['level'] == 1 && !empty($context['page_content']['toc']))
+			echo '
 			<div class="wikitoc floatright">
 				<ul>',
 					output_toc($context['current_page']['url'], '', $context['page_content']['toc']), '
 				</ul>
 			</div>';
-		}
 
 		echo '
 			', $section['content'];
@@ -152,7 +149,7 @@ function template_wiki_content()
 
 function template_talk_page()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	echo '
 	<div style="width: 90%; text-align; center; margin: auto;">';
@@ -192,7 +189,7 @@ function template_talk_page()
 
 function template_recent_changes()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	echo '
 	<form action="', $context['form_url'], '">
@@ -220,7 +217,7 @@ function template_recent_changes()
 
 function template_page_history()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $modSettings, $txt;
 
 	echo '
 	<form action="', $context['form_url'], '" method="post">
@@ -313,7 +310,7 @@ function template_edit_page()
 
 function template_not_found()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $txt;
 
 	echo '
 			', $txt['wiki_page_not_found'], '';
@@ -321,7 +318,7 @@ function template_not_found()
 
 function template_wikipage_below()
 {
-	global $context, $modSettings, $txt, $user_info;
+	global $context, $txt;
 
 	echo '
 		</div></div>

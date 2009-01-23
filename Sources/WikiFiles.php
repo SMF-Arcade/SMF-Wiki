@@ -120,6 +120,13 @@ function WikiFileUpload()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc;
 
+	isAllowedTo('wiki_upload');
+
+	if (isset($_POST['submit_upload']))
+	{
+
+	}
+
 	loadTemplate('WikiFiles');
 	$context['sub_template'] = 'wiki_file_upload';
 }
