@@ -468,7 +468,7 @@ function installDefaultData($forced = false)
 				'',
 				'',
 				'',
-				'',
+				'List',
 				1,
 			),
 			array(
@@ -476,7 +476,7 @@ function installDefaultData($forced = false)
 				'',
 				'',
 				'',
-				'',
+				'List',
 				2,
 			),
 			array(
@@ -484,7 +484,7 @@ function installDefaultData($forced = false)
 				'',
 				'',
 				'',
-				'',
+				'List',
 				3,
 			),
 		),
