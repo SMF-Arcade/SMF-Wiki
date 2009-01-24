@@ -209,7 +209,6 @@ function loadWikiPage()
 	}
 	$smcFunc['db_free_result']($request);
 
-
 	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $row['id_revision_current'];
 
 	$context['page_info'] = array(
@@ -224,6 +223,8 @@ function loadWikiPage()
 		'current_revision' => $row['id_revision_current'],
 		'variables' => array()
 	);
+
+	$id_file = $row['id_file'];
 
 	// Load content itself
 	// TODO: This might need caching?
@@ -250,6 +251,38 @@ function loadWikiPage()
 
 	$context['page_content_raw'] = $row['content'];
 	$context['page_content'] = wikiparser($context['page_info']['title'], $context['page_content_raw'], true, $context['namespace']['id']);
+
+	// Is there file attached to this page?
+	if (!empty($id_file))
+	{
+		$request = $smcFunc['db_query']('', '
+			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
+			FROM {db_prefix}wiki_files
+			WHERE id_file = {int:file}
+				AND is_current = {int:is_current}',
+			array(
+				'file' => $id_file,
+				'is_current' => 1,
+			)
+		);
+
+		$row = $smcFunc['db_fetch_assoc']($request);
+		$smcFunc['db_free_result']($request);
+
+		if (!$row)
+			fatal_lang_error('wiki_file_not_found', false);
+
+		$context['current_file'] = array(
+			'local_name' => $row['localname'],
+			'mime_type' => $row['mime_type'],
+			'file_ext' => $row['file_ext'],
+			'time' => timeformat($row['timestamp']),
+			'filesize' => $row['filesize'] / 1024,
+			'width' => $row['img_width'],
+			'height' => $row['img_height'],
+			'is_image' => !empty($row['mime_type']),
+		);
+	}
 
 	// Don't index older versions please or links to certain version
 	if (!$context['page_info']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
@@ -314,7 +347,7 @@ function read_urlname($url)
 }
 
 // Makes link from page title and namespace
-function wiki_urlname($page, $namespace = null)
+function wiki_urlname($page, $namespace = null, $clean = true)
 {
 	global $smcFunc;
 
@@ -326,8 +359,11 @@ function wiki_urlname($page, $namespace = null)
 			$namespace = '';
 	}
 
-	$namespace = clean_pagename($namespace, true);
-	$page = clean_pagename($page);
+	if ($clean)
+	{
+		$namespace = clean_pagename($namespace, true);
+		$page = clean_pagename($page);
+	}
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }

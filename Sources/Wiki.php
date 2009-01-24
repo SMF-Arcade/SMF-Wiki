@@ -72,15 +72,7 @@ function Wiki($standalone = false)
 	else
 		$_REQUEST['namespace'] = '';
 
-	$namespace = clean_pagename($_REQUEST['namespace'], true);
-	$page = clean_pagename($_REQUEST['page']);
-
-	$context['current_page_name'] = wiki_urlname($page, $namespace);
-
-	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
-		redirectexit(wiki_get_url($context['current_page_name']));
-
-	unset($namespace, $page);
+	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'], false);
 
 	loadNamespace();
 
@@ -90,7 +82,7 @@ function Wiki($standalone = false)
 	// Subactions
 	$subActions = array(
 		'normal' => array(
-			// action => array(file, function, [requires existing page])
+			// action => array(file, function, [requires existing page], [requires file])
 			'view' => array('WikiPage.php', 'ViewPage'),
 			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
 			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
@@ -98,8 +90,7 @@ function Wiki($standalone = false)
 			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
 			'edit' => array('WikiEditPage.php', 'EditPage'),
 			'edit2' => array('WikiEditPage.php', 'EditPage2'),
-			'file_info' => array('WikiFiles.php', 'WikiFileInfo'),
-			'file_view' => array('WikiFiles.php', 'WikiFileView'),
+			'download' => array('WikiFiles.php', 'WikiFileView', true, true),
 		),
 		// Special Pages
 		'special' => array(
@@ -119,6 +110,13 @@ function Wiki($standalone = false)
 		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
 		if ($context['page_info']['id'] === null && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][2]))
 			$_REQUEST['sa'] = 'view';
+		// Don't allow file actions on plain pages
+		elseif (!isset($context['current_file']) && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][3]))
+			$_REQUEST['sa'] = 'view';
+
+		// Download image if asked to
+		if (isset($context['current_file']) && $context['current_file']['is_image'] && isset($_REQUEST['image']))
+			$_REQUEST['sa'] = 'download';
 
 		$subaction = $_REQUEST['sa'];
 
@@ -185,6 +183,7 @@ function Wiki($standalone = false)
 	else
 	{
 		$namespaceGroup = 'special';
+		$pageName =  wiki_urlname($_REQUEST['page'], $context['namespace']['id']);
 
 		if (strpos($_REQUEST['page'], '/'))
 			list ($_REQUEST['page'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
@@ -196,10 +195,22 @@ function Wiki($standalone = false)
 		$context['page_info'] = array(
 			'id' => null,
 			'title' => read_urlname($_REQUEST['page'], true),
-			'name' => wiki_urlname($_REQUEST['page'], $context['namespace']['id']),
+			'name' => $pageName,
 			'namespace' => $context['namespace']['id'],
 			'is_locked' => false,
 		);
+	}
+
+	// Redirect to page if needed
+	if ($context['current_page_name'] != $context['page_info']['name'])
+	{
+		$newUrl = array('page' => $context['page_info']['name']);
+
+		if (isset($_GET['image']))
+			$newUrl[] = 'image';
+		if (isset($_GET['sa']))
+			$newUrl['sa'] = $_GET['sa'];
+		redirectexit(wiki_get_url($newUrl));
 	}
 
 	// Name of current page
@@ -210,12 +221,7 @@ function Wiki($standalone = false)
 		'page' => $context['current_page_name'],
 		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
 	);
-
 	$context['current_page_url'] = wiki_get_url($context['wiki_url']);
-
-	// Redirect to correct case if needed
-	if ($context['current_page_name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
-		redirectexit($context['current_page_url']);
 
 	// Load Navigation
 	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
@@ -246,46 +252,5 @@ function Wiki($standalone = false)
 	require_once($sourcedir . '/' . $subActions[$namespaceGroup][$subaction][0]);
 	$subActions[$namespaceGroup][$subaction][1]();
 }
-
-// Handles Files namespace
-/*
-function WikiFiles()
-{
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
-
-	if (empty($modSettings['wikiAttachmentsDir']))
-		fatal_lang_error('wiki_file_not_found', false);
-
-	$request = $smcFunc['db_query']('', '
-		SELECT localname, mime_type, file_ext
-		FROM {db_prefix}wiki_files
-		WHERE filename = {string:filename}
-			AND is_current = {int:is_current}',
-		array(
-			'filename' => $_REQUEST['file'],
-			'is_current' => 1,
-		)
-	);
-
-	$row = $smcFunc['db_fetch_assoc']($request);
-	$smcFunc['db_free_result']($request);
-
-	if (!$row)
-		fatal_lang_error('wiki_file_not_found', false);
-
-	$context['current_file'] = array(
-		'local_name' => $row['localname'],
-		'mime_type' => $row['mime_type'],
-		'file_ext' => $row['file_ext'],
-	);
-
-	if (isset($_REQUEST['image']) && empty($_REQUEST['sa']))
-		$_REQUEST['sa'] = 'view';
-	else
-		$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'info';
-
-	require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
-	$subActions[$_REQUEST['sa']][1]();
-}*/
 
 ?>

@@ -140,12 +140,14 @@ function WikiFileUpload()
 
 		move_uploaded_file($_FILES['file']['tmp_name'], $modSettings['wikiAttachmentsDir'] . '/' . $tempName);
 
-		if ($imageSize = getimagesize($modSettings['wikiAttachmentsDir'] . '/' . $tempName) && !empty($imageSize[0]))
+		$imageSize = getimagesize($modSettings['wikiAttachmentsDir'] . '/' . $tempName);
+
+		if ($imageSize)
 			$isImage = true;
 
 		$fileName = clean_pagename($_FILES['file']['name']);
 
-		$namespace = $isImage ? $context['namespace_files'] : $context['namespace_images'];
+		$namespace = !$isImage ? $context['namespace_files'] : $context['namespace_images'];
 
 		$request = $smcFunc['db_query']('', '
 			SELECT id_file

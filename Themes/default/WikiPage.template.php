@@ -142,6 +142,11 @@ function template_wiki_content()
 				</ul>
 			</div>';
 
+		if ($section['level'] == 1 && isset($context['current_file']))
+		{
+			print_r($context['current_file']);
+		}
+
 		echo '
 			', $section['content'];
 	}
