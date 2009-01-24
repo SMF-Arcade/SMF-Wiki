@@ -181,7 +181,7 @@ function EditPage2()
 		}
 	}
 
-	if (!$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace']))
+	if ($context['current_page']['id'] === null)
 	{
 		$smcFunc['db_insert']('insert',
 			'{db_prefix}wiki_pages',
@@ -191,14 +191,12 @@ function EditPage2()
 			),
 			array(
 				$_REQUEST['page'],
-				$_REQUEST['namespace'],
+				$context['current_page']['namespace'],
 			),
 			array('id_page')
 		);
 
-		$context['current_page'] = array(
-			'id' => $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article')
-		);
+		$context['current_page']['id'] = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
 	}
 
 	preparsecode($_POST['comment']);

@@ -124,7 +124,7 @@ function WikiFileUpload()
 
 	if (isset($_POST['submit_upload']))
 	{
-
+		
 	}
 
 	loadTemplate('WikiFiles');

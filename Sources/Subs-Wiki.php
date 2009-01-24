@@ -135,7 +135,7 @@ function loadWikiPage($name, $namespace = '', $revision = null)
 
 	$request = $smcFunc['db_query']('', '
 		SELECT info.id_page, info.title, info.namespace, con.content, info.id_revision_current, con.id_revision,
-			info.id_topic, info.is_locked
+			info.id_topic, info.is_locked, info.id_file
 		FROM {db_prefix}wiki_pages AS info
 			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = {raw:revision}
 				AND con.id_page = info.id_page)
@@ -175,7 +175,6 @@ function loadWikiPage($name, $namespace = '', $revision = null)
 		'current_revision' => $row['id_revision_current'],
 		'body' => $row['content'],
 		'variables' => $variables,
-		'found' => true,
 	);
 }
 

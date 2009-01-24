@@ -148,6 +148,12 @@ $tables = array(
 				'default' => 0,
 				'unsigned' => true,
 			),
+			array(
+				'name' => 'id_file',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
 		),
 		'indexes' => array(
 			array(
@@ -257,6 +263,10 @@ $tables = array(
 				'type' => 'int',
 				'default' => 0,
 				'unsigned' => true,
+			),
+			array(
+				'name' => 'description',
+				'type' => 'text',
 			),
 		),
 		'indexes' => array(

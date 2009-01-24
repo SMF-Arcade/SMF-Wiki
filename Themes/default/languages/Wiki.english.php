@@ -33,6 +33,11 @@ $txt['compare_versions'] = 'Compare Selected Versions';
 $txt['wiki_history_short'] = 'hist';
 $txt['wiki_diff_short'] = 'diff';
 
+// File upload
+$txt['wiki_upload_file'] = 'Upload file';
+$txt['wiki_upload_button'] = 'Upload file';
+$txt['file_description'] = 'Description';
+
 // Admin
 $txt['wiki_settings'] = 'Wiki Settings';
 $txt['wiki_admin_title'] = 'Wiki';

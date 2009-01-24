@@ -104,7 +104,7 @@ function ViewTalkPage2()
 		);
 	}
 
-	redirectexit($context['current_page']['url'] . ';sa=talk');
+	redirectexit(wiki_get_url(array('page' => $context['current_page']['name'], 'sa' => 'talk')));
 }
 
 ?>
