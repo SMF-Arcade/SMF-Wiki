@@ -5,9 +5,18 @@ SMF Wiki 0.1                                                                   ?
 ================================================================================
 January 2009
 --------------------------------------------------------------------------------
+ + Many code improvements
 
 December 2008
 --------------------------------------------------------------------------------
+ ! Missing language string 'wikiAttachmentsDir'
+ ! Language string typo 'cannot_wiki_edit_current_page'
+ ! Talk form redirecting wrong url
+ ! "method" attribute missing for form in page history
+ ! Error caused when old revision is not selected
+ * Some tweaks to the Special:RecentChanges
+ ! url to edit section was wrong
+ ! Redirect was broken
 
 November 2008
 --------------------------------------------------------------------------------
