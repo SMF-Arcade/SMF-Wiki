@@ -89,25 +89,6 @@ function Wiki($standalone = false)
 	if (empty($_REQUEST['page']))
 		redirectexit($context['namespace']['url']);
 
-	// Subactions
-	$subActions = array(
-		'normal' => array(
-			// action => array(file, function, [requires existing page])
-			'view' => array('WikiPage.php', 'ViewPage'),
-			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
-			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
-			'diff' => array('WikiPage.php', 'DiffPage', true),
-			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
-			'edit' => array('WikiEditPage.php', 'EditPage'),
-			'edit2' => array('WikiEditPage.php', 'EditPage2'),
-		),
-		// Special Pages
-		'special' => array(
-			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
-			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
-		)
-	);
-
 	// Load Page info if namesapce isn't "Special" namespace
 	if ($context['namespace']['type'] != 1)
 		loadWikiPage();
@@ -120,9 +101,6 @@ function Wiki($standalone = false)
 			'namespace' => $context['namespace']['id'],
 			'is_locked' => false,
 		);
-
-	$namespaceGroup = $context['namespace']['type'] != 1 ? 'normal' : 'special';
-	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
 	// Name of current page
 	$context['current_page_name'] = $context['page_info']['name'];
@@ -160,6 +138,28 @@ function Wiki($standalone = false)
 	else
 		WikiSpecial();
 
+	// Subactions
+	$subActions = array(
+		'normal' => array(
+			// action => array(file, function, [requires existing page])
+			'view' => array('WikiPage.php', 'ViewPage'),
+			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
+			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
+			'diff' => array('WikiPage.php', 'DiffPage', true),
+			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
+			'edit' => array('WikiEditPage.php', 'EditPage'),
+			'edit2' => array('WikiEditPage.php', 'EditPage2'),
+		),
+		// Special Pages
+		'special' => array(
+			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
+			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
+		)
+	);
+
+	$namespaceGroup = $context['namespace']['type'] != 1 ? 'normal' : 'special';
+	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+
 	// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
 	if ($context['page_info']['id'] === null && $namespaceGroup == 'normal' && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][2]))
 		$_REQUEST['sa'] = 'view';
@@ -179,6 +179,9 @@ function WikiMain()
 	// Don't let anyone create page if it's not "normal" page (ie. file)
 	if ($context['namespace']['type'] != 0 && $context['page_info']['id'] === null)
 		$context['can_edit_page'] = false;
+
+	if ($_REQUEST['sa'] == 'edit' || $_REQUEST['sa'] == 'edit2')
+		unset($context['page_content']);
 
 	if ($_REQUEST['sa'] == 'edit2' && isset($_POST['wiki_content']))
 	{
@@ -253,15 +256,7 @@ function WikiSpecial()
 		$_REQUEST['sub_page'] = '';
 	}
 
-	$specialArray = array(
-
-	);
-
-	if (!isset($_REQUEST['special']) || !isset($specialArray[$_REQUEST['special']]))
-		fatal_lang_error('wiki_action_not_found', false, array($_REQUEST['special']));
-
-	require_once($sourcedir . '/' . $specialArray[$_REQUEST['special']][0]);
-	$specialArray[$_REQUEST['special']][1]();
+	$_REQUEST['sa'] = &$_REQUEST['special'];
 }
 
 // Handles Files namespace

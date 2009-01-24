@@ -12,10 +12,10 @@ function template_wiki_file_upload()
 			<div class="windowbg2 smallpadding">
 				<table cellpadding="4" width="100%">
 					<tr>
-						<td align="right" width="50%"></td>
+						<td align="right" width="25%"></td>
 						<td><input type="file" size="48" name="file" /></td>
 					</tr><tr>
-						<td align="right" width="50%">', $txt['file_description'], '</td>
+						<td align="right" width="25%">', $txt['file_description'], '</td>
 						<td><textarea name="description"></textarea></td>
 					</tr>
 				</table>
