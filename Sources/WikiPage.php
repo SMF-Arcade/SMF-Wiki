@@ -27,8 +27,16 @@ function ViewPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
-	// Template
-	$context['sub_template'] = 'view_page';
+	// Show error page if not found
+	if ($context['page_info']['id'] === null)
+	{
+		$context['robot_no_index'] = true;
+		$context['sub_template'] = 'not_found';
+	}
+	else
+	{
+		$context['sub_template'] = 'view_page';
+	}
 }
 
 function DiffPage()

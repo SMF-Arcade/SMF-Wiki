@@ -228,10 +228,10 @@ function loadWikiPage()
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 		fatal_lang_error('wiki_invalid_revision');
 
-	$context['page_info']['vriables'] = wikiparse_variables($row['content']);
+	$context['page_info']['variables'] = wikiparse_variables($row['content']);
 
-	if (!empty($context['page_info']['title']))
-		$context['page_info']['title'] = $context['page_info']['title'];
+	if (!empty($context['page_info']['variables']['title']))
+		$context['page_info']['title'] = $context['page_info']['variables']['title'];
 
 	$context['page_content_raw'] = $row['content'];
 	$context['page_content'] = wikiparser($context['page_info']['title'], $context['page_content_raw'], true, $context['namespace']['id']);

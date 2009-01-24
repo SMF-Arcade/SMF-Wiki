@@ -89,6 +89,25 @@ function Wiki($standalone = false)
 	if (empty($_REQUEST['page']))
 		redirectexit($context['namespace']['url']);
 
+	// Subactions
+	$subActions = array(
+		'normal' => array(
+			// action => array(file, function, [requires existing page])
+			'view' => array('WikiPage.php', 'ViewPage'),
+			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
+			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
+			'diff' => array('WikiPage.php', 'DiffPage', true),
+			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
+			'edit' => array('WikiEditPage.php', 'EditPage'),
+			'edit2' => array('WikiEditPage.php', 'EditPage2'),
+		),
+		// Special Pages
+		'special' => array(
+			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
+			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
+		)
+	);
+
 	// Load Page info if namesapce isn't "Special" namespace
 	if ($context['namespace']['type'] != 1)
 		loadWikiPage();
@@ -102,6 +121,9 @@ function Wiki($standalone = false)
 			'is_locked' => false,
 		);
 
+	$namespaceGroup = $context['namespace']['type'] != 1 ? 'normal' : 'special';
+	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+
 	// Name of current page
 	$context['current_page_name'] = $context['page_info']['name'];
 
@@ -113,12 +135,14 @@ function Wiki($standalone = false)
 
 	$context['current_page_url'] = wiki_get_url($context['wiki_url']);
 
+	// Redirect to correct case if needed
 	if ($context['current_page_name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
 		redirectexit($context['current_page_url']);
 
 	// Load Navigation
 	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
 
+	// Highlight current section
 	foreach ($context['wiki_navigation'] as $id => $grp)
 	{
 		if ($grp['page'] == $context['current_page_name'])
@@ -135,6 +159,13 @@ function Wiki($standalone = false)
 		WikiMain();
 	else
 		WikiSpecial();
+
+	// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
+	if ($context['page_info']['id'] === null && $namespaceGroup == 'normal' && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][2]))
+		$_REQUEST['sa'] = 'view';
+
+	require_once($sourcedir . '/' . $subActions[$namespaceGroup][$_REQUEST['sa']][0]);
+	$subActions[$namespaceGroup][$_REQUEST['sa']][1]();
 }
 
 // Handles Main namespaces
@@ -145,17 +176,9 @@ function WikiMain()
 	$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
 	$context['can_lock_page'] = allowedTo('wiki_admin');
 
-	$subActions = array(
-		'view' => array('WikiPage.php', 'ViewPage'),
-		'talk' => array('WikiTalkPage.php', 'ViewTalkPage'),
-		'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2'),
-		'diff' => array('WikiPage.php', 'DiffPage'),
-		'history' => array('WikiHistory.php', 'ViewPageHistory'),
-		'edit' => array('WikiEditPage.php', 'EditPage'),
-		'edit2' => array('WikiEditPage.php', 'EditPage2'),
-	);
-
-	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+	// Don't let anyone create page if it's not "normal" page (ie. file)
+	if ($context['namespace']['type'] != 0 && $context['page_info']['id'] === null)
+		$context['can_edit_page'] = false;
 
 	if ($_REQUEST['sa'] == 'edit2' && isset($_POST['wiki_content']))
 	{
@@ -215,18 +238,6 @@ function WikiMain()
 	// Template
 	loadTemplate('WikiPage');
 	$context['template_layers'][] = 'wikipage';
-
-	// Show error page if not found
-	if ($context['page_info']['id'] === null && !in_array($_REQUEST['sa'], array('edit', 'edit2')))
-	{
-		$context['robot_no_index'] = true;
-		$context['sub_template'] = 'not_found';
-	}
-	else
-	{
-		require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
-		$subActions[$_REQUEST['sa']][1]();
-	}
 }
 
 // Handles Special pages (such as RecentChanges)
@@ -243,8 +254,7 @@ function WikiSpecial()
 	}
 
 	$specialArray = array(
-		'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
-		'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
+
 	);
 
 	if (!isset($_REQUEST['special']) || !isset($specialArray[$_REQUEST['special']]))
