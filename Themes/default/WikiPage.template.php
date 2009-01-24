@@ -138,7 +138,7 @@ function template_wiki_content()
 			echo '
 			<div class="wikitoc floatright">
 				<ul>',
-					output_toc($context['current_page']['url'], '', $context['page_content']['toc']), '
+					output_toc($context['current_page_url'], '', $context['page_content']['toc']), '
 				</ul>
 			</div>';
 
@@ -297,7 +297,7 @@ function template_edit_page()
 
 			if ($context['can_lock_page'])
 				echo '
-				<input type="checkbox" name="lock_page" value="1"', $context['current_page']['is_locked'] ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
+				<input type="checkbox" name="lock_page" value="1"', $context['page_info']['is_locked'] ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
 
 			echo '
 			</div>

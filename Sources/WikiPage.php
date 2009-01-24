@@ -27,12 +27,6 @@ function ViewPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
-	$context['page_content'] = wikiparser($context['current_page']['title'], $context['current_page']['body'], true, $context['current_page']['namespace']);
-
-	// Don't index older versions please or links to ceratin version
-	if (!$context['current_page']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
-		$context['robot_no_index'] = true;
-
 	// Template
 	$context['sub_template'] = 'view_page';
 }
@@ -51,15 +45,15 @@ function DiffPage()
 
 	if (!empty($_REQUEST['revision']) && $_REQUEST['revision'] < $_REQUEST['old_revision'])
 	{
-		$context['diff_page'] = $context['current_page'];
-		$context['current_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], (int) $_REQUEST['old_revision']);
+		$context['diff_page'] = $context['page_info'];
+		$context['page_info'] = loadWikiPage_old($_REQUEST['page'], $_REQUEST['namespace'], (int) $_REQUEST['old_revision']);
 	}
 	else
 	{
-		$context['diff_page'] = loadWikiPage($_REQUEST['page'], $_REQUEST['namespace'], (int) $_REQUEST['old_revision']);
+		$context['diff_page'] = loadWikiPage_old($_REQUEST['page'], $_REQUEST['namespace'], (int) $_REQUEST['old_revision']);
 	}
 
-	$diff = diff(explode("\n", un_preparsecode($context['diff_page']['body'])), explode("\n", un_preparsecode($context['current_page']['body'])));
+	$diff = diff(explode("\n", un_preparsecode($context['diff_page']['body'])), explode("\n", un_preparsecode($context['page_info']['body'])));
 
 	$context['diff'] = array();
 
@@ -113,12 +107,10 @@ function DiffPage()
 		}
 	}
 
-	$context['page_content'] = wikiparser($context['current_page']['title'], $context['current_page']['body'], true, $context['current_page']['namespace']);
-
-	$context['current_page_title'] = $context['current_page']['title'];
+	$context['current_page_title'] = $context['page_info']['title'];
 
 	// Template
-	$context['page_title'] = $context['forum_name'] . ' - ' . $context['current_page']['title'];
+	$context['page_title'] = $context['forum_name'] . ' - ' . $context['page_info']['title'];
 	$context['sub_template'] = 'view_page';
 }
 

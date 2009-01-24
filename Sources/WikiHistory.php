@@ -103,7 +103,7 @@ function ViewPageHistory()
 		GROUP BY con.id_revision
 		ORDER BY id_revision DESC',
 		array(
-			'page' => $context['current_page']['id'],
+			'page' => $context['page_info']['id'],
 		)
 	);
 
@@ -121,7 +121,7 @@ function ViewPageHistory()
 				'link' => '<a href="' . $scripturl . '?action=profile;u=' . $row['id_member'] . '">' . $row['real_name'] . '</a>'
 			),
 			'comment' => $row['comment'],
-			'current' => $row['id_revision'] == $context['current_page']['current_revision'],
+			'current' => $row['id_revision'] == $context['page_info']['current_revision'],
 			'previous' => $row['id_prev_revision'],
 			'href' => wiki_get_url(array(
 				'page' => $context['current_page_name'],
@@ -142,10 +142,10 @@ function ViewPageHistory()
 	}
 	$smcFunc['db_free_result']($request);
 
-	$context['current_page_title'] = sprintf($txt['revision_history'], $context['current_page']['title']);
+	$context['current_page_title'] = sprintf($txt['revision_history'], $context['page_info']['title']);
 
 	// Template
-	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['revision_history'], $context['current_page']['title']);
+	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['revision_history'], $context['page_info']['title']);
 	$context['sub_template'] = 'page_history';
 }
 

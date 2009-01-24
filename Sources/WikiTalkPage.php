@@ -36,12 +36,12 @@ function ViewTalkPage()
 		'sa' => 'talk2',
 	));
 
-	$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic}', array('topic' => $context['current_page']['topic']), '', 'm.id_msg DESC', 'array');
+	$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic}', array('topic' => $context['page_info']['topic']), '', 'm.id_msg DESC', 'array');
 
-	$context['current_page_title'] = sprintf($txt['talk_page'], $context['current_page']['title']);
+	$context['current_page_title'] = sprintf($txt['talk_page'], $context['page_info']['title']);
 
 	// Template
-	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['talk_page'], $context['current_page']['title']);
+	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['talk_page'], $context['page_info']['title']);
 	$context['sub_template'] = 'talk_page';
 }
 
@@ -64,15 +64,15 @@ function ViewTalkPage2()
 	preparsecode($message);
 
 	$msgOptions = array(
-		'subject' => '[WikiTalk] ' . $context['current_page']['title'],
+		'subject' => '[WikiTalk] ' . $context['page_info']['title'],
 		'body' => $message,
 	);
 	$topicOptions = array(
 		'board' => $modSettings['wikiTalkBoard'],
 	);
 
-	if (!empty($context['current_page']['topic']))
-		$topicOptions['id'] = $context['current_page']['topic'];
+	if (!empty($context['page_info']['topic']))
+		$topicOptions['id'] = $context['page_info']['topic'];
 
 	if ($user_info['is_guest'])
 	{
@@ -91,20 +91,20 @@ function ViewTalkPage2()
 
 	createPost($msgOptions, $topicOptions, $posterOptions);
 
-	if (empty($context['current_page']['topic']))
+	if (empty($context['page_info']['topic']))
 	{
 		$smcFunc['db_query']('' ,'
 			UPDATE {db_prefix}wiki_pages
 			SET id_topic = {int:topic}
 			WHERE id_page = {int:page}',
 			array(
-				'page' => $context['current_page']['id'],
+				'page' => $context['page_info']['id'],
 				'topic' => $topicOptions['id'],
 			)
 		);
 	}
 
-	redirectexit(wiki_get_url(array('page' => $context['current_page']['name'], 'sa' => 'talk')));
+	redirectexit(wiki_get_url(array('page' => $context['page_info']['name'], 'sa' => 'talk')));
 }
 
 ?>

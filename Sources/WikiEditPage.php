@@ -42,17 +42,17 @@ function EditPage()
 
 	$context['edit_section'] = 0;
 
-	if (!isset($context['current_page']['body']))
-		$context['current_page']['body'] = '';
+	if (!isset($context['page_content_raw']))
+		$context['page_content_raw'] = '';
 
 	if (empty($_REQUEST['section']))
-		$body = $context['current_page']['body'];
+		$body = $context['page_content_raw'];
 	else
 	{
-		$b = wikiparser($context['current_page']['title'], $context['current_page']['body'], false);
+		$b = wikiparser($context['page_info']['title'], $context['page_content_raw'], false);
 
 		if (!isset($b['sections'][$_REQUEST['section']]))
-			$body = $context['current_page']['body'];
+			$body = $context['page_content_raw'];
 		else
 		{
 			$context['edit_section'] = $_REQUEST['section'];
@@ -63,9 +63,7 @@ function EditPage()
 	}
 
 	if (isset($_POST['wiki_content']))
-	{
-		$body = $smcFunc['htmlspecialchars']( $_POST['wiki_content'], ENT_QUOTES);
-	}
+		$body = $smcFunc['htmlspecialchars']($_POST['wiki_content'], ENT_QUOTES);
 	else
 		$body = un_preparsecode($body);
 
@@ -78,7 +76,7 @@ function EditPage()
 	if (isset($_REQUEST['preview']))
 	{
 		preparsecode($preview_content);
-		$context['page_content'] = wikiparser($context['current_page']['title'], $preview_content, true, $context['current_page']['namespace']);
+		$context['page_content'] = wikiparser($context['page_info']['title'], $preview_content, true, $context['namespace']['id']);
 	}
 
 	$context['comment'] = '';
@@ -100,8 +98,8 @@ function EditPage()
 
 	// Template
 	loadTemplate('WikiPage', array('article'));
-	$context['page_title'] = sprintf($txt['edit_page'], $context['current_page']['title']);
-	$context['current_page_title'] = sprintf($txt['edit_page'], $context['current_page']['title']);
+	$context['page_title'] = sprintf($txt['edit_page'], $context['page_info']['title']);
+	$context['current_page_title'] = sprintf($txt['edit_page'], $context['page_info']['title']);
 	$context['sub_template'] = 'edit_page';
 }
 
@@ -161,7 +159,7 @@ function EditPage2()
 		$body = $_POST['wiki_content'];
 	else
 	{
-		$b = wikiparser($context['current_page']['title'], $context['current_page']['body'], false);
+		$b = wikiparser($context['page_info']['title'], $context['page_info']['body'], false);
 
 		if (!isset($b['sections'][$_REQUEST['section']]))
 			$body = $_POST['wiki_content'];
@@ -181,7 +179,7 @@ function EditPage2()
 		}
 	}
 
-	if ($context['current_page']['id'] === null)
+	if ($context['page_info']['id'] === null)
 	{
 		$smcFunc['db_insert']('insert',
 			'{db_prefix}wiki_pages',
@@ -191,12 +189,12 @@ function EditPage2()
 			),
 			array(
 				$_REQUEST['page'],
-				$context['current_page']['namespace'],
+				$context['namespace']['id'],
 			),
 			array('id_page')
 		);
 
-		$context['current_page']['id'] = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
+		$context['page_info']['id'] = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
 	}
 
 	preparsecode($_POST['comment']);
@@ -211,11 +209,11 @@ function EditPage2()
 			'comment' => 'string-255',
 		),
 		array(
-			$context['current_page']['id'],
+			$context['page_info']['id'],
 			$user_info['id'],
 			time(),
 			$body,
-			$_POST['comment']
+			$_POST['comment'],
 		),
 		array('id_revision')
 	);
@@ -229,13 +227,13 @@ function EditPage2()
 			is_locked = {int:lock}' : '') . '
 		WHERE id_page = {int:page}',
 		array(
-			'page' => $context['current_page']['id'],
+			'page' => $context['page_info']['id'],
 			'lock' => !empty($_REQUEST['lock_page']) ? 1 : 0,
 			'revision' => $id_revision,
 		)
 	);
 
-	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'])));
+	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $context['namespace']['id'])));
 }
 
 ?>
