@@ -275,7 +275,7 @@ $tables = array(
 			),
 			array(
 				'type' => 'index',
-				'columns' => array('filename', 'is_current')
+				'columns' => array('id_page', 'is_current')
 			),
 		)
 	),

@@ -235,7 +235,7 @@ function Wiki($standalone = false)
 		}
 	}
 
-	// Linktree
+	// Add Page to Link tree
 	$context['linktree'][] = array(
 		'url' => $context['current_page_url'],
 		'name' => $context['page_info']['title'],
