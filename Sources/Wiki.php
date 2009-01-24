@@ -84,21 +84,6 @@ function Wiki($standalone = false)
 
 	unset($namespace, $page);
 
-	// Load Navigation
-	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
-
-	foreach ($context['wiki_navigation'] as $id => $grp)
-	{
-		if ($grp['page'] == $context['current_page_name'])
-			$context['wiki_navigation'][$id]['selected'] = true;
-
-		foreach ($grp['items'] as $subid => $item)
-		{
-			if ($item['page'] == $context['current_page_name'])
-				$context['wiki_navigation'][$id]['items'][$subid]['selected'] = true;
-		}
-	}
-
 	loadNamespace();
 
 	if (empty($_REQUEST['page']))
@@ -130,6 +115,21 @@ function Wiki($standalone = false)
 
 	if ($context['current_page_name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
 		redirectexit($context['current_page_url']);
+
+	// Load Navigation
+	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
+
+	foreach ($context['wiki_navigation'] as $id => $grp)
+	{
+		if ($grp['page'] == $context['current_page_name'])
+			$context['wiki_navigation'][$id]['selected'] = true;
+
+		foreach ($grp['items'] as $subid => $item)
+		{
+			if ($item['page'] == $context['current_page_name'])
+				$context['wiki_navigation'][$id]['items'][$subid]['selected'] = true;
+		}
+	}
 
 	if ($context['namespace']['type'] != 1)
 		WikiMain();
