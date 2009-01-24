@@ -89,11 +89,112 @@ function Wiki($standalone = false)
 	if (empty($_REQUEST['page']))
 		redirectexit($context['namespace']['url']);
 
+	// Subactions
+	$subActions = array(
+		'normal' => array(
+			// action => array(file, function, [requires existing page])
+			'view' => array('WikiPage.php', 'ViewPage'),
+			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
+			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
+			'diff' => array('WikiPage.php', 'DiffPage', true),
+			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
+			'edit' => array('WikiEditPage.php', 'EditPage'),
+			'edit2' => array('WikiEditPage.php', 'EditPage2'),
+			'file_info' => array('WikiFiles.php', 'WikiFileInfo'),
+			'file_view' => array('WikiFiles.php', 'WikiFileView'),
+		),
+		// Special Pages
+		'special' => array(
+			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
+			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
+		)
+	);
+
 	// Load Page info if namesapce isn't "Special" namespace
 	if ($context['namespace']['type'] != 1)
+	{
 		loadWikiPage();
-	// Minimal Page Info for otherpages
+
+		$namespaceGroup = 'normal';
+		$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+
+		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
+		if ($context['page_info']['id'] === null && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][2]))
+			$_REQUEST['sa'] = 'view';
+
+		$subaction = $_REQUEST['sa'];
+
+		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
+		$context['can_lock_page'] = allowedTo('wiki_admin');
+
+		// Don't let anyone create page if it's not "normal" page (ie. file)
+		if ($context['namespace']['type'] != 0 && $context['page_info']['id'] === null)
+			$context['can_edit_page'] = false;
+
+		if ($_REQUEST['sa'] == 'edit' || $_REQUEST['sa'] == 'edit2')
+			unset($context['page_content']);
+
+		if ($_REQUEST['sa'] == 'edit2' && isset($_POST['wiki_content']))
+		{
+			$context['page_info']['variables'] = wikiparse_variables($_POST['wiki_content']);
+
+			if (isset($context['page_info']['variables']['title']))
+				$context['page_info']['title'] = $context['page_info']['variables']['title'];
+		}
+
+		// Setup tabs
+		$context['wikimenu'] = array(
+			'view' => array(
+				'title' => $txt['wiki_view'],
+				'url' => wiki_get_url($context['current_page_name']),
+				'selected' => in_array($_REQUEST['sa'], array('view')),
+				'show' => true,
+			),
+			'talk' => array(
+				'title' => $txt['wiki_talk'],
+				'url' => wiki_get_url(array(
+					'page' => $context['current_page_name'],
+					'sa' => 'talk',
+				)),
+				'selected' => in_array($_REQUEST['sa'], array('talk')),
+				'show' => !empty($modSettings['wikiTalkBoard']),
+			),
+			'edit' => array(
+				'title' => $txt['wiki_edit'],
+				'url' => wiki_get_url(array(
+					'page' => $context['current_page_name'],
+					'sa' => 'edit',
+				)),
+				'selected' => in_array($_REQUEST['sa'], array('edit', 'edit2')),
+				'show' => $context['can_edit_page'],
+			),
+			'history' => array(
+				'title' => $txt['wiki_history'],
+				'url' => wiki_get_url(array(
+					'page' => $context['current_page_name'],
+					'sa' => 'history',
+				)),
+				'selected' => in_array($_REQUEST['sa'], array('history', 'diff')),
+				'show' => true,
+			),
+		);
+
+		// Template
+		loadTemplate('WikiPage');
+		$context['template_layers'][] = 'wikipage';
+	}
+	// Load required info for Special pages
 	else
+	{
+		$namespaceGroup = 'special';
+
+		if (strpos($_REQUEST['page'], '/'))
+			list ($_REQUEST['page'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
+		else
+			$_REQUEST['sub_page'] = '';
+
+		$subaction = $_REQUEST['page'];
+
 		$context['page_info'] = array(
 			'id' => null,
 			'title' => read_urlname($_REQUEST['page'], true),
@@ -101,6 +202,7 @@ function Wiki($standalone = false)
 			'namespace' => $context['namespace']['id'],
 			'is_locked' => false,
 		);
+	}
 
 	// Name of current page
 	$context['current_page_name'] = $context['page_info']['name'];
@@ -133,149 +235,28 @@ function Wiki($standalone = false)
 		}
 	}
 
-	if ($context['namespace']['type'] != 1)
-		WikiMain();
-	else
-		WikiSpecial();
-
-	// Subactions
-	$subActions = array(
-		'normal' => array(
-			// action => array(file, function, [requires existing page])
-			'view' => array('WikiPage.php', 'ViewPage'),
-			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
-			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
-			'diff' => array('WikiPage.php', 'DiffPage', true),
-			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
-			'edit' => array('WikiEditPage.php', 'EditPage'),
-			'edit2' => array('WikiEditPage.php', 'EditPage2'),
-		),
-		// Special Pages
-		'special' => array(
-			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
-			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
-		)
-	);
-
-	$namespaceGroup = $context['namespace']['type'] != 1 ? 'normal' : 'special';
-	$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
-
-	// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
-	if ($context['page_info']['id'] === null && $namespaceGroup == 'normal' && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][2]))
-		$_REQUEST['sa'] = 'view';
-
-	require_once($sourcedir . '/' . $subActions[$namespaceGroup][$_REQUEST['sa']][0]);
-	$subActions[$namespaceGroup][$_REQUEST['sa']][1]();
-}
-
-// Handles Main namespaces
-function WikiMain()
-{
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
-
-	$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
-	$context['can_lock_page'] = allowedTo('wiki_admin');
-
-	// Don't let anyone create page if it's not "normal" page (ie. file)
-	if ($context['namespace']['type'] != 0 && $context['page_info']['id'] === null)
-		$context['can_edit_page'] = false;
-
-	if ($_REQUEST['sa'] == 'edit' || $_REQUEST['sa'] == 'edit2')
-		unset($context['page_content']);
-
-	if ($_REQUEST['sa'] == 'edit2' && isset($_POST['wiki_content']))
-	{
-		$context['page_info']['variables'] = wikiparse_variables($_POST['wiki_content']);
-
-		if (isset($context['page_info']['variables']['title']))
-			$context['page_info']['title'] = $context['page_info']['variables']['title'];
-	}
-
-	// Setup tabs
-	$context['wikimenu'] = array(
-		'view' => array(
-			'title' => $txt['wiki_view'],
-			'url' => wiki_get_url($context['current_page_name']),
-			'selected' => in_array($_REQUEST['sa'], array('view')),
-			'show' => true,
-		),
-		'talk' => array(
-			'title' => $txt['wiki_talk'],
-			'url' => wiki_get_url(array(
-				'page' => $context['current_page_name'],
-				'sa' => 'talk',
-			)),
-			'selected' => in_array($_REQUEST['sa'], array('talk')),
-			'show' => !empty($modSettings['wikiTalkBoard']),
-		),
-		'edit' => array(
-			'title' => $txt['wiki_edit'],
-			'url' => wiki_get_url(array(
-				'page' => $context['current_page_name'],
-				'sa' => 'edit',
-			)),
-			'selected' => in_array($_REQUEST['sa'], array('edit', 'edit2')),
-			'show' => $context['can_edit_page'],
-		),
-		'history' => array(
-			'title' => $txt['wiki_history'],
-			'url' => wiki_get_url(array(
-				'page' => $context['current_page_name'],
-				'sa' => 'history',
-			)),
-			'selected' => in_array($_REQUEST['sa'], array('history', 'diff')),
-			'show' => true,
-		),
-	);
-
 	// Linktree
 	$context['linktree'][] = array(
 		'url' => $context['current_page_url'],
 		'name' => $context['page_info']['title'],
 	);
 
-	// Page title
+	// Page Title
 	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['page_info']['title']);
 	$context['current_page_title'] = $context['page_info']['title'];
 
-	// Template
-	loadTemplate('WikiPage');
-	$context['template_layers'][] = 'wikipage';
-}
-
-// Handles Special pages (such as RecentChanges)
-function WikiSpecial()
-{
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
-
-	if (strpos($_REQUEST['page'], '/'))
-		list ($_REQUEST['special'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
-	else
-	{
-		$_REQUEST['special'] = $_REQUEST['page'];
-		$_REQUEST['sub_page'] = '';
-	}
-
-	$_REQUEST['sa'] = &$_REQUEST['special'];
+	require_once($sourcedir . '/' . $subActions[$namespaceGroup][$subaction][0]);
+	$subActions[$namespaceGroup][$subaction][1]();
 }
 
 // Handles Files namespace
+/*
 function WikiFiles()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	if (empty($modSettings['wikiAttachmentsDir']))
 		fatal_lang_error('wiki_file_not_found', false);
-
-	$_REQUEST['file'] = $_REQUEST['page'];
-	unset($page, $_REQUEST['page']);
-
-	$context['current_page_name'] = wiki_urlname($_REQUEST['file'], $context['namespace']['id']);
-
-	$subActions = array(
-		'info' => array('WikiFiles.php', 'WikiFileInfo'),
-		'view' => array('WikiFiles.php', 'WikiFileView'),
-	);
 
 	$request = $smcFunc['db_query']('', '
 		SELECT localname, mime_type, file_ext
@@ -307,6 +288,6 @@ function WikiFiles()
 
 	require_once($sourcedir . '/' . $subActions[$_REQUEST['sa']][0]);
 	$subActions[$_REQUEST['sa']][1]();
-}
+}*/
 
 ?>
