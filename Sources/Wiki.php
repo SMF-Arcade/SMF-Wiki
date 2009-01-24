@@ -82,6 +82,8 @@ function Wiki($standalone = false)
 	if ($namespace != $_REQUEST['namespace'] || $page != $_REQUEST['page'])
 		redirectexit(wiki_get_url($context['current_page_name']));
 
+	unset($namespace, $page);
+
 	// Load Navigation
 	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
 
@@ -103,7 +105,7 @@ function Wiki($standalone = false)
 		FROM {db_prefix}wiki_namespace
 		WHERE namespace = {string:namespace}',
 		array(
-			'namespace' => $namespace,
+			'namespace' => $_REQUEST['namespace'],
 		)
 	);
 
@@ -127,18 +129,24 @@ function Wiki($standalone = false)
 			'name' => $context['namespace']['prefix'],
 		);
 
-	if (empty($page))
+	if (empty($_REQUEST['page']))
 		redirectexit($context['namespace']['url']);
 
 	// Load Page info if namesapce isn't "Special" namespace
 	if ($context['namespace']['type'] != 1)
 		loadWikiPage();
+	// Minimal Page Info for otherpages
+	else
+		$context['page_info'] = array(
+			'id' => null,
+			'title' => read_urlname($_REQUEST['page'], true),
+			'name' => wiki_urlname($_REQUEST['page'], $context['namespace']['id']),
+			'namespace' => $context['namespace']['id'],
+			'is_locked' => false,
+		);
 
 	// Name of current page
 	$context['current_page_name'] = $context['page_info']['name'];
-
-	if ($context['current_page_name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
-		redirectexit(wiki_get_url($context['current_page_name']));
 
 	// Base array for calling wiki_get_url for this page
 	$context['wiki_url'] = array(
@@ -147,6 +155,9 @@ function Wiki($standalone = false)
 	);
 
 	$context['current_page_url'] = wiki_get_url($context['wiki_url']);
+
+	if ($context['current_page_name'] != wiki_urlname($_REQUEST['page'], $_REQUEST['namespace']))
+		redirectexit($context['current_page_url']);
 
 	if ($context['namespace']['type'] != 1)
 		WikiMain();
