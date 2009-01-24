@@ -137,7 +137,6 @@ function loadNamespace()
 		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
 		FROM {db_prefix}wiki_namespace',
 		array(
-			'namespace' => $_REQUEST['namespace'],
 		)
 	);
 

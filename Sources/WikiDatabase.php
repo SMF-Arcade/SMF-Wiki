@@ -472,33 +472,55 @@ function installDefaultData($forced = false)
 				'Index',
 				0,
 			),
-			array(
-				'Special',
-				'',
-				'',
-				'',
-				'List',
-				1,
-			),
-			array(
-				'File',
-				'',
-				'',
-				'',
-				'List',
-				2,
-			),
-			array(
-				'Image',
-				'',
-				'',
-				'',
-				'List',
-				3,
-			),
 		),
 		array('namespace')
 	);
+
+	$specialNamespaces = array(
+		1 => array('name' => 'Special', 'default_page' => 'List'),
+		2 => array('name' => 'File', 'default_page' => 'List'),
+		3 => array('name' => 'Image', 'default_page' => 'List'),
+	);
+
+	foreach ($specialNamespaces as $type => $data)
+	{
+		$request = $smcFunc['db_query']('', '
+			SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
+			FROM {db_prefix}wiki_namespace
+			WHERE namespace_type = {int:type}',
+			array(
+				'type' => $type,
+			)
+		);
+
+		$row = $smcFunc['db_fetch_assoc']($request);
+
+		if (!$row)
+			$smcFunc['db_insert']('ignore',
+				'{db_prefix}wiki_namespace',
+				array(
+					'namespace' => 'string',
+					'ns_prefix' => 'string',
+					'page_header' => 'string',
+					'page_footer' => 'string',
+					'default_page' => 'string',
+					'namespace_type' => 'int',
+				),
+				array(
+					array(
+						$data['name'],
+						'',
+						'',
+						'',
+						$data['default_page'],
+						$type,
+					),
+				),
+				array('namespace')
+			);
+
+		$smcFunc['db_free_result']($request);
+	}
 
 	$defaultPages = array(
 		array(
