@@ -6,7 +6,7 @@ function template_wiki_file_upload()
 	global $context, $txt;
 
 	echo '
-	<form action="', wiki_get_url($context['current_page_url']), '" method="post" accept-charset="', $context['character_set'], '" enctype="multipart/form-data">
+	<form action="', $context['current_page_url'], '" method="post" accept-charset="', $context['character_set'], '" enctype="multipart/form-data">
 		<div class="tborder">
 			<h3 class="catbg headerpadding">', $txt['wiki_upload_file'], '</h3>
 			<div class="windowbg2 smallpadding">

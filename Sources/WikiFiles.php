@@ -140,7 +140,7 @@ function WikiFileUpload()
 
 		move_uploaded_file($_FILES['file']['tmp_name'], $modSettings['wikiAttachmentsDir'] . '/' . $tempName);
 
-		if ($imageSize = getimagesize($modSettings['wikiAttachmentsDir'] . '/' . $tempName) || empty($imageSize[0]))
+		if ($imageSize = getimagesize($modSettings['wikiAttachmentsDir'] . '/' . $tempName) && !empty($imageSize[0]))
 			$isImage = true;
 
 		$fileName = clean_pagename($_FILES['file']['name']);
