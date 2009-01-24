@@ -129,13 +129,47 @@ function diff($old, $new)
 	);
 }
 
-function loadWikiPage()
+function loadNamespace()
 {
-	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
+	global $smcFunc, $context;
 
 	$request = $smcFunc['db_query']('', '
-		SELECT info.id_page, info.title, info.id_revision_current, info.id_topic, info.is_locked, info.id_file
-		FROM {db_prefix}wiki_pages AS info
+		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
+		FROM {db_prefix}wiki_namespace
+		WHERE namespace = {string:namespace}',
+		array(
+			'namespace' => $_REQUEST['namespace'],
+		)
+	);
+
+	$row = $smcFunc['db_fetch_assoc']($request);
+	$smcFunc['db_free_result']($request);
+
+	if (!$row)
+		fatal_lang_error('wiki_namespace_not_found', false, array(read_urlname($_REQUEST['namespace'])));
+
+	$context['namespace'] = array(
+		'id' => $row['namespace'],
+		'prefix' => $row['ns_prefix'],
+		'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
+		'type' => $row['namespace_type'],
+	);
+
+	// Add namespace to linktree if necassary
+	if (!empty($context['namespace']['prefix']))
+		$context['linktree'][] = array(
+			'url' =>  $context['namespace']['url'],
+			'name' => $context['namespace']['prefix'],
+		);
+}
+
+function loadWikiPage()
+{
+	global $smcFunc, $context;
+
+	$request = $smcFunc['db_query']('', '
+		SELECT id_page, title, id_revision_current, id_topic, is_locked, id_file
+		FROM {db_prefix}wiki_pages
 		WHERE info.title = {string:page}
 			AND info.namespace = {string:namespace}',
 		array(

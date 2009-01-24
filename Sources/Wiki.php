@@ -68,7 +68,7 @@ function Wiki($standalone = false)
 	if (!isset($_REQUEST['page']))
 		$_REQUEST['page'] = '';
 
-	// Santise Namespace
+	// Check that namespace and page has only legal characters and redirect if not
 	if (strpos($_REQUEST['page'], ':'))
 		list ($_REQUEST['namespace'], $_REQUEST['page']) = explode(':', $_REQUEST['page'], 2);
 	else
@@ -99,35 +99,7 @@ function Wiki($standalone = false)
 		}
 	}
 
-	// Load Namespace
-	$request = $smcFunc['db_query']('', '
-		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
-		FROM {db_prefix}wiki_namespace
-		WHERE namespace = {string:namespace}',
-		array(
-			'namespace' => $_REQUEST['namespace'],
-		)
-	);
-
-	$row = $smcFunc['db_fetch_assoc']($request);
-	$smcFunc['db_free_result']($request);
-
-	if (!$row)
-		fatal_lang_error('wiki_namespace_not_found', false, array(read_urlname($namespace)));
-
-	$context['namespace'] = array(
-		'id' => $row['namespace'],
-		'prefix' => $row['ns_prefix'],
-		'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
-		'type' => $row['namespace_type'],
-	);
-
-	// Add namespace to linktree if necassary
-	if (!empty($context['namespace']['prefix']))
-		$context['linktree'][] = array(
-			'url' =>  $context['namespace']['url'],
-			'name' => $context['namespace']['prefix'],
-		);
+	loadNamespace();
 
 	if (empty($_REQUEST['page']))
 		redirectexit($context['namespace']['url']);
