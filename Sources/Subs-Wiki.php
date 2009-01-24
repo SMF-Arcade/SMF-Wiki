@@ -170,8 +170,8 @@ function loadWikiPage()
 	$request = $smcFunc['db_query']('', '
 		SELECT id_page, title, id_revision_current, id_topic, is_locked, id_file
 		FROM {db_prefix}wiki_pages
-		WHERE info.title = {string:page}
-			AND info.namespace = {string:namespace}',
+		WHERE title = {string:page}
+			AND namespace = {string:namespace}',
 		array(
 			'page' => $_REQUEST['page'],
 			'namespace' => $context['namespace']['id'],
@@ -213,7 +213,7 @@ function loadWikiPage()
 	// Load content itself
 	// TODO: This might need caching?
 	$request = $smcFunc['db_query']('', '
-		SELECT con.content
+		SELECT content
 		FROM {db_prefix}wiki_content
 		WHERE id_page = {int:page}
 			AND id_revision = {raw:revision}',
