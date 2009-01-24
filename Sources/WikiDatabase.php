@@ -223,10 +223,9 @@ $tables = array(
 				'unsigned' => true,
 			),
 			array(
-				'name' => 'filename',
-				'type' => 'varchar',
-				'size' => '255',
-				'default' => '',
+				'name' => 'id_page',
+				'type' => 'int',
+				'unsigned' => true,
 			),
 			array(
 				'name' => 'localname',
@@ -482,7 +481,7 @@ function installDefaultData($forced = false)
 				1,
 			),
 			array(
-				'Files',
+				'File',
 				'',
 				'',
 				'',

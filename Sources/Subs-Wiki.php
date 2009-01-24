@@ -135,25 +135,41 @@ function loadNamespace()
 
 	$request = $smcFunc['db_query']('', '
 		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
-		FROM {db_prefix}wiki_namespace
-		WHERE namespace = {string:namespace}',
+		FROM {db_prefix}wiki_namespace',
 		array(
 			'namespace' => $_REQUEST['namespace'],
 		)
 	);
 
-	$row = $smcFunc['db_fetch_assoc']($request);
+	$context['namespaces'] = array();
+
+	while ($row = $smcFunc['db_fetch_assoc']($request))
+	{
+		$context['namespaces'][] = array(
+			'id' => $row['namespace'],
+			'prefix' => $row['ns_prefix'],
+			'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
+			'type' => $row['namespace_type'],
+		);
+
+		if ($row['namespace'] == $_REQUEST['namespace'])
+			$context['namespace'] = $context['namespaces'][count($context['namespaces']) - 1];
+
+		// Hnadle special namespaces
+		if ($row['namespace_type'] == 1 && !isset($context['namespace_special']))
+			$context['namespace_special'] = $context['namespaces'][count($context['namespaces']) - 1];
+		elseif ($row['namespace_type'] == 2 && !isset($context['namespace_files']))
+			$context['namespace_files'] = $context['namespaces'][count($context['namespaces']) - 1];
+		elseif ($row['namespace_type'] == 3 && !isset($context['namespace_images']))
+			$context['namespace_images'] = $context['namespaces'][count($context['namespaces']) - 1];
+		elseif ($row['namespace_type'] != 0)
+			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($row['namespace'])));
+	}
 	$smcFunc['db_free_result']($request);
 
-	if (!$row)
+	// Current namespace wansn't found?
+	if (!isset($context['namespace']))
 		fatal_lang_error('wiki_namespace_not_found', false, array(read_urlname($_REQUEST['namespace'])));
-
-	$context['namespace'] = array(
-		'id' => $row['namespace'],
-		'prefix' => $row['ns_prefix'],
-		'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
-		'type' => $row['namespace_type'],
-	);
 
 	// Add namespace to linktree if necassary
 	if (!empty($context['namespace']['prefix']))

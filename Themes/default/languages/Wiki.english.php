@@ -69,6 +69,7 @@ $txt['template_not_found'] = 'Error: Template &quot;%s&quot; not found!';
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
 $txt['wiki_file_not_found'] = 'File was not found.';
 $txt['wiki_namespace_not_found'] = 'There is no namespace &quot;%s&quot; in this wiki .';
+$txt['wiki_namespace_broken'] = 'Unable to load namespace &quot;%s&quot;, it\'s either unkown type or duplicate of special type.';
 $txt['wiki_action_not_found'] = 'There is no action &quot;%s&quot;';
 $txt['wiki_old_revision_not_selected'] = 'You didn\'t select an old revision.';
 $txt['cannot_wiki_edit_current_page'] = 'You are not allowed to edit this page.';
