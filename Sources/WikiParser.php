@@ -107,11 +107,11 @@ class WikiParser
 	{
 		$this->params = $params;
 
+		$message = $this->__parse__curls($message);
+
 		if ($this->parse_bbc)
 			$message = parse_bbc($message);
 
-		$message = preg_replace_callback('/{{(((("|).+?\4))+?)}}/', array($this, '__bracket_callback'), $message);
-		//$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', array('wiki_image_callback'), $message);
 		$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
 
 		$parts = preg_split(
@@ -139,6 +139,7 @@ class WikiParser
 
 		$toc = array();
 
+		$i = 0;
 		while ($i < count($parts))
 		{
 			// New Section
@@ -237,20 +238,186 @@ class WikiParser
 		$this->tableOfContents = do_toctable(2, $toc);
 	}
 
-	function __bracket_callback($groups)
+	function __parse__curls($message, $params = array())
 	{
-		global $context;
+		global $txt;
 
-		if (isset($this->page_info['variables'][$groups[1]]))
-			return $this->page_info['variables'][$groups[1]];
-		elseif (isset($context['wiki_variables'][$groups[1]]))
-			return $context['wiki_variables'][$groups[1]];
-		else
+		$parts = preg_split(
+			'%({{{|}}}|{{|}}|\||&quot;|")%',
+			$message,
+			null,
+			PREG_SPLIT_DELIM_CAPTURE
+		);
+
+		$inBracket = false;
+		$currentBracket = array(
+			'name' => '',
+			'params' => array(),
+			'non_parsed' => '',
+		);
+
+		$message = '';
+
+		$i = 0;
+
+		while ($i < count($parts))
 		{
-			//print_r($groups);die('__bracket_callback');
+			if (!$inBracket && $parts[$i] == '{{' && isset($parts[$i + 1]))
+			{
+				$currentBracket['non_parsed'] = $parts[$i];
+				$i++;
 
-			return $groups[0];
+				$inBracket = 2;
+				$currentBracket['type'] = 2;
+				$currentBracket['name'] = $parts[$i];
+				$currentBracket['non_parsed'] = $parts[$i];
+			}
+			elseif (!$inBracket && $parts[$i] == '{{{' && isset($parts[$i + 1]))
+			{
+				$currentBracket['non_parsed'] = $parts[$i];
+				$i++;
+
+				$inBracket = 3;
+				$currentBracket['type'] = 3;
+				$currentBracket['name'] = $parts[$i];
+				$currentBracket['non_parsed'] .= $parts[$i];
+			}
+			elseif ($inBracket && $parts[$i] == '|')
+			{
+				$currentBracket['non_parsed'] .= $parts[$i];
+				$i++;
+
+				$paramData = $parts[$i];
+				$currentBracket['non_parsed'] .= $parts[$i];
+
+				if ($parts[$i + 1] == '"' || $parts[$i + 1] == '&quot;')
+				{
+					$currentBracket['non_parsed'] .= $parts[$i + 1];
+
+					$i = $i + 2;
+
+					while ($parts[$i] != '&quot;' && $parts[$i + 1] != '"')
+					{
+						$paramData .= $parts[$i];
+						$currentBracket['non_parsed'] .= $parts[$i];
+						$i++;
+					}
+					$currentBracket['non_parsed'] .= $parts[$i];
+				}
+
+				$currentBracket['params'][] = $paramData;
+			}
+			elseif (($inBracket === 2 && $parts[$i] == '}}' || $inBracket === 3 &&$parts[$i] == '}}}'))
+			{
+				$currentBracket['non_parsed'] .= $parts[$i];
+
+				if ($currentBracket['type'] == 3)
+				{
+					if (isset($params[$currentBracket['name']]))
+						$message .= $params[$currentBracket['name']];
+					else
+						$message .= $currentBracket['non_parsed'];
+				}
+				elseif ($currentBracket['type'] == 2)
+				{
+					if (substr($currentBracket['name'], 0, 1) == '#')
+					{
+						list ($function, $param1) = explode(':', substr($currentBracket['name'], 1), 2);
+
+						$funcParams = array(trim($param1));
+
+						foreach ($currentBracket['params'] as $param)
+							$funcParams[] = trim($param);
+
+						$function = trim($function);
+
+						if ($function == 'if')
+						{
+							if (isset($params[$funcParams[0]]))
+							{
+								if (isset($funcParams[1]))
+									$message .= $funcParams[1];
+							}
+							elseif (isset($funcParams[2]))
+								$message .= $funcParams[2];
+						}
+					}
+					elseif (isset($this->page_info['variables'][$currentBracket['name']]))
+						$message .= $this->page_info['variables'][$currentBracket['name']];
+					elseif (isset($context['wiki_variables'][$currentBracket['name']]))
+						$message .= $context['wiki_variables'][$currentBracket['name']];
+					else
+					{
+						$currentBracket['name'] = trim(str_replace('<br />', '', $currentBracket['name']));
+
+						list ($namespace, $page) = __url_page_parse($currentBracket['name']);
+
+						$nextNumeric = 1;
+
+						$templateParams = array();
+
+						foreach ($currentBracket['params'] as $param)
+						{
+							if (strpos($param, '='))
+							{
+								list ($key, $value) = explode('=', $param, 2);
+
+								$key = trim(str_replace('<br />', '', $key));
+
+								if (is_numeric($key))
+									$nextNumeric = $key + 1;
+							}
+							else
+								$key = $nextNumeric++;
+
+							$value = str_replace("\n", '<br />', trim(str_replace('<br />', "\n", $value)));
+
+							$templateParams[$key] = $value;
+						}
+
+						if (empty($namespace))
+							$namespace = 'Template';
+
+						if (!isset($context['wiki_template']))
+							$context['wiki_template'] = array();
+
+						if (!isset($context['wiki_template'][$namespace . ':' . $page]))
+							$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs-Wiki.php', 'wiki_template_get', array($namespace, $page));
+
+						if ($context['wiki_template'][$namespace . ':' . $page] === false)
+							$message .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
+
+						$message .= $this->__parse__curls($context['wiki_template'][$namespace . ':' . $page], $templateParams);
+					}
+				}
+				else
+					$message .= $currentBracket['non_parsed'];
+
+				$inBracket = false;
+
+				$currentBracket = array(
+					'name' => '',
+					'params' => array(),
+					'non_parsed' => '',
+				);
+			}
+			elseif ($inBracket && !empty($parts[$i]))
+			{
+				$currentBracket['non_parsed'] .= $parts[$i];
+
+				$last = array_pop($currentBracket['params']);
+
+				$last .= $parts[$i];
+
+				$currentBracket['params'][] = $last;
+			}
+			elseif (!$inBracket && !empty($parts[$i]))
+				$message .= $parts[$i];
+
+			$i++;
 		}
+
+		return $message;
 	}
 
 	function __link_callback($groups)
@@ -367,35 +534,7 @@ function wikitemplate_callback($groups)
 	global $context, $wikiReplaces;
 	static $templateFunctions = array();
 
-	$page = $groups[1];
 
-	if (strpos($page, ':') !== false)
-		list ($namespace, $page) = explode(':', $page);
-	else
-		$namespace = 'Template';
-
-	if (!isset($context['wiki_template']))
-		$context['wiki_template'] = array();
-
-	if (!isset($context['wiki_template'][$namespace . ':' . $page]))
-		$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs-Wiki.php', 'wiki_template_get', array($namespace, $page));
-
-	if ($context['wiki_template'][$namespace . ':' . $page] === false)
-		return '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
-
-	$wikiReplaces = array(
-		'@@content@@' => $groups[3]
-	);
-
-	preg_match_all('/([^\s]+?)=(&quot;|")(.+?)(&quot;|")/s', $groups[2], $result, PREG_SET_ORDER);
-
-	foreach ($result as $res)
-		$wikiReplaces['@@' . trim($res[1]) . '@@'] = trim($res[3]);
-
-	return strtr(
-		preg_replace_callback('/\{IF(\s+?)?@@(.+?)@@(\s+?)?\{(.+?)\}\}/s', 'wikitemplate_if_callback', $context['wiki_template'][$namespace . ':' . $page]),
-		$wikiReplaces
-	);
 }
 
 // Callback for condtional IF
