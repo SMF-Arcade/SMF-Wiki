@@ -215,7 +215,6 @@ function loadWikiPage()
 		'id' => $row['id_page'],
 		'title' => read_urlname($row['title']),
 		'name' => wiki_urlname($row['title'], $context['namespace']['id']),
-		'namespace' => $row['namespace'],
 		'topic' => $row['id_topic'],
 		'is_current' => $revision == $row['id_revision_current'],
 		'is_locked' => !empty($row['is_locked']),
