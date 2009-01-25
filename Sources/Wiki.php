@@ -104,6 +104,10 @@ function Wiki($standalone = false)
 	{
 		loadWikiPage();
 
+		// Don't index older versions please or links to certain version
+		if ($context['page_info']['id'] === null || !$context['page_info']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
+			$context['robot_no_index'] = true;
+
 		$namespaceGroup = 'normal';
 		$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 

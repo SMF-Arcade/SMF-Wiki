@@ -7,6 +7,8 @@ January 2009
 --------------------------------------------------------------------------------
  + Many code improvements
  + Upload Feature
+ + Added more caching features
+ + Added functions for creating pages and revisions
 
 December 2008
 --------------------------------------------------------------------------------

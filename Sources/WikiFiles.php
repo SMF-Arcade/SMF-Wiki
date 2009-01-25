@@ -196,27 +196,12 @@ function WikiFileUpload()
 
 		// New file?
 		if (!$row)
-		{
-			$smcFunc['db_insert']('insert',
-				'{db_prefix}wiki_pages',
-				array(
-					'title' => 'string-255',
-					'namespace' => 'string-255',
-				),
-				array(
-					$fileName,
-					$namespace['id'],
-				),
-				array('id_page')
-			);
-
-			$id_page = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
-		}
+			$id_page = createPage($fileName, $namespace);
 		// Updating existing file?
 		elseif ($row && !empty($_REQUEST['sub_page']))
 		{
 			$id_page = $row['id_page'];
-			$id_file_old = $row['id_page'];
+			$id_file_old = $row['id_file'];
 		}
 		// Error
 		else
@@ -261,41 +246,17 @@ function WikiFileUpload()
 
 		$id_file = $smcFunc['db_insert_id']('{db_prefix}wiki_files', 'id_file');
 
-		$smcFunc['db_insert']('insert',
-			'{db_prefix}wiki_content',
-			array(
-				'id_page' => 'int',
-				'id_author' => 'int',
-				'id_file' => 'int',
-				'timestamp' => 'int',
-				'content' => 'string',
-				'comment' => 'string-255',
-			),
-			array(
-				$id_page,
-				$user_info['id'],
-				$id_file,
-				time(),
-				$_POST['file_description'],
-				'',
-			),
-			array('id_revision')
+		$pageOptions = array();
+		$revisionOptions = array(
+			'file' => $id_file,
+			'body' => $_POST['file_description'],
+			'comment' => '',
+		);
+		$posterOptions = array(
+			'id' => $user_info['id'],
 		);
 
-		$id_revision = $smcFunc['db_insert_id']('{db_prefix}articles_content', 'id_revision');
-
-		$smcFunc['db_query']('' ,'
-			UPDATE {db_prefix}wiki_pages
-			SET
-				id_revision_current = {int:revision},
-				id_file = {int:file}
-			WHERE id_page = {int:page}',
-			array(
-				'page' => $id_page,
-				'revision' => $id_revision,
-				'file' => $id_file,
-			)
-		);
+		createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions);
 
 		rename($modSettings['wikiAttachmentsDir'] . '/' . $tempName, substr($modSettings['wikiAttachmentsDir'] . '/' . $tempName, 0, -4));
 

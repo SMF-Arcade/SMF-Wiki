@@ -182,47 +182,17 @@ function loadWikiPage()
 {
 	global $smcFunc, $context;
 
-	$request = $smcFunc['db_query']('', '
-		SELECT id_page, title, id_revision_current, id_topic, is_locked, id_file
-		FROM {db_prefix}wiki_pages
-		WHERE title = {string:page}
-			AND namespace = {string:namespace}',
-		array(
-			'page' => $_REQUEST['page'],
-			'namespace' => $context['namespace']['id'],
-		)
-	);
+	$context['page_info'] = cache_quick_get('wiki-pageinfo-' .  $context['namespace']['id'] . '-' . $_REQUEST['page'], 'Subs-Wiki.php', 'wiki_get_page_info', array($_REQUEST['page'], $context['namespace']));
 
-	if (!$row = $smcFunc['db_fetch_assoc']($request))
-	{
-		$smcFunc['db_free_result']($request);
+	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $context['page_info']['current_revision'];
 
-		$context['page_info'] = array(
-			'id' => null,
-			'title' => read_urlname($_REQUEST['page'], true),
-			'name' => wiki_urlname($_REQUEST['page'], $context['namespace']['id']),
-			'namespace' => $context['namespace']['id'],
-			'is_locked' => false,
-		);
-
-		return;
-	}
-	$smcFunc['db_free_result']($request);
-
-	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $row['id_revision_current'];
-
-	$context['page_info'] = array(
-		'id' => $row['id_page'],
-		'title' => read_urlname($row['title']),
-		'name' => wiki_urlname($row['title'], $context['namespace']['id']),
-		'topic' => $row['id_topic'],
-		'is_current' => $revision == $row['id_revision_current'],
-		'is_locked' => !empty($row['is_locked']),
+	$context['page_info'] += array(
+		'is_current' => $revision == $context['page_info']['current_revision'],
 		'revision' => $revision,
-		'current_revision' => $row['id_revision_current'],
 	);
 
-	$id_file = $row['id_file'];
+	if ($context['page_info']['id'] === null)
+		return;
 
 	// Load content itself
 	list ($page_data, $context['page_content_raw'], $context['page_content']) = cache_quick_get(
@@ -230,7 +200,6 @@ function loadWikiPage()
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], $revision)
 	);
-
 	$context['page_info'] += $page_data;
 	unset($page_data);
 
@@ -266,10 +235,54 @@ function loadWikiPage()
 			'is_image' => !empty($row['mime_type']),
 		);
 	}
+}
 
-	// Don't index older versions please or links to certain version
-	if (!$context['page_info']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
-		$context['robot_no_index'] = true;
+function wiki_get_page_info($page, $namespace)
+{
+	global $smcFunc;
+
+	$request = $smcFunc['db_query']('', '
+		SELECT id_page, title, id_revision_current, id_topic, is_locked
+		FROM {db_prefix}wiki_pages
+		WHERE title = {string:page}
+			AND namespace = {string:namespace}',
+		array(
+			'page' => $page,
+			'namespace' => $namespace['id'],
+		)
+	);
+
+	if (!$row = $smcFunc['db_fetch_assoc']($request))
+	{
+		$smcFunc['db_free_result']($request);
+
+		return array(
+			'data' => array(
+				'id' => null,
+				'title' => read_urlname($page, true),
+				'name' => wiki_urlname($page, $namespace['id']),
+				'is_current' => true,
+				'is_locked' => false,
+				'current_revision' => 0,
+			),
+			'expires' => time() + 180,
+			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+		);
+	}
+	$smcFunc['db_free_result']($request);
+
+	return array(
+		'data' => array(
+			'id' => $row['id_page'],
+			'title' => read_urlname($row['title']),
+			'name' => wiki_urlname($row['title'], $namespace['id']),
+			'topic' => $row['id_topic'],
+			'is_locked' => !empty($row['is_locked']),
+			'current_revision' => $row['id_revision_current'],
+		),
+		'expires' => time() + 360,
+		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+	);
 }
 
 function wiki_get_page_content($page_info, $namespace, $revision)
@@ -854,6 +867,91 @@ function loadWikiMenu()
 		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 	);
+}
+
+// Creates new page without any revision
+function createPage($title, $namespace)
+{
+	global $smcFunc;
+
+	$smcFunc['db_insert']('insert',
+		'{db_prefix}wiki_pages',
+		array(
+			'title' => 'string-255',
+			'namespace' => 'string-255',
+		),
+		array(
+			$title,
+			$namespace['id'],
+		),
+		array('id_page')
+	);
+
+	return $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_page');
+}
+
+// Creates new revision for page
+function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions)
+{
+	global $smcFunc;
+
+	$request = $smcFunc['db_query']('', '
+		SELECT title, namespace
+		FROM {db_prefix}wiki_pages
+		WHERE id_page = {int:page}
+		LIMIT 1',
+		array(
+			'page' => $id_page,
+		)
+	);
+
+	$row = $smcFunc['db_fetch_assoc']($request);
+	$smcFunc['db_free_result']($request);
+
+	if (!$row)
+		return false;
+
+	$smcFunc['db_insert']('insert',
+		'{db_prefix}wiki_content',
+		array(
+			'id_page' => 'int',
+			'id_author' => 'int',
+			'id_file' => 'int',
+			'timestamp' => 'int',
+			'content' => 'string',
+			'comment' => 'string-255',
+		),
+		array(
+			$id_page,
+			$posterOptions['id'],
+			!empty($revisionOptions['file']) ? $revisionOptions['file'] : 0,
+			time(),
+			$revisionOptions['body'],
+			$revisionOptions['comment'],
+		),
+		array('id_revision')
+	);
+
+	$id_revision = $smcFunc['db_insert_id']('{db_prefix}wiki_content', 'id_revision');
+
+	$smcFunc['db_query']('' ,'
+		UPDATE {db_prefix}wiki_pages
+		SET
+			id_revision_current = {int:revision}' . (isset($pageOptions['lock']) ? ',
+			is_locked = {int:lock}' : '') . (!empty($revisionOptions['file']) ? ',
+			id_file = {int:file}' : '') . '
+		WHERE id_page = {int:page}',
+		array(
+			'page' => $id_page,
+			'file' => !empty($revisionOptions['file']) ? $revisionOptions['file'] : 0,
+			'lock' => !empty($pageOptions['lock']) ? 1 : 0,
+			'revision' => $id_revision,
+		)
+	);
+
+	cache_put_data('wiki-pageinfo-' . $row['namespace'] . '-' . $row['title'], null, 360);
+
+	return true;
 }
 
 // Remove an array of revisions. (permissions are NOT checked in this function!)

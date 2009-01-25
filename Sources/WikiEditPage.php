@@ -180,60 +180,24 @@ function EditPage2()
 	}
 
 	if ($context['page_info']['id'] === null)
-	{
-		$smcFunc['db_insert']('insert',
-			'{db_prefix}wiki_pages',
-			array(
-				'title' => 'string-255',
-				'namespace' => 'string-255',
-			),
-			array(
-				$_REQUEST['page'],
-				$context['namespace']['id'],
-			),
-			array('id_page')
-		);
-
-		$context['page_info']['id'] = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
-	}
+		$context['page_info']['id'] = createPage($_REQUEST['page'], $context['namespace']['id']);
 
 	preparsecode($_POST['comment']);
 
-	$smcFunc['db_insert']('insert',
-		'{db_prefix}wiki_content',
-		array(
-			'id_page' => 'int',
-			'id_author' => 'int',
-			'id_file' => 'int',
-			'timestamp' => 'int',
-			'content' => 'string',
-			'comment' => 'string-255',
-		),
-		array(
-			$context['page_info']['id'],
-			$user_info['id'],
-			isset($context['current_file']) ? $context['current_file']['id'] : 0,
-			time(),
-			$body,
-			$_POST['comment'],
-		),
-		array('id_revision')
+	$pageOptions = array();
+	$revisionOptions = array(
+		'file' => !empty($context['page_info']['id_file']) ? $context['page_info']['id_file'] : 0,
+		'body' => $body,
+		'comment' => $_POST['comment'],
+	);
+	$posterOptions = array(
+		'id' => $user_info['id'],
 	);
 
-	$id_revision = $smcFunc['db_insert_id']('{db_prefix}articles_content', 'id_revision');
+	if ($context['can_lock_page'])
+		$pageOptions['lock'] = !empty($_REQUEST['lock_page']);
 
-	$smcFunc['db_query']('' ,'
-		UPDATE {db_prefix}wiki_pages
-		SET
-			id_revision_current = {int:revision}' . ($context['can_lock_page'] ? ',
-			is_locked = {int:lock}' : '') . '
-		WHERE id_page = {int:page}',
-		array(
-			'page' => $context['page_info']['id'],
-			'lock' => !empty($_REQUEST['lock_page']) ? 1 : 0,
-			'revision' => $id_revision,
-		)
-	);
+	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
 
 	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $context['namespace']['id'])));
 }
