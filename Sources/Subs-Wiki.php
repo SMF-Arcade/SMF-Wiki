@@ -265,7 +265,8 @@ function wiki_get_page_info($page, $namespace)
 				'is_locked' => false,
 				'current_revision' => 0,
 			),
-			'expires' => time() + 180,
+			// Minimal cache time for non-existing pages
+			'expires' => time() + 60,
 			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 		);
 	}
@@ -280,7 +281,7 @@ function wiki_get_page_info($page, $namespace)
 			'is_locked' => !empty($row['is_locked']),
 			'current_revision' => $row['id_revision_current'],
 		),
-		'expires' => time() + 360,
+		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 	);
 }
