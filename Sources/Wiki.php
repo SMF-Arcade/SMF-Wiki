@@ -28,6 +28,7 @@ function loadWiki($mode = '')
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
 
 	require_once($sourcedir . '/Subs-Wiki.php');
+	require_once($sourcedir . '/WikiParser.php');
 
 	// Wiki Version
 	$wiki_version = '0.1';
@@ -66,11 +67,7 @@ function Wiki($standalone = false)
 	if (!isset($_REQUEST['page']))
 		$_REQUEST['page'] = '';
 
-	// Check that namespace and page has only legal characters and redirect if not
-	if (strpos($_REQUEST['page'], ':'))
-		list ($_REQUEST['namespace'], $_REQUEST['page']) = explode(':', $_REQUEST['page'], 2);
-	else
-		$_REQUEST['namespace'] = '';
+	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
 
 	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'], false);
 

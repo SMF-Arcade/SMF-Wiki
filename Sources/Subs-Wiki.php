@@ -133,38 +133,23 @@ function loadNamespace()
 {
 	global $smcFunc, $context;
 
-	$request = $smcFunc['db_query']('', '
-		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
-		FROM {db_prefix}wiki_namespace',
-		array(
-		)
-	);
+	$context['namespaces'] = cache_quick_get('wiki-namespaces', 'Subs-Wiki.php', 'wiki_get_namespaces', array());
 
-	$context['namespaces'] = array();
-
-	while ($row = $smcFunc['db_fetch_assoc']($request))
+	foreach ($context['namespaces'] as $id => $ns)
 	{
-		$context['namespaces'][] = array(
-			'id' => $row['namespace'],
-			'prefix' => $row['ns_prefix'],
-			'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
-			'type' => $row['namespace_type'],
-		);
-
-		if ($row['namespace'] == $_REQUEST['namespace'])
-			$context['namespace'] = $context['namespaces'][count($context['namespaces']) - 1];
+		if ($id == $_REQUEST['namespace'])
+			$context['namespace'] = $context['namespaces'][$id];
 
 		// Hnadle special namespaces
-		if ($row['namespace_type'] == 1 && !isset($context['namespace_special']))
-			$context['namespace_special'] = $context['namespaces'][count($context['namespaces']) - 1];
-		elseif ($row['namespace_type'] == 2 && !isset($context['namespace_files']))
-			$context['namespace_files'] = $context['namespaces'][count($context['namespaces']) - 1];
-		elseif ($row['namespace_type'] == 3 && !isset($context['namespace_images']))
-			$context['namespace_images'] = $context['namespaces'][count($context['namespaces']) - 1];
-		elseif ($row['namespace_type'] != 0)
-			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($row['namespace'])));
+		if ($ns['type'] == 1 && !isset($context['namespace_special']))
+			$context['namespace_special'] = &$context['namespaces'][$id];
+		elseif ($ns['type'] == 2 && !isset($context['namespace_files']))
+			$context['namespace_files'] = &$context['namespaces'][$id];
+		elseif ($ns['type'] == 3 && !isset($context['namespace_images']))
+			$context['namespace_images'] = &$context['namespaces'][$id];
+		elseif ($ns['type'] != 0)
+			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($id)));
 	}
-	$smcFunc['db_free_result']($request);
 
 	// Current namespace wansn't found?
 	if (!isset($context['namespace']))
@@ -176,6 +161,35 @@ function loadNamespace()
 			'url' =>  $context['namespace']['url'],
 			'name' => $context['namespace']['prefix'],
 		);
+}
+
+function wiki_get_namespaces()
+{
+	global $smcFunc;
+
+	$request = $smcFunc['db_query']('', '
+		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
+		FROM {db_prefix}wiki_namespace',
+		array(
+		)
+	);
+
+	$namespaces = array();
+
+	while ($row = $smcFunc['db_fetch_assoc']($request))
+		$namespaces[$row['namespace']] = array(
+			'id' => $row['namespace'],
+			'prefix' => $row['ns_prefix'],
+			'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
+			'type' => $row['namespace_type'],
+		);
+	$smcFunc['db_free_result']($request);
+
+	return array(
+		'data' => $namespaces,
+		'expires' => time() + 3600,
+		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+	);
 }
 
 function loadWikiPage()
@@ -310,7 +324,7 @@ function wiki_get_page_content($page_info, $namespace, $revision)
 	);
 
 	$page_content_raw = $row['content'];
-	$page_content = wikiparser($page_info['title'], $page_content_raw, true, $namespace['id']);
+	$page_content = wikiparser($page_info, $page_content_raw, true, $namespace['id']);
 
 	return array(
 		'data' => array($page_data, $page_content_raw, $page_content),
@@ -376,6 +390,17 @@ function read_urlname($url)
 	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', un_htmlspecialchars($url))));
 }
 
+// Gets Namespace and Page from url style (Namespace:Page_Title)
+function __url_page_parse($page)
+{
+	if (strpos($page, ':'))
+		list ($namespace, $page) = explode(':', $page, 2);
+	else
+		$namespace = '';
+
+	return array($namespace, $page);
+}
+
 // Makes link from page title and namespace
 function wiki_urlname($page, $namespace = null, $clean = true)
 {
@@ -404,6 +429,7 @@ function make_html_safe($string)
 	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
 }
 
+// Cleans illegal characters from pagename
 function clean_pagename($string, $namespace = false)
 {
 	global $smcFunc;
@@ -412,352 +438,6 @@ function clean_pagename($string, $namespace = false)
 		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':', '|'), '_', $string)));
 
 	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
-}
-
-// Makes table of contents
-function do_toctable($tlevel, $toc, $main = true)
-{
-	$stack = array(
-		'',
-		array(),
-	);
-	$num = 0;
-	$mainToc = array();
-
-	foreach ($toc as $t)
-	{
-		list ($level, $title) = $t;
-
-		if ($level == $tlevel)
-		{
-			if (!empty($stack[0]))
-			{
-				$mainToc[] = array(
-					$num,
-					$stack[0],
-					!empty($stack[1]) ? do_toctable($tlevel + 1, $stack[1], false) : array(),
-				);
-			}
-
-			$stack = array(
-				$title,
-				array()
-			);
-
-			$num++;
-		}
-		elseif ($level >= $tlevel)
-			$stack[1][] = array($level, $title);
-	}
-
-	if (!empty($stack[0]))
-	{
-		$mainToc[] = array(
-			$num,
-			$stack[0],
-			!empty($stack[1]) ? do_toctable($tlevel+1, $stack[1], false) : array(),
-		);
-	}
-
-	return $mainToc;
-}
-
-function wikiparse_variables($message)
-{
-	global $rep_temp, $pageVariables;
-
-	$pageVariables = array();
-
-	$message = preg_replace_callback('%{{([a-zA-Z]+):(.+?)}}%', 'wikivariable_callback', $message);
-
-	$temp = $pageVariables;
-	unset($pageVariables);
-
-	return $temp;
-}
-
-// Parses wiki page
-function wikiparser($page_title, $message, $parse_bbc = true, $namespace = null)
-{
-	global $rep_temp;
-
-	$wikiPageObject = array(
-		'toc' => array(),
-		'sections' => array(),
-	);
-
-
-	$message = preg_replace_callback('%{{([a-zA-Z]+(:(.+?))?)}}(<br( />)?)?%', 'wikivariable_callback', $message);
-	$message = preg_replace_callback('%{(.+?)\s?([^}]+?)?}(.+?){/\1}%', 'wikitemplate_callback', $message);
-
-	if ($parse_bbc)
-		$message = parse_bbc($message);
-
-	$message = preg_replace_callback('/\[\[Image:(.*?)(\|(.*?))?\]\]/', 'wiki_image_callback', $message);
-	$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', 'wikilink_callback', $message);
-	$parts = preg_split('%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />)|(<br />)|(<!!!>)|(</!!!>)|(<div|<ul|<table|<code)|(</div>|</ul>|</table>|</code>)%', $message, null,  PREG_SPLIT_DELIM_CAPTURE);
-
-	$i = 0;
-
-	$toc = array();
-	$curSection = array(
-		'title' => $page_title,
-		'level' => 1,
-		'content' => '',
-		'edit_url' => wiki_get_url(array(
-			'page' => wiki_urlname($page_title, $namespace),
-			'sa' => 'edit',
-		)),
-	);
-
-	$para_open = false;
-	// Can paragraph be opened?
-	$can_para = true;
-
-	//(print_r($parts));
-
-	while ($i < count($parts))
-	{
-		if (substr($parts[$i], 0, 1) == '=' && strlen($parts[$i]) >= 2 && strlen($parts[$i]) <= 5)
-		{
-			if (str_replace('=', '', $parts[$i]) == '')
-			{
-				if ($para_open)
-					$curSection['content'] .= '</p>';
-				$wikiPageObject['sections'][] = $curSection;
-
-				$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
-
-				$curSection = array(
-					'title' => $parts[$i + 1],
-					'level' => strlen($parts[$i]),
-					'content' => '',
-					'edit_url' => wiki_get_url(array(
-						'page' => wiki_urlname($page_title, $namespace),
-						'sa' => 'edit',
-						'section' => count($wikiPageObject['sections']),
-					)),
-				);
-
-				$para_open = false;
-
-				$i += 1;
-			}
-		}
-		// New Paragraph?
-		elseif ($parts[$i] == '<br /><br />')
-		{
-			if ($para_open)
-				$curSection['content'] .= '</p>';
-			$para_open = false;
-		}
-		// Block tags can't be in paragraph
-		elseif (in_array($parts[$i], array('<div', '<ul', '<table', '<code')))
-		{
-			if ($para_open)
-				$curSection['content'] .= '</p>';
-			$para_open = false;
-
-			// Don't start new paragraph
-			$can_para = false;
-
-			$curSection['content'] .= $parts[$i];
-		}
-		elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code')))
-		{
-			// Now new paragraph can be started again
-			$can_para = true;
-
-			$curSection['content'] .= $parts[$i];
-		}
-		// No paragraphs area
-		elseif ($parts[$i] == '<!!!>')
-		{
-			if ($para_open)
-				$curSection['content'] .= '</p>';
-			$para_open = false;
-
-			// Don't start new paragraph
-			$can_para = false;
-		}
-		// No paragraphs area
-		elseif ($parts[$i] == '</!!!>')
-		{
-			// Now new paragraph can be started again
-			$can_para = true;
-		}
-		// Avoid starting paragraph with newline
-		elseif ($parts[$i] == '<br />')
-		{
-			if ($para_open || !$can_para)
-				$curSection['content'] .= $parts[$i];
-		}
-		elseif (!empty($parts[$i]))
-		{
-			// Open new paragraph if one isn't open
-			if (!$para_open && $can_para)
-			{
-				$curSection['content'] .= '<p>';
-				$para_open = true;
-			}
-
-			$curSection['content'] .= $parts[$i];
-		}
-
-		$i++;
-	}
-
-	$i = 0;
-
-	$tempToc = array();
-
-	$trees = array();
-
-	$wikiPageObject['toc'] = do_toctable(2, $toc);
-
-	// Close last paragraph
-	if ($para_open)
-		$curSection['content'] .= '</p>';
-
-	$wikiPageObject['sections'][] = $curSection;
-
-	return $wikiPageObject;
-}
-
-// Callback for wikivariables
-function wikivariable_callback($groups)
-{
-	global $context, $pageVariables;
-
-	if (empty($groups[2]))
-	{
-		if (isset($pageVariables[$groups[1]]))
-			return $pageVariables[$groups[1]];
-		elseif (isset($context['wiki_variables'][$groups[1]]))
-			return $context['wiki_variables'][$groups[1]];
-	}
-	else
-	{
-		if (isset($pageVariables))
-			$pageVariables[$groups[1]] = $groups[2];
-		return '';
-	}
-
-	return $groups[0];
-}
-
-// Callback for images
-function wiki_image_callback($groups)
-{
-	if (!empty($groups[3]))
-	{
-		$options = explode('|', $groups[3]);
-		$align = '';
-		$size = '';
-		$caption = '';
-		$alt = '';
-
-		// Size
-		if (!empty($options[0]))
-		{
-			if ($options[0] == 'thumb')
-				$size = ' width="180"';
-			elseif (is_numeric($options[0]))
-				$size = ' width="' . $options[0] . '"';
-			elseif (strpos($options[0], 'x') !== false)
-			{
-				list ($width, $height) = explode('x', $options[0], 2);
-
-				if (is_numeric($width) && is_numeric($height))
-				{
-					$size = ' width="' . $width . '" height="' . $height. '"';
-				}
-			}
-		}
-
-		// Align
-		if (!empty($options[1]) && ($options[1] == 'left' || $options[1] == 'right'))
-			$align = $options[1];
-
-		// Alt
-		if (!empty($options[2]))
-			$alt = $options[2];
-
-		// Caption
-		if (!empty($options[3]))
-			$caption = $options[3];
-
-		if (!empty($align) || !empty($caption))
-			$code = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
-
-		$code .= '<a href="' . wiki_get_url(wiki_urlname($groups[1], 'Image')) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1], 'Image'), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
-
-		if (!empty($align) || !empty($caption))
-			$code .= '</div>';
-
-		return $code;
-	}
-
-	return '<a href="' . wiki_get_url(wiki_urlname($groups[1], 'Image')) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1], 'Image'), 'image')) . '" alt="" /></a>';
-}
-
-// Callback for making wikilinks
-function wikilink_callback($groups)
-{
-	if (empty($groups[3]))
-		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
-	else
-		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . $groups[3] . $groups[4] . '</a>';
-
-	return $link . $groups[5];
-}
-
-// Callback for templates
-function wikitemplate_callback($groups)
-{
-	global $context, $wikiReplaces;
-	static $templateFunctions = array();
-
-	$page = $groups[1];
-
-	if (strpos($page, ':') !== false)
-		list ($namespace, $page) = explode(':', $page);
-	else
-		$namespace = 'Template';
-
-	if (!isset($context['wiki_template']))
-		$context['wiki_template'] = array();
-
-	if (!isset($context['wiki_template'][$namespace . ':' . $page]))
-		$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs-Wiki.php', 'wiki_template_get', array($namespace, $page));
-
-	if ($context['wiki_template'][$namespace . ':' . $page] === false)
-		return '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
-
-	$wikiReplaces = array(
-		'@@content@@' => $groups[3]
-	);
-
-	preg_match_all('/([^\s]+?)=(&quot;|")(.+?)(&quot;|")/s', $groups[2], $result, PREG_SET_ORDER);
-
-	foreach ($result as $res)
-		$wikiReplaces['@@' . trim($res[1]) . '@@'] = trim($res[3]);
-
-	return strtr(
-		preg_replace_callback('/\{IF(\s+?)?@@(.+?)@@(\s+?)?\{(.+?)\}\}/s', 'wikitemplate_if_callback', $context['wiki_template'][$namespace . ':' . $page]),
-		$wikiReplaces
-	);
-}
-
-// Callback for condtional IF
-function wikitemplate_if_callback($groups)
-{
-	global $context, $wikiReplaces;
-
-	if (!empty($wikiReplaces['@@' . $groups[2] . '@@']))
-		return $groups[4];
-	else
-		return '';
 }
 
 // Gets template
