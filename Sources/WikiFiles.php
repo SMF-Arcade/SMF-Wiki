@@ -118,15 +118,20 @@ function WikiFileView()
 
 function WikiFileUpload()
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
 	if (empty($modSettings['wikiAttachmentsDir']) || !is_dir($modSettings['wikiAttachmentsDir']) || !is_writeable($modSettings['wikiAttachmentsDir']))
 		fatal_lang_error('wiki_file_not_found', false);
 
 	isAllowedTo('wiki_upload');
 
-	if (isset($_POST['submit_upload']))
+	// Submit?
+	if (isset($_POST[$context['session_var']]))
 	{
+		require_once($sourcedir . '/Subs-Post.php');
+
+		checkSession('post');
+
 		if (empty($_FILES['file']))
 			fatal_lang_error('wiki_file_upload_failed');
 		elseif ($_FILES['file']['error'] != UPLOAD_ERR_OK)
@@ -134,9 +139,29 @@ function WikiFileUpload()
 		elseif (!is_uploaded_file($_FILES['file']['tmp_name']))
 			fatal_lang_error('wiki_file_upload_failed');
 
+		if (!empty($_REQUEST['file_description_mode']) && isset($_REQUEST['file_description']))
+		{
+			$_REQUEST['file_description'] = html_to_bbc($_REQUEST['file_description']);
+			$_REQUEST['file_description'] = un_htmlspecialchars($_REQUEST['file_description']);
+			$_POST['file_description'] = $_REQUEST['file_description'];
+		}
+
+		if (htmltrim__recursive(htmlspecialchars__recursive($_POST['file_description'])) == '')
+			$_POST['file_description'] = '';
+		else
+		{
+			$_POST['file_description'] = $smcFunc['htmlspecialchars']($_POST['file_description'], ENT_QUOTES);
+
+			preparsecode($_POST['file_description']);
+		}
+
 		$isImage = false;
 
 		$tempName = substr(sha1($_FILES['file']['name'] . mt_rand()), 0, 255) . '.tmp';
+
+		// Make sure file doesn't exist
+		while (file_exists($modSettings['wikiAttachmentsDir'] . '/' . $tempName))
+			$tempName = substr(sha1($_FILES['file']['name'] . mt_rand()), 0, 255) . '.tmp';
 
 		move_uploaded_file($_FILES['file']['tmp_name'], $modSettings['wikiAttachmentsDir'] . '/' . $tempName);
 
@@ -146,11 +171,13 @@ function WikiFileUpload()
 			$isImage = true;
 
 		$fileName = clean_pagename($_FILES['file']['name']);
+		if (!empty($_REQUEST['sub_page']))
+			$fileName = $_REQUEST['sub_page'];
 
 		$namespace = !$isImage ? $context['namespace_files'] : $context['namespace_images'];
 
 		$request = $smcFunc['db_query']('', '
-			SELECT id_file
+			SELECT id_page, id_file
 			FROM {db_prefix}wiki_pages
 			WHERE namespace = {string:namespace}
 				AND title = {string:name}',
@@ -163,7 +190,35 @@ function WikiFileUpload()
 		$row = $smcFunc['db_fetch_assoc']($request);
 		$smcFunc['db_free_result']($request);
 
-		if ($row)
+		$id_page = null;
+		$id_file_old = null;
+
+		// New file?
+		if (!$row)
+		{
+			$smcFunc['db_insert']('insert',
+				'{db_prefix}wiki_pages',
+				array(
+					'title' => 'string-255',
+					'namespace' => 'string-255',
+				),
+				array(
+					$fileName,
+					$namespace['id'],
+				),
+				array('id_page')
+			);
+
+			$id_page = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
+		}
+		// Updating existing file?
+		elseif ($row && !empty($_REQUEST['sub_page']))
+		{
+			$id_page = $row['id_page'];
+			$id_file_old = $row['id_page'];
+		}
+		// Error
+		else
 		{
 			unlink($modSettings['wikiAttachmentsDir'] . '/' . $tempName);
 			fatal_lang_error('wiki_file_exists');
@@ -173,22 +228,9 @@ function WikiFileUpload()
 		if (strlen($fileext) > 8 || '.' . $fileext == $fileName)
 			$fileext = '';
 
-		$smcFunc['db_insert']('insert',
-			'{db_prefix}wiki_pages',
-			array(
-				'title' => 'string-255',
-				'namespace' => 'string-255',
-			),
-			array(
-				$fileName,
-				$namespace['id'],
-			),
-			array('id_page')
-		);
-
-		$context['page_info']['id'] = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
-
-		$smcFunc['db_insert']('', '{db_prefix}wiki_files',
+		// Insert file into database
+		$smcFunc['db_insert']('',
+			'{db_prefix}wiki_files',
 			array(
 				'id_page' => 'int',
 				'localname' => 'string-255',
@@ -202,7 +244,7 @@ function WikiFileUpload()
 				'img_height' => 'int',
 			),
 			array(
-				$context['page_info']['id'],
+				$id_page,
 				substr($tempName, 0, -4),
 				$isImage ? $imageSize['mime'] : '',
 				$fileext,
@@ -228,10 +270,10 @@ function WikiFileUpload()
 				'comment' => 'string-255',
 			),
 			array(
-				$context['page_info']['id'],
+				$id_page,
 				$user_info['id'],
 				time(),
-				'',
+				$_POST['file_description'],
 				'',
 			),
 			array('id_revision')
@@ -246,7 +288,7 @@ function WikiFileUpload()
 				id_file = {int:file}
 			WHERE id_page = {int:page}',
 			array(
-				'page' => $context['page_info']['id'],
+				'page' => $id_page,
 				'revision' => $id_revision,
 				'file' => $id_file,
 			)
@@ -254,8 +296,32 @@ function WikiFileUpload()
 
 		rename($modSettings['wikiAttachmentsDir'] . '/' . $tempName, substr($modSettings['wikiAttachmentsDir'] . '/' . $tempName, 0, -4));
 
+		if ($id_file_old !== null)
+			$smcFunc['db_query']('' ,'
+				UPDATE {db_prefix}wiki_files
+				SET is_current = {int:not_current}
+				WHERE id_file = {int:file}',
+				array(
+					'not_current' => 0,
+					'file' => $id_file_old,
+				)
+			);
+
 		redirectexit(wiki_get_url(wiki_urlname($fileName, $namespace['id'])));
 	}
+
+	$editorOptions = array(
+		'id' => 'file_description',
+		'value' => '',
+		'labels' => array(
+			'post_button' => $txt['wiki_upload_button'],
+		),
+		'width' => '100%',
+		'height' => '250px',
+	);
+	create_control_richedit($editorOptions);
+
+	$context['post_box_name'] = 'wiki_content';
 
 	loadTemplate('WikiFiles');
 	$context['sub_template'] = 'wiki_file_upload';

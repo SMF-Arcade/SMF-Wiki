@@ -187,7 +187,7 @@ function template_talk_page()
 			<input type="submit" name="send" value="', $txt['add_comment'], '" />
 		</div>
 
-		<input type="hidden" name="sc" value="', $context['session_id'], '" />
+		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
 		<input type="hidden" name="seqnum" value="', $context['form_sequence_number'], '" />
 	</form>';
 }
@@ -309,7 +309,7 @@ function template_edit_page()
 		</div>
 
 		<input type="hidden" name="section" value="', $context['edit_section'], '" />
-		<input type="hidden" name="sc" value="', $context['session_id'], '" />
+		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
 	</form>';
 }
 
