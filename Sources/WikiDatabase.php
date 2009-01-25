@@ -184,6 +184,12 @@ $tables = array(
 				'unsigned' => true,
 			),
 			array(
+				'name' => 'id_file',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
 				'name' => 'timestamp',
 				'type' => 'int',
 				'default' => 0,

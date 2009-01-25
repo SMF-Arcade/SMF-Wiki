@@ -204,6 +204,7 @@ function EditPage2()
 		array(
 			'id_page' => 'int',
 			'id_author' => 'int',
+			'id_file' => 'int',
 			'timestamp' => 'int',
 			'content' => 'string',
 			'comment' => 'string-255',
@@ -211,6 +212,7 @@ function EditPage2()
 		array(
 			$context['page_info']['id'],
 			$user_info['id'],
+			isset($context['current_file']) ? $context['current_file']['id'] : 0,
 			time(),
 			$body,
 			$_POST['comment'],

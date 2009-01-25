@@ -42,7 +42,7 @@ function template_wiki_file_upload()
 					</tr>
 				</table>
 			</div>
-			<div style="text-align: center">
+			<div class="windowbg2 smallpadding" style="text-align: center">
 				<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
 				', template_control_richedit($context['post_box_name'], 'buttons'), '
 			</div>

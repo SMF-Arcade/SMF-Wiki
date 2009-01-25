@@ -120,6 +120,9 @@ function WikiFileUpload()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 
+	require_once($sourcedir . '/Subs-Post.php');
+	require_once($sourcedir . '/Subs-Editor.php');
+
 	if (empty($modSettings['wikiAttachmentsDir']) || !is_dir($modSettings['wikiAttachmentsDir']) || !is_writeable($modSettings['wikiAttachmentsDir']))
 		fatal_lang_error('wiki_file_not_found', false);
 
@@ -128,8 +131,6 @@ function WikiFileUpload()
 	// Submit?
 	if (isset($_POST[$context['session_var']]))
 	{
-		require_once($sourcedir . '/Subs-Post.php');
-
 		checkSession('post');
 
 		if (empty($_FILES['file']))
@@ -258,13 +259,14 @@ function WikiFileUpload()
 			array('id_file')
 		);
 
-		$id_file = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
+		$id_file = $smcFunc['db_insert_id']('{db_prefix}wiki_files', 'id_file');
 
 		$smcFunc['db_insert']('insert',
 			'{db_prefix}wiki_content',
 			array(
 				'id_page' => 'int',
 				'id_author' => 'int',
+				'id_file' => 'int',
 				'timestamp' => 'int',
 				'content' => 'string',
 				'comment' => 'string-255',
@@ -272,6 +274,7 @@ function WikiFileUpload()
 			array(
 				$id_page,
 				$user_info['id'],
+				$id_file,
 				time(),
 				$_POST['file_description'],
 				'',
@@ -318,10 +321,11 @@ function WikiFileUpload()
 		),
 		'width' => '100%',
 		'height' => '250px',
+		'preview_type' => 0,
 	);
 	create_control_richedit($editorOptions);
 
-	$context['post_box_name'] = 'wiki_content';
+	$context['post_box_name'] = 'file_description';
 
 	loadTemplate('WikiFiles');
 	$context['sub_template'] = 'wiki_file_upload';
