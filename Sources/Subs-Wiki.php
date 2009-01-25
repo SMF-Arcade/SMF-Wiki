@@ -221,48 +221,32 @@ function loadWikiPage()
 		'is_locked' => !empty($row['is_locked']),
 		'revision' => $revision,
 		'current_revision' => $row['id_revision_current'],
-		'variables' => array()
 	);
 
 	$id_file = $row['id_file'];
 
 	// Load content itself
-	// TODO: This might need caching?
-	$request = $smcFunc['db_query']('', '
-		SELECT content, id_file
-		FROM {db_prefix}wiki_content
-		WHERE id_page = {int:page}
-			AND id_revision = {raw:revision}',
-		array(
-			'page' => $context['page_info']['id'],
-			'namespace' => $context['namespace']['id'],
-			'revision' => $revision,
-		)
+	list ($page_data, $context['page_content_raw'], $context['page_content']) = cache_quick_get(
+		'wiki-page-' .  $context['page_info']['id'] . '-rev' . $revision,
+		'Subs-Wiki.php', 'wiki_get_page_content',
+		array($context['page_info'], $context['namespace'], $revision)
 	);
 
-	// Hacking? Trying to get access to forbidden page? Hopefully not bug
-	if (!$row = $smcFunc['db_fetch_assoc']($request))
-		fatal_lang_error('wiki_invalid_revision');
-
-	$context['page_info']['variables'] = wikiparse_variables($row['content']);
+	$context['page_info'] += $page_data;
+	unset($page_data);
 
 	if (!empty($context['page_info']['variables']['title']))
 		$context['page_info']['title'] = $context['page_info']['variables']['title'];
 
-	$context['page_content_raw'] = $row['content'];
-	$context['page_content'] = wikiparser($context['page_info']['title'], $context['page_content_raw'], true, $context['namespace']['id']);
-
 	// Is there file attached to this page?
-	if (!empty($id_file) || !empty($row['id_file']))
+	if (!empty($context['page_info']['id_file']))
 	{
 		$request = $smcFunc['db_query']('', '
 			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
 			FROM {db_prefix}wiki_files
-			WHERE id_file = {int:file}' . (empty($row['id_file']) ? '
-				AND is_current = {int:is_current}' : ''),
+			WHERE id_file = {int:file}',
 			array(
-				'file' => !empty($row['id_file']) ? $row['id_file'] : $id_file,
-				'is_current' => 1,
+				'file' => $context['page_info']['id_file'],
 			)
 		);
 
@@ -287,6 +271,39 @@ function loadWikiPage()
 	// Don't index older versions please or links to certain version
 	if (!$context['page_info']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
 		$context['robot_no_index'] = true;
+}
+
+function wiki_get_page_content($page_info, $namespace, $revision)
+{
+	global $smcFunc;
+
+	$request = $smcFunc['db_query']('', '
+		SELECT content, id_file
+		FROM {db_prefix}wiki_content
+		WHERE id_page = {int:page}
+			AND id_revision = {raw:revision}',
+		array(
+			'page' => $page_info['id'],
+			'revision' => $revision,
+		)
+	);
+
+	if (!$row = $smcFunc['db_fetch_assoc']($request))
+		fatal_lang_error('wiki_invalid_revision');
+
+	$page_data = array(
+		'id_file' => $row['id_file'],
+		'variables' => wikiparse_variables($row['content']),
+	);
+
+	$page_content_raw = $row['content'];
+	$page_content = wikiparser($page_info['title'], $page_content_raw, true, $namespace['id']);
+
+	return array(
+		'data' => array($page_data, $page_content_raw, $page_content),
+		'expires' => time() + 3600,
+		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+	);
 }
 
 function loadWikiPage_old($name, $namespace = '', $revision = null)
