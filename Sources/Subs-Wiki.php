@@ -229,7 +229,7 @@ function loadWikiPage()
 	// Load content itself
 	// TODO: This might need caching?
 	$request = $smcFunc['db_query']('', '
-		SELECT content
+		SELECT content, id_file
 		FROM {db_prefix}wiki_content
 		WHERE id_page = {int:page}
 			AND id_revision = {raw:revision}',
@@ -253,15 +253,15 @@ function loadWikiPage()
 	$context['page_content'] = wikiparser($context['page_info']['title'], $context['page_content_raw'], true, $context['namespace']['id']);
 
 	// Is there file attached to this page?
-	if (!empty($id_file))
+	if (!empty($id_file) || !empty($row['id_file']))
 	{
 		$request = $smcFunc['db_query']('', '
 			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
 			FROM {db_prefix}wiki_files
-			WHERE id_file = {int:file}
-				AND is_current = {int:is_current}',
+			WHERE id_file = {int:file}' . (empty($row['id_file']) ? '
+				AND is_current = {int:is_current}' : ''),
 			array(
-				'file' => $id_file,
+				'file' => !empty($row['id_file']) ? $row['id_file'] : $id_file,
 				'is_current' => 1,
 			)
 		);
