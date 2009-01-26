@@ -180,7 +180,7 @@ function EditPage2()
 	}
 
 	if ($context['page_info']['id'] === null)
-		$context['page_info']['id'] = createPage($_REQUEST['page'], $context['namespace']['id']);
+		$context['page_info']['id'] = createPage($_REQUEST['page'], $context['namespace']);
 
 	preparsecode($_POST['comment']);
 

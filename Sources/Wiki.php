@@ -160,7 +160,7 @@ function Wiki($standalone = false)
 			$subaction = 'download';
 
 		// Don't index pages with invalid subaction
-		if (!isset($_REQUEST['sa']) || $subaction != $_REQUEST['sa'])
+		if (!empty($_REQUEST['sa']) && $subaction != $_REQUEST['sa'])
 			$context['robot_no_index'] = true;
 
 		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
@@ -186,7 +186,7 @@ function Wiki($standalone = false)
 			'view' => array(
 				'title' => $txt['wiki_view'],
 				'url' => wiki_get_url($context['current_page_name']),
-				'selected' => in_array($_REQUEST['sa'], array('view')),
+				'selected' => in_array($subaction, array('view')),
 				'show' => true,
 			),
 			'talk' => array(
@@ -195,7 +195,7 @@ function Wiki($standalone = false)
 					'page' => $context['current_page_name'],
 					'sa' => 'talk',
 				)),
-				'selected' => in_array($_REQUEST['sa'], array('talk')),
+				'selected' => in_array($subaction, array('talk')),
 				'show' => !empty($modSettings['wikiTalkBoard']),
 			),
 			'edit' => array(
@@ -204,7 +204,7 @@ function Wiki($standalone = false)
 					'page' => $context['current_page_name'],
 					'sa' => 'edit',
 				)),
-				'selected' => in_array($_REQUEST['sa'], array('edit', 'edit2')),
+				'selected' => in_array($subaction, array('edit', 'edit2')),
 				'show' => $context['can_edit_page'],
 			),
 			'history' => array(
@@ -213,7 +213,7 @@ function Wiki($standalone = false)
 					'page' => $context['current_page_name'],
 					'sa' => 'history',
 				)),
-				'selected' => in_array($_REQUEST['sa'], array('history', 'diff')),
+				'selected' => in_array($subaction, array('history', 'diff')),
 				'show' => true,
 			),
 		);
