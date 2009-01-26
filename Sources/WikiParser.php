@@ -115,7 +115,7 @@ class WikiParser
 		}
 
 		$parts = preg_split(
-			'%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}|(<br />|<br /><br />|<br />|<!!!>|</!!!>|<div|<ul|<table|<code|</div>|</ul>|</table>|</code>)%',
+			'%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />|<br />|<!!!>|</!!!>|<div|<ul|<table|<code|</div>|</ul>|</table>|</code>)%',
 			$message,
 			null,
 			PREG_SPLIT_DELIM_CAPTURE
@@ -125,6 +125,7 @@ class WikiParser
 			'title' => $this->page_info['title'],
 			'level' => 1,
 			'content' => '',
+			'parts' => array(),
 			'edit_url' => wiki_get_url(array(
 				'page' => wiki_urlname($this->page_info['title'], $this->namespace),
 				'sa' => 'edit',
@@ -139,101 +140,110 @@ class WikiParser
 
 		$toc = array();
 
+		$contentTemp = '';
+
+		$currentPart = array();
+		$currentType = 'p';
+
 		$i = 0;
 		while ($i < count($parts))
 		{
 			// New Section
-			if (substr($parts[$i], 0, 1) == '=' && strlen($parts[$i]) >= 2 && strlen($parts[$i]) <= 5)
+			if (substr($parts[$i], 0, 1) == '=' && strlen($parts[$i]) >= 2 && strlen($parts[$i]) <= 5 && str_replace('=', '', $parts[$i]) == '')
 			{
-				if (str_replace('=', '', $parts[$i]) == '')
-				{
-					if ($para_open)
-						$this->currentSection['content'] .= '</p>';
-					$this->pageSections[] = $this->currentSection;
+				if (!empty($currentPart))
+					$this->currentSection['parts'][] = $currentPart;
+				$currentPart = array();
 
-					$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
+				$this->pageSections[] = $this->currentSection;
 
-					$this->currentSection = array(
-						'title' => $parts[$i + 1],
-						'level' => strlen($parts[$i]),
-						'content' => '',
-						'edit_url' => wiki_get_url(array(
-							'page' => wiki_urlname($this->page_info['title'], $this->namespace),
-							'sa' => 'edit',
-							'section' => count($this->pageSections),
-						)),
-					);
+				$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
 
-					$para_open = false;
+				$this->currentSection = array(
+					'title' => $parts[$i + 1],
+					'level' => strlen($parts[$i]),
+					'content' => '',
+					'parts' => array(),
+					'edit_url' => wiki_get_url(array(
+						'page' => wiki_urlname($this->page_info['title'], $this->namespace),
+						'sa' => 'edit',
+						'section' => count($this->pageSections),
+					)),
+				);
 
-					$i += 1;
-				}
+				$i += 1;
 			}
 			elseif (!$this->parse_bbc)
 				$this->currentSection['content'] .= $parts[$i];
-			// New Paragraph?
+			// End of Paragraph?
 			elseif ($parts[$i] == '<br /><br />')
 			{
-				if ($para_open)
-					$this->currentSection['content'] .= '</p>';
-				$para_open = false;
+				if (!empty($currentPart))
+					$this->currentSection['parts'][] = $currentPart;
+
+				$currentType = 'p';
+				$currentPart = array();
 			}
 			// Block tags can't be in paragraph
 			elseif (in_array($parts[$i], array('<div', '<ul', '<table', '<code')))
 			{
-				if ($para_open)
-					$this->currentSection['content'] .= '</p>';
-				$para_open = false;
+				if ($currentType != 'raw')
+				{
+					$this->currentSection['parts'][] = $currentPart;
 
-				// Don't start new paragraph
-				$can_para = false;
+					$currentType = 'raw';
+					$currentPart = array(
+						'type' => 'raw',
+						'content' => '',
+					);
+				}
 
-				$this->currentSection['content'] .= $parts[$i];
+				$currentPart['content'] .= $parts[$i];
 			}
 			elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code>')))
 			{
-				// Now new paragraph can be started again
-				$can_para = true;
-
-				$this->currentSection['content'] .= $parts[$i];
+				$currentType = 'p';
+				$currentPart = array();
 			}
 			// No paragraphs area
 			elseif ($parts[$i] == '<!!!>')
 			{
-				if ($para_open)
-					$this->currentSection['content'] .= '</p>';
-				$para_open = false;
-
-				// Don't start new paragraph
-				$can_para = false;
+				$currentType = 'raw';
+				$currentPart = array(
+					'type' => 'raw',
+					'content' => '',
+				);
 			}
 			// No paragraphs area
 			elseif ($parts[$i] == '</!!!>')
 			{
-				// Now new paragraph can be started again
-				$can_para = true;
+				if (!empty($currentPart))
+					$this->currentSection['parts'][] = $currentPart;
+
+				$currentType = 'p';
+				$currentPart = array();
 			}
 			// Avoid starting paragraph with newline
 			elseif ($parts[$i] == '<br />')
 			{
-				if ($para_open || !$can_para)
-					$this->currentSection['content'] .= $parts[$i];
+				if (!empty($currentPart['content']))
+					$currentPart['content'] .= $parts[$i];
 			}
 			elseif (!empty($parts[$i]))
 			{
-				// Open new paragraph if one isn't open
-				if (!$para_open && $can_para)
-				{
-					$this->currentSection['content'] .= '<p>';
-					$para_open = true;
-				}
+				if (empty($currentPart))
+					$currentPart = array(
+						'type' => $currentType,
+						'content' => '',
+					);
 
-				$this->currentSection['content'] .= $parts[$i];
+				$currentPart['content'] .= $parts[$i];
 			}
 
 			$i++;
 		}
 
+		$this->currentSection['parts'][] = $currentPart;
 		$this->pageSections[] = $this->currentSection;
 		$this->currentSection = null;
 

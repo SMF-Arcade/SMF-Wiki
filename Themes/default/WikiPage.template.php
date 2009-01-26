@@ -147,8 +147,17 @@ function template_wiki_content()
 			print_r($context['current_file']);
 		}
 
-		echo '
-			', $section['content'];
+		foreach ($section['parts'] as $part)
+		{
+			if ($part['type'] == 'p')
+			{
+				echo '
+			<p>', $part['content'], '</p>';
+			}
+			elseif ($part['type'] == 'raw')
+				echo '
+			', $part['content'];
+		}
 	}
 }
 
