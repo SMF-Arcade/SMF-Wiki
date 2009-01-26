@@ -67,14 +67,20 @@ function Wiki($standalone = false)
 	if (!isset($_REQUEST['page']))
 		$_REQUEST['page'] = '';
 
-	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
-
-	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'], false);
-
 	loadNamespace();
 
-	if (empty($_REQUEST['page']))
-		redirectexit($context['namespace']['url']);
+	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
+
+	$context['namespace'] = &$context['namespaces'][$_REQUEST['namespace']];
+
+	// Add namespace to linktree if necassary
+	if (!empty($context['namespace']['prefix']))
+		$context['linktree'][] = array(
+			'url' =>  $context['namespace']['url'],
+			'name' => $context['namespace']['prefix'],
+		);
+
+	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'], false);
 
 	// Subactions
 	$subActions = array(
@@ -96,9 +102,43 @@ function Wiki($standalone = false)
 		)
 	);
 
-	// Load Page info if namesapce isn't "Special" namespace
-	if ($context['namespace']['type'] != 1)
+	// show error page for invalid titles
+	if (!is_valid_pagename($_REQUEST['page'], $context['namespace']))
 	{
+		$namespaceGroup = 'normal';
+		$subaction = 'view';
+
+		$context['page_info'] = array(
+			'id' => null,
+			'title' => read_urlname($_REQUEST['page'], true),
+			'name' => $context['current_page_name'],
+			'namespace' => $context['namespace']['id'],
+			'is_locked' => false,
+		);
+
+		// Setup tabs
+		$context['wikimenu'] = array(
+			'view' => array(
+				'title' => $txt['wiki_view'],
+				'url' => wiki_get_url($context['current_page_name']),
+				'selected' => in_array($subaction, array('view')),
+				'show' => true,
+			),
+		);
+
+		$context['robot_no_index'] = true;
+
+		// Template
+		loadTemplate('WikiPage');
+		$context['template_layers'][] = 'wikipage';
+		$context['sub_template'] = 'not_found';
+	}
+	// Load Page info if namesapce isn't "Special" namespace
+	elseif ($context['namespace']['type'] != 1)
+	{
+		if (empty($_REQUEST['page']))
+			redirectexit($context['namespace']['url']);
+
 		loadWikiPage();
 
 		// Don't index older versions please or links to certain version
@@ -106,20 +146,22 @@ function Wiki($standalone = false)
 			$context['robot_no_index'] = true;
 
 		$namespaceGroup = 'normal';
-		$_REQUEST['sa'] = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+		$subaction = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
 		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
-		if ($context['page_info']['id'] === null && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][2]))
-			$_REQUEST['sa'] = 'view';
+		if ($context['page_info']['id'] === null && !empty($subActions[$namespaceGroup][$subaction][2]))
+			$subaction = 'view';
 		// Don't allow file actions on plain pages
-		elseif (!isset($context['current_file']) && !empty($subActions[$namespaceGroup][$_REQUEST['sa']][3]))
-			$_REQUEST['sa'] = 'view';
+		elseif (!isset($context['current_file']) && !empty($subActions[$namespaceGroup][$subaction][3]))
+			$subaction = 'view';
 
 		// Download image if asked to
 		if (isset($context['current_file']) && $context['current_file']['is_image'] && isset($_REQUEST['image']))
-			$_REQUEST['sa'] = 'download';
+			$subaction = 'download';
 
-		$subaction = $_REQUEST['sa'];
+		// Don't index pages with invalid subaction
+		if (!isset($_REQUEST['sa']) || $subaction != $_REQUEST['sa'])
+			$context['robot_no_index'] = true;
 
 		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
 		$context['can_lock_page'] = allowedTo('wiki_admin');

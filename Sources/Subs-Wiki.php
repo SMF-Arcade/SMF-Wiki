@@ -137,9 +137,6 @@ function loadNamespace()
 
 	foreach ($context['namespaces'] as $id => $ns)
 	{
-		if ($id == $_REQUEST['namespace'])
-			$context['namespace'] = $context['namespaces'][$id];
-
 		// Hnadle special namespaces
 		if ($ns['type'] == 1 && !isset($context['namespace_special']))
 			$context['namespace_special'] = &$context['namespaces'][$id];
@@ -150,17 +147,6 @@ function loadNamespace()
 		elseif ($ns['type'] != 0)
 			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($id)));
 	}
-
-	// Current namespace wansn't found?
-	if (!isset($context['namespace']))
-		fatal_lang_error('wiki_namespace_not_found', false, array(read_urlname($_REQUEST['namespace'])));
-
-	// Add namespace to linktree if necassary
-	if (!empty($context['namespace']['prefix']))
-		$context['linktree'][] = array(
-			'url' =>  $context['namespace']['url'],
-			'name' => $context['namespace']['prefix'],
-		);
 }
 
 function wiki_get_namespaces()
@@ -393,10 +379,18 @@ function read_urlname($url)
 // Gets Namespace and Page from url style (Namespace:Page_Title)
 function __url_page_parse($page)
 {
+	global $context;
+
 	if (strpos($page, ':'))
 		list ($namespace, $page) = explode(':', $page, 2);
 	else
 		$namespace = '';
+
+	if (!empty($namespace) && !isset($context['namespaces'][$namespace]))
+	{
+		$page = $namespace . ':' . $page;
+		$namespace = '';
+	}
 
 	return array($namespace, $page);
 }
@@ -421,6 +415,14 @@ function wiki_urlname($page, $namespace = null, $clean = true)
 	}
 
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
+}
+
+function is_valid_pagename($page, $namespace)
+{
+	if ($namespace['id'] != '' && empty($page))
+		return false;
+	
+	return str_replace(array('[', ']', '{', '}', '|'), '', $page) == $page;
 }
 
 // Makes string safe to use as id for html element
