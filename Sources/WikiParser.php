@@ -243,18 +243,23 @@ class WikiParser
 		global $txt;
 
 		$parts = preg_split(
-			'%({{{|}}}|{{|}}|\||&quot;|")%',
+			'%(&lt;nowiki&gt;|&lt;/nowiki&gt;|{{{|}}}|{{|}}|\||&quot;|")%',
 			$message,
 			null,
 			PREG_SPLIT_DELIM_CAPTURE
 		);
 
 		$inBracket = false;
+		$inQuote = false;
+		$wikiParseSection = true;
 		$currentBracket = array(
 			'name' => '',
 			'params' => array(),
+			'data' => array(),
 			'non_parsed' => '',
 		);
+
+		$openBrackets = array();
 
 		$message = '';
 
@@ -262,93 +267,176 @@ class WikiParser
 
 		while ($i < count($parts))
 		{
-			if (!$inBracket && $parts[$i] == '{{' && isset($parts[$i + 1]))
+			if (!$inBracket && $parts[$i] == '&lt;nowiki&gt;' && $wikiParseSection)
+				$wikiParseSection = false;
+			elseif (!$inBracket && $parts[$i] == '&lt;/nowiki&gt;' && !$wikiParseSection)
+				$wikiParseSection = true;
+			elseif (!$wikiParseSection && !$inBracket)
+				$message .= $parts[$i];
+			elseif (!$wikiParseSection)
 			{
+				$currentBracket['non_parsed'] .= $parts[$i];
+				$currentBracket['data'][] = $parts[$i];
+			}
+			// Quotes
+			elseif ($inQuote && ($parts[$i] == '&quot;' || $parts[$i] == '&quot;'))
+			{
+				$inQuote = false;
+				$currentBracket['non_parsed'] .= $parts[$i];
+			}
+			elseif ($inQuote)
+			{
+				$currentBracket['non_parsed'] .= $parts[$i];
+				$currentBracket['data'][] = $parts[$i];
+			}
+			elseif (!$inQuote && $inBracket && ($parts[$i] == '&quot;' || $parts[$i] == '&quot;'))
+			{
+				$inQuote = true;
+				$currentBracket['non_parsed'] .= $parts[$i];
+			}
+			// Brackets
+			elseif ($parts[$i] == '{{' && isset($parts[$i + 1]))
+			{
+				if ($inBracket)
+				{
+					$openBrackets[] = $currentBracket;
+					$currentBracket = array(
+						'name' => '',
+						'params' => array(),
+						'data' => array(),
+						'non_parsed' => '',
+					);
+				}
+
 				$currentBracket['non_parsed'] = $parts[$i];
 				$i++;
 
-				$inBracket = 2;
+				$inBracket = true;
 				$currentBracket['type'] = 2;
 				$currentBracket['name'] = $parts[$i];
-				$currentBracket['non_parsed'] = $parts[$i];
+				$currentBracket['non_parsed'] .= $parts[$i];
 			}
-			elseif (!$inBracket && $parts[$i] == '{{{' && isset($parts[$i + 1]))
+			elseif ($parts[$i] == '{{{' && isset($parts[$i + 1]))
 			{
+				if ($inBracket)
+				{
+					$openBrackets[] = $currentBracket;
+					$currentBracket = array(
+						'name' => '',
+						'params' => array(),
+						'data' => array(),
+						'non_parsed' => '',
+					);
+				}
+
 				$currentBracket['non_parsed'] = $parts[$i];
 				$i++;
 
-				$inBracket = 3;
+				$inBracket = true;
 				$currentBracket['type'] = 3;
 				$currentBracket['name'] = $parts[$i];
 				$currentBracket['non_parsed'] .= $parts[$i];
 			}
 			elseif ($inBracket && $parts[$i] == '|')
 			{
+				if (!empty($currentBracket['data']))
+					$currentBracket['params'][] = $currentBracket['data'];
+				$currentBracket['data'] = array('|');
 				$currentBracket['non_parsed'] .= $parts[$i];
-				$i++;
-
-				$paramData = $parts[$i];
-				$currentBracket['non_parsed'] .= $parts[$i];
-
-				if ($parts[$i + 1] == '"' || $parts[$i + 1] == '&quot;')
-				{
-					$currentBracket['non_parsed'] .= $parts[$i + 1];
-
-					$i = $i + 2;
-
-					while ($parts[$i] != '&quot;' && $parts[$i + 1] != '"')
-					{
-						$paramData .= $parts[$i];
-						$currentBracket['non_parsed'] .= $parts[$i];
-						$i++;
-					}
-					$currentBracket['non_parsed'] .= $parts[$i];
-				}
-
-				$currentBracket['params'][] = $paramData;
 			}
-			elseif (($inBracket === 2 && $parts[$i] == '}}' || $inBracket === 3 &&$parts[$i] == '}}}'))
+			elseif (($currentBracket['type'] === 2 && $parts[$i] == '}}' || $currentBracket['type'] === 3 && $parts[$i] == '}}}'))
 			{
 				$currentBracket['non_parsed'] .= $parts[$i];
+
+				// is there param?
+				if (!empty($currentBracket['data']))
+				{
+					$currentBracket['params'][] = $currentBracket['data'];
+					$currentBracket['data'] = array();
+				}
+
+				$currentBracket['parsed'] = '';
 
 				if ($currentBracket['type'] == 3)
 				{
 					if (isset($params[$currentBracket['name']]))
-						$message .= $params[$currentBracket['name']];
+					{
+						$currentBracket['parsed'] .= $params[$currentBracket['name']];
+						$currentBracket['boolean_value'] = true;
+					}
 					else
-						$message .= $currentBracket['non_parsed'];
+					{
+						$currentBracket['parsed'] .= $currentBracket['non_parsed'];
+						$currentBracket['boolean_value'] = false;
+					}
 				}
 				elseif ($currentBracket['type'] == 2)
 				{
 					if (substr($currentBracket['name'], 0, 1) == '#')
 					{
+						$prams = array();
+
 						list ($function, $param1) = explode(':', substr($currentBracket['name'], 1), 2);
 
-						$funcParams = array(trim($param1));
+						$funcParams = array();
 
-						foreach ($currentBracket['params'] as $param)
-							$funcParams[] = trim($param);
+						if (trim($param1) != '')
+							$funcParams[] = trim($param1);
+
+						foreach ($currentBracket['params'] as $temp)
+						{
+							$param = array();
+							$dynamicParams = array();
+
+							foreach ($temp as $ib => $part)
+							{
+								// Separator
+								if ($ib == 0 && is_string($part) && $part == '|' && empty($funcParams))
+									$funcParams[] = $param;
+								elseif ($ib == 0 && is_string($part) && $part == '|')
+									continue;
+								elseif (is_string($part))
+									$param[] = $part;
+								elseif (is_array($part))
+								{
+									$dynamicParams[] = $part;
+									$param[] = $part['parsed'];
+								}
+							}
+
+							if (count($dynamicParams) == 1 && trim($dynamicParams[0]['parsed']) == trim(implode('', $param)))
+								$funcParams[] = $dynamicParams[0];
+							else
+								$funcParams[] = trim(implode('', $param));
+						}
 
 						$function = trim($function);
 
 						if ($function == 'if')
 						{
-							if (isset($params[$funcParams[0]]))
+							if (isset($funcParams[0]) && is_array($funcParams[0]))
 							{
-								if (isset($funcParams[1]))
-									$message .= $funcParams[1];
+								if (isset($funcParams[0]['boolean_value']) && $funcParams[0]['boolean_value'] === true)
+									$currentBracket['parsed'] .= isset($funcParams[1]) ? $funcParams[1] : '';
+								else
+									$currentBracket['parsed'] .= isset($funcParams[2]) ? $funcParams[2] : '';
 							}
-							elseif (isset($funcParams[2]))
-								$message .= $funcParams[2];
+							elseif (isset($funcParams[0]))
+							{
+								if (trim($funcParams[0]) == true)
+									$currentBracket['parsed'] .= isset($funcParams[1]) ? $funcParams[1] : '';
+								else
+									$currentBracket['parsed'] .= isset($funcParams[2]) ? $funcParams[2] : '';
+							}
 						}
 					}
 					elseif (isset($this->page_info['variables'][$currentBracket['name']]))
-						$message .= $this->page_info['variables'][$currentBracket['name']];
+						$currentBracket['parsed'] .= $this->page_info['variables'][$currentBracket['name']];
 					elseif (isset($context['wiki_variables'][$currentBracket['name']]))
-						$message .= $context['wiki_variables'][$currentBracket['name']];
+						$currentBracket['parsed'] .= $context['wiki_variables'][$currentBracket['name']];
 					else
 					{
-						$currentBracket['name'] = trim(str_replace('<br />', '', $currentBracket['name']));
+						$currentBracket['name'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $currentBracket['name']));
 
 						list ($namespace, $page) = __url_page_parse($currentBracket['name']);
 
@@ -356,8 +444,25 @@ class WikiParser
 
 						$templateParams = array();
 
-						foreach ($currentBracket['params'] as $param)
+						foreach ($currentBracket['params'] as $temp)
 						{
+							$param = array();
+							$dynamicParams = array();
+
+							foreach ($temp as $ib => $part)
+							{
+								// Separator
+								if ($ib == 0 && is_string($part) && $part == '|' && empty($funcParams))
+									$funcParams[] = $param;
+								elseif ($ib == 0 && is_string($part) && $part == '|')
+									continue;
+								elseif (is_string($part))
+									$param[] = $part;
+								elseif (is_array($part))
+									$param[] = $part['parsed'];
+							}
+
+							$param = trim(implode('', $param));
 							if (strpos($param, '='))
 							{
 								list ($key, $value) = explode('=', $param, 2);
@@ -385,36 +490,52 @@ class WikiParser
 							$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs-Wiki.php', 'wiki_template_get', array($namespace, $page));
 
 						if ($context['wiki_template'][$namespace . ':' . $page] === false)
-							$message .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
+							$currentBracket['parsed'] .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
 
-						$message .= $this->__parse__curls($context['wiki_template'][$namespace . ':' . $page], $templateParams);
+						$currentBracket['parsed'] .= $this->__parse__curls($context['wiki_template'][$namespace . ':' . $page], $templateParams);
 					}
 				}
 				else
-					$message .= $currentBracket['non_parsed'];
+					$currentBracket['parsed'] .= $currentBracket['non_parsed'];
 
-				$inBracket = false;
+				if (empty($openBrackets))
+				{
+					$inBracket = false;
 
-				$currentBracket = array(
-					'name' => '',
-					'params' => array(),
-					'non_parsed' => '',
-				);
+					$message .= $currentBracket['parsed'];
+
+					$currentBracket = array(
+						'name' => '',
+						'params' => array(),
+						'non_parsed' => '',
+					);
+				}
+				else
+				{
+					$parsedBracket = $currentBracket;
+
+					$currentBracket = array_pop($openBrackets);
+					$currentBracket['non_parsed'] .= $parsedBracket['non_parsed'];
+					$currentBracket['data'][] = $parsedBracket;
+				}
 			}
 			elseif ($inBracket && !empty($parts[$i]))
 			{
 				$currentBracket['non_parsed'] .= $parts[$i];
-
-				$last = array_pop($currentBracket['params']);
-
-				$last .= $parts[$i];
-
-				$currentBracket['params'][] = $last;
+				$currentBracket['data'][] = $parts[$i];
 			}
 			elseif (!$inBracket && !empty($parts[$i]))
 				$message .= $parts[$i];
 
 			$i++;
+		}
+
+		// Try to fix mistakes
+		if (!empty($currentBracket['non_parsed']))
+		{
+			foreach ($openBrackets as $brc)
+				$message .= $brc['non_parsed'];
+			$message .= $currentBracket['non_parsed'];
 		}
 
 		return $message;
