@@ -107,12 +107,12 @@ class WikiParser
 	{
 		$this->params = $params;
 
-		$message = $this->__parse__curls($message);
-
 		if ($this->parse_bbc)
+		{
+			$message = $this->__parse__curls($message);
 			$message = parse_bbc($message);
-
-		$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
+			$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
+		}
 
 		$parts = preg_split(
 			'%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}|(<br />|<br /><br />|<br />|<!!!>|</!!!>|<div|<ul|<table|<code|</div>|</ul>|</table>|</code>)%',
@@ -169,6 +169,8 @@ class WikiParser
 					$i += 1;
 				}
 			}
+			elseif (!$this->parse_bbc)
+				$this->currentSection['content'] .= $parts[$i];
 			// New Paragraph?
 			elseif ($parts[$i] == '<br /><br />')
 			{
@@ -188,7 +190,7 @@ class WikiParser
 
 				$this->currentSection['content'] .= $parts[$i];
 			}
-			elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code')))
+			elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code>')))
 			{
 				// Now new paragraph can be started again
 				$can_para = true;

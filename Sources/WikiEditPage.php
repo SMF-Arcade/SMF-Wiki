@@ -159,7 +159,7 @@ function EditPage2()
 		$body = $_POST['wiki_content'];
 	else
 	{
-		$b = wikiparser($context['page_info'], $context['page_info']['body'], false);
+		$b = wikiparser($context['page_info'], $context['page_content_raw'], false);
 
 		if (!isset($b['sections'][$_REQUEST['section']]))
 			$body = $_POST['wiki_content'];
