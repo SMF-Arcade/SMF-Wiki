@@ -13,6 +13,7 @@ $txt['admin_wiki_settings'] = 'Settings';
 $txt['permissiongroup_wiki'] = 'Wiki';
 $txt['permissionname_wiki_access'] = 'Access Wiki';
 $txt['permissionname_wiki_edit'] = 'Edit Pages In Wiki';
+$txt['permissionname_wiki_delete'] = 'Delete Pages from Wiki';
 $txt['permissionname_wiki_upload'] = 'Upload Files to Wiki';
 $txt['permissionname_wiki_admin'] = 'Administrate Wiki';
 
