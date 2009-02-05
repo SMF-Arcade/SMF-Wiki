@@ -202,12 +202,22 @@ class WikiParser
 			}
 			elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code>')))
 			{
+				if (!empty($currentPart))
+				{
+					$currentPart['content'] .= $parts[$i];
+					
+					$this->currentSection['parts'][] = $currentPart;
+				}
+
 				$currentType = 'p';
 				$currentPart = array();
 			}
 			// No paragraphs area
 			elseif ($parts[$i] == '<!!!>')
 			{
+				if (!empty($currentPart))
+					$this->currentSection['parts'][] = $currentPart;
+
 				$currentType = 'raw';
 				$currentPart = array(
 					'type' => 'raw',
