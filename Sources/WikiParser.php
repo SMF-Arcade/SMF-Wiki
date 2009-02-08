@@ -110,8 +110,8 @@ class WikiParser
 		if ($this->parse_bbc)
 		{
 			$message = $this->__parse__curls($message);
-			$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
 			$message = parse_bbc($message);
+			$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
 		}
 
 		$parts = preg_split(
