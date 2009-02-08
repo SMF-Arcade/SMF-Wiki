@@ -147,6 +147,11 @@ ul.wikimenu li
 	font-weight: normal;
 }
 
+a.redlink
+{
+	color: red;
+}
+
 .wikitoc
 {
 	border: 1px solid #AAAAAA;

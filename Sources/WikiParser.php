@@ -601,7 +601,9 @@ class WikiParser
 
 		list ($namespace, $page) = __url_page_parse($groups[1]);
 
-		if ($namespace == $context['namespace_images']['id'])
+		$page_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
+
+		if ($namespace == $context['namespace_images']['id'] && $page_info['id'] !== null)
 		{
 			if (!empty($groups[3]))
 			{
@@ -656,10 +658,15 @@ class WikiParser
 		}
 		else
 		{
+			$class = array();
+
+			if ($page_info['id'] === null)
+				$class[] = 'redlink';
+
 			if (empty($groups[3]))
-				$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
+				$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . read_urlname($groups[1]) . $groups[4] . '</a>';
 			else
-				$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . $groups[3] . $groups[4] . '</a>';
+				$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $groups[3] . $groups[4] . '</a>';
 
 			return $link . $groups[5];
 		}
