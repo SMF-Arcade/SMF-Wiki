@@ -1,4 +1,24 @@
 <?php
+/**********************************************************************************
+* WikiParser.php                                                                  *
+***********************************************************************************
+* SMF Wiki                                                                        *
+* =============================================================================== *
+* Software Version:           SMF Wiki 0.1                                        *
+* Software by:                Niko Pahajoki (http://www.madjoki.com)              *
+* Copyright 2008-2009 by:     Niko Pahajoki (http://www.madjoki.com)              *
+* Support, News, Updates at:  http://www.smfarcade.info                           *
+***********************************************************************************
+* This program is free software; you may redistribute it and/or modify it under   *
+* the terms of the provided license as published by Simple Machines LLC.          *
+*                                                                                 *
+* This program is distributed in the hope that it is and will be useful, but      *
+* WITHOUT ANY WARRANTIES; without even any implied warranty of MERCHANTABILITY    *
+* or FITNESS FOR A PARTICULAR PURPOSE.                                            *
+*                                                                                 *
+* See the "license.txt" file for details of the Simple Machines license.          *
+* The latest version can always be found at http://www.simplemachines.org.        *
+**********************************************************************************/
 
 // Makes Table of Content
 function do_toctable($tlevel, $toc, $main = true)
@@ -646,20 +666,6 @@ class WikiParser
 	}
 }
 
-// Callback for replace variables and templates
-function wikiparses_variable_replace($groups)
-{
-	global $context, $variablesTemp, $templateParams;
-
-	if (isset($variablesTemp[$groups[1]]))
-		return $variablesTemp[$groups[1]];
-	// Is it global variable (ie wikiversion)
-	elseif (isset($context['wiki_variables'][$groups[1]]))
-		return $context['wiki_variables'][$groups[1]];
-	else
-		return $groups[0];
-}
-
 // Parses wiki page
 function wikiparser($page_info, $message, $parse_bbc = true, $namespace = null)
 {
@@ -681,26 +687,6 @@ function wikilink_callback($groups)
 		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . $groups[3] . $groups[4] . '</a>';
 
 	return $link . $groups[5];
-}
-
-// Callback for templates
-function wikitemplate_callback($groups)
-{
-	global $context, $wikiReplaces;
-	static $templateFunctions = array();
-
-
-}
-
-// Callback for condtional IF
-function wikitemplate_if_callback($groups)
-{
-	global $context, $wikiReplaces;
-
-	if (!empty($wikiReplaces['@@' . $groups[2] . '@@']))
-		return $groups[4];
-	else
-		return '';
 }
 
 ?>
