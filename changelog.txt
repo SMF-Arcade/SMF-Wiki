@@ -6,6 +6,7 @@ SMF Wiki 0.1                                                                   ?
 February 2009
 --------------------------------------------------------------------------------
  ! Wikiparser lost some raw sections
+ ! Wikiparser lost values for numeric parameters
 
 January 2009
 --------------------------------------------------------------------------------

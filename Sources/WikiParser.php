@@ -110,8 +110,8 @@ class WikiParser
 		if ($this->parse_bbc)
 		{
 			$message = $this->__parse__curls($message);
-			$message = parse_bbc($message);
 			$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
+			$message = parse_bbc($message);
 		}
 
 		$parts = preg_split(
@@ -205,7 +205,7 @@ class WikiParser
 				if (!empty($currentPart))
 				{
 					$currentPart['content'] .= $parts[$i];
-					
+
 					$this->currentSection['parts'][] = $currentPart;
 				}
 
@@ -262,7 +262,7 @@ class WikiParser
 
 	function __parse__curls($message, $params = array())
 	{
-		global $txt;
+		global $context, $txt;
 
 		$parts = preg_split(
 			'%(&lt;nowiki&gt;|&lt;/nowiki&gt;|{{{|}}}|{{|}}|\||&quot;|")%',
@@ -495,7 +495,10 @@ class WikiParser
 									$nextNumeric = $key + 1;
 							}
 							else
+							{
 								$key = $nextNumeric++;
+								$value = $param;
+							}
 
 							$value = str_replace("\n", '<br />', trim(str_replace('<br />', "\n", $value)));
 
@@ -508,13 +511,22 @@ class WikiParser
 						if (!isset($context['wiki_template']))
 							$context['wiki_template'] = array();
 
-						if (!isset($context['wiki_template'][$namespace . ':' . $page]))
-							$context['wiki_template'][$namespace . ':' . $page] = cache_quick_get('wiki-template-' . $namespace . ':' . $page, 'Subs-Wiki.php', 'wiki_template_get', array($namespace, $page));
+						$template_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
 
-						if ($context['wiki_template'][$namespace . ':' . $page] === false)
+						if ($template_info['id'] !== null)
+						{
+							list ($template_data, $template_raw_content, $template_content) = cache_quick_get(
+								'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
+								'Subs-Wiki.php', 'wiki_get_page_content',
+								array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
+							);
+
+							$currentBracket['parsed'] .= $this->__parse__curls($template_raw_content, $templateParams);
+						}
+						else
+						{
 							$currentBracket['parsed'] .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
-
-						$currentBracket['parsed'] .= $this->__parse__curls($context['wiki_template'][$namespace . ':' . $page], $templateParams);
+						}
 					}
 				}
 				else
