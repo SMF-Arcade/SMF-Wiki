@@ -311,11 +311,29 @@ function doTables($tbl, $tables, $columnRename = array(), $smf2 = true)
 	{
 		$table_name = $table['name'];
 
+		// Renames in this table?
+		if (!empty($table['rename']))
+		{
+			$oldTable = $smcFunc['db_table_structure']($table_name);
+
+			foreach ($oldTable['columns'] as $column)
+			{
+				if (isset($table['rename'][$column['name']]))
+				{
+					$old_name = $column['name'];
+					$column['name'] = $table['rename'][$column['name']];
+
+					$smcFunc['db_change_column']($table_name, $old_name, $column);
+				}
+			}
+		}
+
+		// Global renames? (should be avoided)
 		if (!empty($columnRename) && in_array($db_prefix . $table_name, $tbl))
 		{
-			$ctable = $smcFunc['db_table_structure']($table_name);
+			$currentTable = $smcFunc['db_table_structure']($table_name);
 
-			foreach ($ctable['columns'] as $column)
+			foreach ($currentTable['columns'] as $column)
 			{
 				if (isset($columnRename[$column['name']]))
 				{
@@ -391,7 +409,7 @@ function doTables($tbl, $tables, $columnRename = array(), $smf2 = true)
 					if ($table['upgrade']['columns'][$col['name']] == 'drop')
 						$smcFunc['db_remove_column']($table_name, $col['name']);
 				}
-				elseif (!$exists)
+				elseif (!$exists && empty($table['smf']))
 					$log[] = sprintf('Table %s has non-required column %s', $table_name, $col['name']);
 			}
 
@@ -461,15 +479,18 @@ function doTables($tbl, $tables, $columnRename = array(), $smf2 = true)
 							elseif (isset($index['name']) && isset($index2['name']) && $index['name'] == $index2['name'] && $index['type'] == $index2['type'] && $index['columns'] === $index2['columns'])
 								$smcFunc['db_remove_index']($table_name, $index['name']);
 							else
-								$log[] = array($table_name . ' has Unneeded index', $index);
+								$log[] = $table_name . ' has Unneeded index ' . var_dump($index);
 						}
 					}
 					else
-						$log[] = array($table_name . ' has Unneeded index', $index);
+						$log[] = $table_name . ' has Unneeded index ' . var_dump($index);
 				}
 			}
 		}
 	}
+
+	if (!empty($log))
+		log_error(implode('<br />', $log));
 
 	return $log;
 }

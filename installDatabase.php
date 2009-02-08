@@ -42,6 +42,8 @@ $tbl = array_keys($tables);
 foreach ($tbl as $id => $table)
 	$tbl[$id] = $db_prefix . $table;
 
+$tbl = array_intersect($tbl, $smcFunc['db_list_tables']());
+
 db_extend('packages');
 db_extend('extra');
 
