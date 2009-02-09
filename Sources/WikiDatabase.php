@@ -633,6 +633,7 @@ function installDefaultData($forced = false)
 		1 => array('name' => 'Special', 'default_page' => 'List'),
 		2 => array('name' => 'File', 'default_page' => 'List'),
 		3 => array('name' => 'Image', 'default_page' => 'List'),
+		4 => array('name' => 'SMFWiki', 'default_page' => 'List'),
 	);
 
 	foreach ($specialNamespaces as $type => $data)
@@ -683,9 +684,9 @@ function installDefaultData($forced = false)
 			'locked' => true,
 		),
 		array(
-			'namespace' => 'Template',
-			'name' => 'Navigation',
-			'body' => '__navigation__' . "\n" . ':Main_Page|__main_page__',
+			'namespace' => 'SMFWiki',
+			'name' => 'Sidebar',
+			'body' => '* __navigation__' . "\n" . '** Main_Page|__main_page__',
 			'locked' => true,
 		),
 	);

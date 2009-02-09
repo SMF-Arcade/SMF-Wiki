@@ -96,6 +96,80 @@ function wiki_get_url($params)
 	}
 }
 
+// Makes Readable name form urlname
+function read_urlname($url)
+{
+	global $smcFunc;
+
+	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', un_htmlspecialchars($url))));
+}
+
+// Gets Namespace and Page from url style (Namespace:Page_Title)
+function __url_page_parse($page)
+{
+	global $context;
+
+	if (strpos($page, ':'))
+		list ($namespace, $page) = explode(':', $page, 2);
+	else
+		$namespace = '';
+
+	if (!empty($namespace) && !isset($context['namespaces'][$namespace]))
+	{
+		$page = $namespace . ':' . $page;
+		$namespace = '';
+	}
+
+	return array($namespace, $page);
+}
+
+// Makes link from page title and namespace
+function wiki_urlname($page, $namespace = null, $clean = true)
+{
+	global $smcFunc;
+
+	if ($namespace == null)
+	{
+		if (strpos($page, ':'))
+			list ($namespace, $page) = explode(':', $page, 2);
+		else
+			$namespace = '';
+	}
+
+	if ($clean)
+	{
+		$namespace = clean_pagename($namespace, true);
+		$page = clean_pagename($page);
+	}
+
+	return !empty($namespace) ? $namespace . ':' . $page : $page;
+}
+
+function is_valid_pagename($page, $namespace)
+{
+	if ($namespace['id'] != '' && empty($page))
+		return false;
+
+	return str_replace(array('[', ']', '{', '}', '|'), '', $page) == $page;
+}
+
+// Makes string safe to use as id for html element
+function make_html_safe($string)
+{
+	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
+}
+
+// Cleans illegal characters from pagename
+function clean_pagename($string, $namespace = false)
+{
+	global $smcFunc;
+
+	if ($namespace)
+		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':', '|'), '_', $string)));
+
+	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
+}
+
 function loadNamespace()
 {
 	global $smcFunc, $context;
@@ -111,6 +185,8 @@ function loadNamespace()
 			$context['namespace_files'] = &$context['namespaces'][$id];
 		elseif ($ns['type'] == 3 && !isset($context['namespace_images']))
 			$context['namespace_images'] = &$context['namespaces'][$id];
+		elseif ($ns['type'] == 4 && !isset($context['namespace_internal']))
+			$context['namespace_internal'] = &$context['namespaces'][$id];
 		elseif ($ns['type'] != 0)
 			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($id)));
 	}
@@ -335,118 +411,6 @@ function loadWikiPage_old($name, $namespace = '', $revision = null)
 	);
 }
 
-// Makes Readable name form urlname
-function read_urlname($url)
-{
-	global $smcFunc;
-
-	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', un_htmlspecialchars($url))));
-}
-
-// Gets Namespace and Page from url style (Namespace:Page_Title)
-function __url_page_parse($page)
-{
-	global $context;
-
-	if (strpos($page, ':'))
-		list ($namespace, $page) = explode(':', $page, 2);
-	else
-		$namespace = '';
-
-	if (!empty($namespace) && !isset($context['namespaces'][$namespace]))
-	{
-		$page = $namespace . ':' . $page;
-		$namespace = '';
-	}
-
-	return array($namespace, $page);
-}
-
-// Makes link from page title and namespace
-function wiki_urlname($page, $namespace = null, $clean = true)
-{
-	global $smcFunc;
-
-	if ($namespace == null)
-	{
-		if (strpos($page, ':'))
-			list ($namespace, $page) = explode(':', $page, 2);
-		else
-			$namespace = '';
-	}
-
-	if ($clean)
-	{
-		$namespace = clean_pagename($namespace, true);
-		$page = clean_pagename($page);
-	}
-
-	return !empty($namespace) ? $namespace . ':' . $page : $page;
-}
-
-function is_valid_pagename($page, $namespace)
-{
-	if ($namespace['id'] != '' && empty($page))
-		return false;
-
-	return str_replace(array('[', ']', '{', '}', '|'), '', $page) == $page;
-}
-
-// Makes string safe to use as id for html element
-function make_html_safe($string)
-{
-	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
-}
-
-// Cleans illegal characters from pagename
-function clean_pagename($string, $namespace = false)
-{
-	global $smcFunc;
-
-	if ($namespace)
-		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':', '|'), '_', $string)));
-
-	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
-}
-
-// Gets template
-function wiki_template_get($namespace, $page, $revision = 0)
-{
-	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
-
-	$request = $smcFunc['db_query']('', '
-		SELECT con.content
-		FROM {db_prefix}wiki_pages AS info
-			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = {raw:revision}
-				AND con.id_page = info.id_page)
-		WHERE info.title = {string:article}
-			AND info.namespace = {string:namespace}',
-		array(
-			'article' => $page,
-			'namespace' => $namespace,
-			'revision' => !empty($revision) ? $revision : 'info.id_revision_current',
-		)
-	);
-
-	if (!$row = $smcFunc['db_fetch_assoc']($request))
-	{
-		$smcFunc['db_free_result']($request);
-
-		return array(
-			'expires' => time() + 360,
-			'data' => false,
-			'refresh_eval' => 'return isset($_REQUEST[\'purge\']);',
-		);
-	}
-	$smcFunc['db_free_result']($request);
-
-	return array(
-		'data' => $row['content'],
-		'expires' => time() + 3600,
-		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
-	);
-}
-
 // LoadWikiMenu
 function loadWikiMenu()
 {
@@ -454,27 +418,36 @@ function loadWikiMenu()
 
 	$return = array();
 
-	$template = wiki_template_get('Template', 'Navigation');
+	$page_info = wiki_get_page_info('Sidebar', $context['namespace_internal']);
 
-	$menu = preg_split('~<br( /)?' . '>~', $template['data']);
+	list ($page_data, $page_content_raw, $page_content) = wiki_get_page_content($page_info, $context['namespace_internal'], $page_info['current_revision']);
+
+	$menu = preg_split('~<br( /)?' . '>~', $page_content_raw);
 
 	$current_menu = false;
 
 	foreach ($menu as $item)
 	{
 		$item = trim($item);
-		$subItem = false;
 
-		$subItem = substr($item, 0, 1) == ':';
-
-		if ($subItem)
-			$item = substr($item, 1);
+		if (substr($item, 0, 2) == '**' && substr($item, 2, 1) != '*')
+		{
+			$subItem = true;
+			$item = trim(substr($item, 2));
+		}
+		elseif (substr($item, 0, 1) == '*' && substr($item, 1, 1) != '*')
+		{
+			$subItem = false;
+			$item = trim(substr($item, 1));
+		}
+		else
+			continue;
 
 		if (strpos($item, '|') !== false)
 		{
 			list ($page, $title) = explode('|', $item, 2);
 
-			if (substr($url, 4) != 'http')
+			if (substr($page, 4) != 'http')
 				$url = wiki_get_url($page);
 			else
 				$url = $page;
@@ -543,7 +516,7 @@ function createPage($title, $namespace)
 // Creates new revision for page
 function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions)
 {
-	global $smcFunc;
+	global $context, $smcFunc;
 
 	$request = $smcFunc['db_query']('', '
 		SELECT title, namespace
@@ -598,6 +571,10 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 			'revision' => $id_revision,
 		)
 	);
+
+	// If editing menu, clear cached menu
+	if ($row['namespace'] == $context['namespace_internal']['id'] && $row['title'] == 'Sidebar')
+		cache_put_data('wiki-navigation', null, 360);
 
 	cache_put_data('wiki-pageinfo-' . $row['namespace'] . '-' . $row['title'], null, 360);
 
