@@ -105,6 +105,256 @@ function wikiparse_variables($message)
 	return $temp;
 }
 
+class WikiPreprocess
+{
+	function __construct()
+	{
+
+	}
+
+	function preprocess($text, $mode = 'normal')
+	{
+		$preprocessed = '';
+		$text = str_replace('<br />', "\n", $text);
+
+		$i = 0;
+
+		$currentItem = array();
+
+		$rules = array(
+			'[' => array(
+				'close' => ']',
+				'min' => 2,
+				'max' => 2,
+				'names' => array(
+					2 => 'wikilink',
+				),
+			),
+			'{' => array(
+				'close' => '}',
+				'min' => 2,
+				'max' => 3,
+				'names' => array(
+					2 => 'template',
+					3 => 'template_param',
+				),
+			),
+		);
+
+		$stack = array();
+		$piece = null;
+
+		$searchBase = '[{';
+
+		$textLen = strlen($text);
+
+		while (true)
+		{
+			$charType = '';
+			$search = $searchBase;
+			$closeTag = '';
+
+			$stackIndex = count($stack) - 1;
+
+			if (!empty($stack))
+			{
+				$piece = end($stack);
+				$search .= $piece['closing_char'] . '|';// . '|';
+				$closeTag = $piece['closing_char'];
+				unset($piece);
+			}
+
+			$skip = strcspn($text, $search, $i);
+
+			if ($skip > 0 && empty($stack))
+			{
+				$preprocessed .= substr($text, $i, $skip);
+				$i += $skip;
+			}
+			elseif ($skip > 0)
+			{
+				$stack[$stackIndex]['current_param'] .= substr($text, $i, $skip);
+				$i += $skip;
+			}
+
+			if ($i >= $textLen)
+				break;
+			else
+			{
+				$curChar = $text[$i];
+
+				// Close char?
+				if ($curChar == $closeTag)
+					$charType = 'close';
+				// Start char?
+				elseif (isset($rules[$curChar]))
+				{
+					$rule = $rules[$curChar];
+					$charType = 'open';
+				}
+				elseif ($curChar == '|')
+					$charType = 'pipe';
+			}
+
+			if ($charType == 'open')
+			{
+				$len = strspn($text, $curChar, $i);
+
+				if ($len >= $rule['min'])
+				{
+					$piece = array(
+						'opening_char' => $curChar,
+						'closing_char' => $rule['close'],
+						'len' => $len,
+						'contents' => '',
+						'params' => array(),
+						'children' => array(),
+						'lineStart' => ($i > 0 && $text[$i-1] == "\n"),
+					);
+
+					$stack[] = $piece;
+				}
+				else
+				{
+					if (empty($stack))
+						$preprocessed .= str_repeat($curChar, $len);
+					else
+						$stack[$stackIndex]['current_param'] .= str_repeat($curChar, $len);
+				}
+
+				$i += $len;
+			}
+			elseif ($charType == 'pipe')
+			{
+				if (!isset($stack[$stackIndex]['firstParam']))
+					$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
+				elseif ($stack[$stackIndex]['current_param_name'] == null)
+					$stack[$stackIndex]['params'][] = $stack[$stackIndex]['current_param'];
+				else
+					$stack[$stackIndex]['params'][$stack[$stackIndex]['current_param_name']] = $stack[$stackIndex]['current_param'];
+
+				$stack[$stackIndex]['current_param'] = null;
+				$stack[$stackIndex]['current_param_name'] = null;
+
+				$i++;
+			}
+			elseif ($charType == 'close')
+			{
+				$piece = &$stack[$stackIndex];
+
+				$maxLen = $piece['len'];
+				$len = strspn($text, $curChar, $i, $maxLen);
+
+				$rule = $rules[$piece['opening_char']];
+
+				if ($len > $rule['max'])
+					$matchLen = $rule['max'];
+				else
+				{
+					$matchLen = $len;
+
+					while ($matchLen > 0 && !isset($rule['names'][$matchLen]))
+						$matchLen--;
+				}
+
+				if ($matchLen <= 0)
+				{
+					$stack[$stackIndex]['current_param'] .= str_repeat($curChar, $len);
+					$i += $len;
+					continue;
+				}
+
+				if ($piece['current_param'] !== null)
+				{
+					if (!isset($stack[$stackIndex]['firstParam']))
+						$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
+					elseif ($stack[$stackIndex]['current_param_name'] == null)
+						$stack[$stackIndex]['params'][] = $stack[$stackIndex]['current_param'];
+					else
+						$stack[$stackIndex]['params'][$stack[$stackIndex]['current_param_name']] = $stack[$stackIndex]['current_param'];
+
+					$stack[$stackIndex]['current_param'] = null;
+					$stack[$stackIndex]['current_param_name'] = null;
+				}
+
+				$name = $rule['names'][$matchLen];
+				$params = array();
+
+				if (!empty($piece['params']))
+				{
+					foreach ($piece['params'] as $p)
+						$params[] = $p;
+				}
+
+				$thisElement = $piece;
+				$thisElement['name'] = $name;
+
+				$i += $matchLen;
+
+				// Remove last item from stack
+				array_pop($stack);
+
+				if (!empty($stack))
+				{
+					$stackIndex = count($stack) - 1;
+
+					if ($stack[$stackIndex]['current_param'] === null)
+						$stack[$stackIndex]['current_param'] = $thisElement;
+					else
+					{
+						$stack[$stackIndex]['current_param'] = trim($stack[$stackIndex]['current_param']);
+
+						if (substr($stack[$stackIndex]['current_param'], -1) == '=')
+						{
+							$stack[$stackIndex]['current_param_name'] = substr($stack[$stackIndex]['current_param'], 0, -1);
+							$stack[$stackIndex]['current_param'] = $thisElement;
+						}
+						else
+							$stack[$stackIndex]['children'][] = $thisElement;
+					}
+				};
+
+				if ($matchLen < $piece['len'])
+				{
+					$skips = 0;
+					$piece['len'] -= $matchLen;
+
+					while ($piece['len'] > 0)
+					{
+						if (isset($rule['names'][$piece['len']]))
+						{
+							$piece['current_param'] .= str_repeat($piece['opening_char'], $skips);
+
+							$stack[] = $piece;
+							break;
+						}
+
+						$piece['len']--;
+						$skips++;
+					}
+
+					//$preprocessed .= str_repeat($piece['opening_char'], $skips);
+				}
+
+				if (empty($stack))
+					$preprocessed .= print_r($piece, true);
+			}
+			elseif (empty($stack))
+			{
+				$preprocessed .= $curChar;
+				$i++;
+			}
+			else
+			{
+				$stack[$stackIndex]['current_param'] .= $curChar;
+				$i++;
+			}
+		}
+
+		return htmlspecialchars($preprocessed);
+	}
+}
+
 class WikiParser
 {
 	var $page_info;
