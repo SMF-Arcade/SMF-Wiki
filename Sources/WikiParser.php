@@ -114,8 +114,8 @@ class WikiPreprocess
 
 	function preprocess($text, $mode = 'normal')
 	{
-		$preprocessed = '';
-		$text = str_replace('<br />', "\n", $text);
+		$stringTemp = '';
+		$text = str_replace(array("\r\n", '<br />'), "\n", $text);
 
 		$i = 0;
 
@@ -144,9 +144,14 @@ class WikiPreprocess
 		$stack = array();
 		$piece = null;
 
-		$searchBase = '[{';
+		$searchBase = "[{\n";
 
 		$textLen = strlen($text);
+
+		$sections = array();
+
+		$section = array('name' => '', 'parts' => array());
+		$paragraph = array();
 
 		while (true)
 		{
@@ -168,7 +173,7 @@ class WikiPreprocess
 
 			if ($skip > 0 && empty($stack))
 			{
-				$preprocessed .= substr($text, $i, $skip);
+				$stringTemp .= substr($text, $i, $skip);
 				$i += $skip;
 			}
 			elseif ($skip > 0)
@@ -194,14 +199,73 @@ class WikiPreprocess
 				}
 				elseif ($curChar == '|')
 					$charType = 'pipe';
+				elseif ($curChar == "\n" && $text[$i + 1] == "\n")
+				{
+					$charType = 'new-paragraph';
+
+					$i += 2;
+				}
+				elseif ($curChar == "\n" && $text[$i + 1] == "=")
+				{
+					$charType = 'new-section';
+
+					$i += 1;
+				}
 			}
 
+			if ($charType == 'new-paragraph')
+			{
+				if (!empty($stringTemp))
+					$paragraph[] = $stringTemp;
+				$stringTemp = '';
+
+				$section['parts'][] = $paragraph;
+
+				$paragraph = array();
+			}
+			elseif ($charType == 'new-section')
+			{
+				$len = strcspn($text, "\n", $i);
+
+				$header = substr($text, $i, $len);
+
+				$c = strspn($header, '=');
+				$c2 = strspn(strrev($header), '=');
+
+				if ($c == $c2)
+				{
+					if (!empty($stringTemp))
+						$paragraph[] = $stringTemp;
+					if (!empty($paragraph))
+						$section['parts'][] = $paragraph;
+					if (!empty($section))
+						$sections[] = $section;
+					$stringTemp = '';
+					$paragraph = array();
+
+					$name = trim(substr($header, $c, -$c2));
+
+					$section = array(
+						'name' => $name,
+						'parts' => array(),
+					);
+				}
+				// Not header
+				else
+				{
+					$i--;
+					$charType = '';
+				}
+			}
 			if ($charType == 'open')
 			{
 				$len = strspn($text, $curChar, $i);
 
 				if ($len >= $rule['min'])
 				{
+					$paragraph[] = $stringTemp;
+					$stringTemp = '';
+
 					$piece = array(
 						'opening_char' => $curChar,
 						'closing_char' => $rule['close'],
@@ -217,7 +281,7 @@ class WikiPreprocess
 				else
 				{
 					if (empty($stack))
-						$preprocessed .= str_repeat($curChar, $len);
+						$stringTemp .= str_repeat($curChar, $len);
 					else
 						$stack[$stackIndex]['current_param'] .= str_repeat($curChar, $len);
 				}
@@ -332,26 +396,31 @@ class WikiPreprocess
 						$piece['len']--;
 						$skips++;
 					}
-
-					//$preprocessed .= str_repeat($piece['opening_char'], $skips);
 				}
 
 				if (empty($stack))
-					$preprocessed .= print_r($piece, true);
+					$paragraph[] = $thisElement;
 			}
-			elseif (empty($stack))
+			elseif ($charType == '' && empty($stack))
 			{
-				$preprocessed .= $curChar;
+				$stringTemp .= $curChar;
 				$i++;
 			}
-			else
+			elseif ($charType == '')
 			{
 				$stack[$stackIndex]['current_param'] .= $curChar;
 				$i++;
 			}
 		}
 
-		return htmlspecialchars($preprocessed);
+		if (!empty($stringTemp))
+			$paragraph[] = $stringTemp;
+		if (!empty($paragraph))
+			$section['parts'][] = $paragraph;
+		if (!empty($section))
+			$sections[] = $section;
+
+		return $sections;
 	}
 }
 
