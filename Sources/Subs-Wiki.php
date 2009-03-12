@@ -129,12 +129,7 @@ function wiki_urlname($page, $namespace = null, $clean = true)
 	global $smcFunc;
 
 	if ($namespace == null)
-	{
-		if (strpos($page, ':'))
-			list ($namespace, $page) = explode(':', $page, 2);
-		else
-			$namespace = '';
-	}
+		list ($namespace, $page) = __url_page_parse($page);
 
 	if ($clean)
 	{
