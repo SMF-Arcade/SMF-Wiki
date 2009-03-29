@@ -771,7 +771,7 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 		array('id_revision')
 	);
 
-	$id_revision = $smcFunc['db_insert_id']('{db_prefix}articles_content', 'id_revision');
+	$id_revision = $smcFunc['db_insert_id']('{db_prefix}wiki_content', 'id_revision');
 
 	$smcFunc['db_query']('' ,'
 		UPDATE {db_prefix}wiki_pages

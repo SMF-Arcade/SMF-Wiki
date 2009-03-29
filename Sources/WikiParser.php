@@ -105,19 +105,127 @@ function wikiparse_variables($message)
 	return $temp;
 }
 
-class WikiPreprocess
+class WikiParser
 {
 	function __construct()
 	{
 
 	}
+	
+	function parse($content, &$page_info, &$status, $mode = 'normal', $parameters = array())
+	{
+		global $context, $txt;
+		
+		if ($mode == 'normal')
+		{
+			// Run preprocessor to get array of items
+			$content = WikiParser::__preprocess($content, $mode);
+		}
+		
+		$sections = array();
+		
+		$status['paragraphOpen'] = isset($status['paragraphOpen']) ? $status['paragraphOpen'] : false;
+		
+		foreach ($content as $section)
+		{
+			$sectionID = count($sections);
+			
+			$sections[] = array(
+				'name' => $section['name'],
+				'html' => '',
+			);
+			
+			// Make reference, since it's easier to read this way
+			$currentHtml = &$sections[$sectionID]['html'];
+			
+			if (empty($section['part']))
+				continue;
+			
+			foreach ($section['part'] as $part)
+			{
+				if (!empty($part['is_new_paragraph']))
+				{
+					if ($status['paragraphOpen'])
+						$currentHtml .= '</p>';
+					
+					$currentHtml .= '<p>';
+					$status['paragraphOpen'] = true;
+				}
+				if (!empty($part['inline']) && !$status['paragraphOpen'])
+				{
+					$currentHtml .= '<p>';
+					$status['paragraphOpen'] = true;					
+				}
+				elseif (empty($part['inline']) && $status['paragraphOpen'])
+				{
+					$currentHtml .= '</p>';
+					$status['paragraphOpen'] = false;					
+				}
+				
+				foreach ($part['content'] as $item)
+				{
+					if (is_string($item))
+						$currentHtml .= $item;
+					// Replace templates
+					elseif ($item['name'] == 'template')
+					{
+						$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $item['firstParam']));
 
-	function preprocess($text, $mode = 'normal')
+						list ($namespace, $page) = __url_page_parse($item['firstParam']);
+
+						// TODO: Make Template special namespace
+						if (empty($namespace))
+							$namespace = 'Template';
+							
+						$template_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
+
+						if ($template_info['id'] !== null)
+						{
+							list ($template_data, $template_raw_content, $template_content) = cache_quick_get(
+								'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
+								'Subs-Wiki.php', 'wiki_get_page_content',
+								array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
+							);
+
+							$currentHtml .= WikiParser::parse($template_raw_content, $page_info, $status, 'template', $item['params']);
+						}
+						else
+							$currentHtml .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';					
+					}
+					else
+						WikiParser::__debug_die($currentHtml, $item);
+				} // END content of part
+			} // END part of section
+			
+			if ($status['paragraphOpen'])
+			{
+				$currentHtml .= '</p>';
+				$status['paragraphOpen'] = false;					
+			}
+			
+			unset($currentHtml);
+		} // END section
+		
+		return $sections;
+	}
+	
+	private function __debug_die($currentHtml, $item)
+	{
+		echo '
+		PARSE ERROR!!
+		Unable to parse item <pre>', var_dump($item), '</pre>
+		Parsed HTML: <pre>', htmlspecialchars($currentHtml), '</pre>';
+		
+		die();
+	}
+
+	private function __preprocess($text, $mode = 'normal')
 	{
 		$stringTemp = '';
-		$text = str_replace(array("\r\n", '<br />'), "\n", $text);
-
 		$i = 0;
+		
+		$text = parse_bbc($text);
+		$text = str_replace(array("\r\n", '<br />'), "\n", $text);
 
 		$currentItem = array();
 
@@ -150,8 +258,10 @@ class WikiPreprocess
 
 		$sections = array();
 
-		$section = array('name' => '', 'parts' => array());
+		$section = array('name' => '(root)', 'parts' => array());
+
 		$paragraph = array();
+		$is_new_paragraph = true;
 
 		while (true)
 		{
@@ -199,17 +309,17 @@ class WikiPreprocess
 				}
 				elseif ($curChar == '|')
 					$charType = 'pipe';
-				elseif ($curChar == "\n" && $text[$i + 1] == "\n")
-				{
-					$charType = 'new-paragraph';
-
-					$i += 2;
-				}
 				elseif ($curChar == "\n" && $text[$i + 1] == "=")
 				{
 					$charType = 'new-section';
 
 					$i += 1;
+				}
+				elseif ($curChar == "\n" && $text[$i + 1] == "\n" && $text[$i + 2] != "=")
+				{
+					$charType = 'new-paragraph';
+
+					$i += 2;
 				}
 			}
 
@@ -219,15 +329,24 @@ class WikiPreprocess
 					$paragraph[] = $stringTemp;
 				$stringTemp = '';
 
-				$section['parts'][] = $paragraph;
+				$section['part'][] = array(
+					'is_new_paragraph' => $is_new_paragraph,
+					'inline' => true,
+					'content' => $paragraph
+				);
+				
+				$is_new_paragraph = true;
 
 				$paragraph = array();
 			}
 			elseif ($charType == 'new-section')
 			{
 				$len = strcspn($text, "\n", $i);
-
-				$header = substr($text, $i, $len);
+				
+				if ($len !== false)
+					$header = substr($text, $i, $len);
+				else
+					$header = substr($text, $i);
 
 				$c = strspn($header, '=');
 				$c2 = strspn(strrev($header), '=');
@@ -237,7 +356,11 @@ class WikiPreprocess
 					if (!empty($stringTemp))
 						$paragraph[] = $stringTemp;
 					if (!empty($paragraph))
-						$section['parts'][] = $paragraph;
+						$section['part'][] = array(
+							'is_new_paragraph' => $is_new_paragraph,
+							'inline' => true,
+							'content' => $paragraph,
+						);
 					if (!empty($section))
 						$sections[] = $section;
 					$stringTemp = '';
@@ -249,6 +372,12 @@ class WikiPreprocess
 						'name' => $name,
 						'parts' => array(),
 					);
+					
+					$is_new_paragraph = true;
+					
+					$i += $len;
+					
+					continue;
 				}
 				// Not header
 				else
@@ -257,13 +386,15 @@ class WikiPreprocess
 					$charType = '';
 				}
 			}
+			// chartype may change above so this needs to be if instead of elseif
 			if ($charType == 'open')
 			{
 				$len = strspn($text, $curChar, $i);
 
 				if ($len >= $rule['min'])
 				{
-					$paragraph[] = $stringTemp;
+					if (!empty($stringTemp))
+						$paragraph[] = $stringTemp;
 					$stringTemp = '';
 
 					$piece = array(
@@ -293,7 +424,16 @@ class WikiPreprocess
 				if (!isset($stack[$stackIndex]['firstParam']))
 					$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
 				elseif ($stack[$stackIndex]['current_param_name'] == null)
-					$stack[$stackIndex]['params'][] = $stack[$stackIndex]['current_param'];
+				{
+					if (strpos($stack[$stackIndex]['current_param'], '=') !== false)
+					{
+						list ($paramName, $paramValue) = explode('=', $stack[$stackIndex]['current_param'], 2);					
+						$stack[$stackIndex]['params'][$paramName] = $paramValue;
+						unset($paramName, $paramValue);
+					}
+					else
+						$stack[$stackIndex]['params'][] = $stack[$stackIndex]['current_param'];
+				}
 				else
 					$stack[$stackIndex]['params'][$stack[$stackIndex]['current_param_name']] = $stack[$stackIndex]['current_param'];
 
@@ -416,7 +556,11 @@ class WikiPreprocess
 		if (!empty($stringTemp))
 			$paragraph[] = $stringTemp;
 		if (!empty($paragraph))
-			$section['parts'][] = $paragraph;
+			$section['part'][] = array(
+				'is_new_paragraph' => $is_new_paragraph,
+				'inline' => true,
+				'content' => $paragraph
+			);
 		if (!empty($section))
 			$sections[] = $section;
 
@@ -424,7 +568,7 @@ class WikiPreprocess
 	}
 }
 
-class WikiParser
+class WikiParserOld
 {
 	var $page_info;
 	var $namespace;
@@ -797,75 +941,7 @@ class WikiParser
 						$currentBracket['parsed'] .= $context['wiki_variables'][$currentBracket['name']];
 					else
 					{
-						$currentBracket['name'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $currentBracket['name']));
-
-						list ($namespace, $page) = __url_page_parse($currentBracket['name']);
-
-						$nextNumeric = 1;
-
-						$templateParams = array();
-
-						foreach ($currentBracket['params'] as $temp)
-						{
-							$param = array();
-							$dynamicParams = array();
-
-							foreach ($temp as $ib => $part)
-							{
-								// Separator
-								if ($ib == 0 && is_string($part) && $part == '|' && empty($funcParams))
-									$funcParams[] = $param;
-								elseif ($ib == 0 && is_string($part) && $part == '|')
-									continue;
-								elseif (is_string($part))
-									$param[] = $part;
-								elseif (is_array($part))
-									$param[] = $part['parsed'];
-							}
-
-							$param = trim(implode('', $param));
-							if (strpos($param, '='))
-							{
-								list ($key, $value) = explode('=', $param, 2);
-
-								$key = trim(str_replace('<br />', '', $key));
-
-								if (is_numeric($key))
-									$nextNumeric = $key + 1;
-							}
-							else
-							{
-								$key = $nextNumeric++;
-								$value = $param;
-							}
-
-							$value = str_replace("\n", '<br />', trim(str_replace('<br />', "\n", $value)));
-
-							$templateParams[$key] = $value;
-						}
-
-						if (empty($namespace))
-							$namespace = 'Template';
-
-						if (!isset($context['wiki_template']))
-							$context['wiki_template'] = array();
-
-						$template_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
-
-						if ($template_info['id'] !== null)
-						{
-							list ($template_data, $template_raw_content, $template_content) = cache_quick_get(
-								'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
-								'Subs-Wiki.php', 'wiki_get_page_content',
-								array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
-							);
-
-							$currentBracket['parsed'] .= $this->__parse__curls($template_raw_content, $templateParams);
-						}
-						else
-						{
-							$currentBracket['parsed'] .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';
-						}
+	
 					}
 				}
 				else
@@ -990,18 +1066,6 @@ class WikiParser
 			return $link . $groups[5];
 		}
 	}
-}
-
-// Parses wiki page
-function wikiparser($page_info, $message, $parse_bbc = true, $namespace = null)
-{
-	global $variablesTemp;
-
-	// temp
-	$parser = new WikiParser($page_info, $namespace, $parse_bbc);
-	$parser->parse($message);
-
-	return array('toc' => $parser->tableOfContents, 'sections' => $parser->pageSections);
 }
 
 // Callback for making wikilinks

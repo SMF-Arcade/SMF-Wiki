@@ -160,7 +160,7 @@ function clean_pagename($string, $namespace = false)
 	global $smcFunc;
 
 	if ($namespace)
-		return ucfirst($smcFunc['strtolower'](str_replace(array(' ', '[', ']', '{', '}', ':', '|'), '_', $string)));
+		return str_replace(array(' ', '[', ']', '{', '}', ':', '|'), '_', $string);
 
 	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
 }
@@ -413,9 +413,20 @@ function loadWikiMenu()
 
 	$return = array();
 
-	$page_info = wiki_get_page_info('Sidebar', $context['namespace_internal']);
+	$cacheInfo = wiki_get_page_info('Sidebar', $context['namespace_internal']);
+	$page_info = $cacheInfo['data'];
+	unset($cacheInfo);
 
-	list ($page_data, $page_content_raw, $page_content) = wiki_get_page_content($page_info, $context['namespace_internal'], $page_info['current_revision']);
+	if ($page_info['id'] === null)
+		return array(
+			'data' => array(),
+			'expires' => time(),
+			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+		);
+
+	$cacheInfo = wiki_get_page_content($page_info, $context['namespace_internal'], $page_info['current_revision']);
+	list ($page_data, $page_content_raw, $page_content) = $cacheInfo['data'];
+	unset($cacheInfo);
 
 	$menu = preg_split('~<br( /)?' . '>~', $page_content_raw);
 

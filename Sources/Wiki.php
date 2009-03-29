@@ -56,6 +56,8 @@ function loadWiki($mode = '')
 	// Admin Mode
 	elseif ($mode == 'admin')
 		loadTemplate('WikiAdmin');
+		
+	loadNamespace();
 }
 
 function Wiki($standalone = false)
@@ -66,8 +68,6 @@ function Wiki($standalone = false)
 
 	if (!isset($_REQUEST['page']))
 		$_REQUEST['page'] = '';
-
-	loadNamespace();
 
 	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
 
