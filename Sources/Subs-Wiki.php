@@ -348,7 +348,9 @@ function wiki_get_page_content($page_info, $namespace, $revision)
 	);
 
 	$page_content_raw = $row['content'];
-	$page_content = wikiparser($page_info, $page_content_raw, true, $namespace['id']);
+	
+	$status = array();
+	$page_content = WikiParser::parse($page_content_raw, $page_info, $status);
 
 	return array(
 		'data' => array($page_data, $page_content_raw, $page_content),

@@ -107,31 +107,29 @@ function wikiparse_variables($message)
 
 class WikiParser
 {
-	function __construct()
-	{
-
-	}
-	
 	function parse($content, &$page_info, &$status, $mode = 'normal', $parameters = array())
 	{
 		global $context, $txt;
 		
-		if ($mode == 'normal')
+		if ($mode == 'normal' || $mode == 'template')
 		{
 			// Run preprocessor to get array of items
 			$content = WikiParser::__preprocess($content, $mode);
 		}
-		
+			
 		$sections = array();
 		
 		$status['paragraphOpen'] = isset($status['paragraphOpen']) ? $status['paragraphOpen'] : false;
 		
+		//if (!is_array($content))
+		//	var_dump($content);
+		
 		foreach ($content as $section)
 		{
 			$sectionID = count($sections);
-			
 			$sections[] = array(
 				'name' => $section['name'],
+				'level' => $section['level'],
 				'html' => '',
 			);
 			
@@ -143,7 +141,7 @@ class WikiParser
 			
 			foreach ($section['part'] as $part)
 			{
-				if (!empty($part['is_new_paragraph']))
+				/*if (!empty($part['is_new_paragraph']))
 				{
 					if ($status['paragraphOpen'])
 						$currentHtml .= '</p>';
@@ -160,41 +158,9 @@ class WikiParser
 				{
 					$currentHtml .= '</p>';
 					$status['paragraphOpen'] = false;					
-				}
+				}*/
 				
-				foreach ($part['content'] as $item)
-				{
-					if (is_string($item))
-						$currentHtml .= $item;
-					// Replace templates
-					elseif ($item['name'] == 'template')
-					{
-						$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $item['firstParam']));
-
-						list ($namespace, $page) = __url_page_parse($item['firstParam']);
-
-						// TODO: Make Template special namespace
-						if (empty($namespace))
-							$namespace = 'Template';
-							
-						$template_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
-
-						if ($template_info['id'] !== null)
-						{
-							list ($template_data, $template_raw_content, $template_content) = cache_quick_get(
-								'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
-								'Subs-Wiki.php', 'wiki_get_page_content',
-								array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
-							);
-
-							$currentHtml .= WikiParser::parse($template_raw_content, $page_info, $status, 'template', $item['params']);
-						}
-						else
-							$currentHtml .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';					
-					}
-					else
-						WikiParser::__debug_die($currentHtml, $item);
-				} // END content of part
+				$currentHtml .= WikiParser::__parse_part($page_info, $status, $part['content'], $parameters);
 			} // END part of section
 			
 			if ($status['paragraphOpen'])
@@ -206,7 +172,207 @@ class WikiParser
 			unset($currentHtml);
 		} // END section
 		
+		if ($mode == 'template')
+		{
+			$currentHtml = '';
+			
+			foreach ($sections as $section)
+			{
+				if ($section['level'] != 1)
+					$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
+				
+				$currentHtml .= $section['html'];
+			}
+				
+			return $currentHtml;
+		}
+		
 		return $sections;
+	}
+	
+	private function __parse_part(&$page_info, &$status, &$content, $parameters)
+	{
+		global $context, $txt;
+		
+		$currentHtml = '';
+		
+		if (is_string($content))
+			return $content;
+		
+		foreach ($content as $item)
+		{
+			if (is_string($item))
+				$currentHtml .= $item;
+			// Replace templates
+			elseif ($item['name'] == 'template')
+			{
+				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
+				$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), WikiParser::__parse_part($page_info, $status, $item['firstParam'], $parameters)));
+
+				list ($namespace, $page) = __url_page_parse($item['firstParam']);
+
+				// TODO: Make Template special namespace
+				if (empty($namespace))
+					$namespace = 'Template';
+					
+				$template_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
+
+				if ($template_info['id'] !== null)
+				{
+					list ($template_data, $template_raw_content, $template_content) = cache_quick_get(
+						'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
+						'Subs-Wiki.php', 'wiki_get_page_content',
+						array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
+					);
+					
+					$currentHtml .= WikiParser::parse($template_raw_content, $page_info, $status, 'template', $item['params']);
+				}
+				else
+					$currentHtml .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';					
+			}
+			// Replace parameters
+			elseif ($item['name'] == 'template_param')
+			{
+				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
+				$param = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), WikiParser::__parse_part($page_info, $status, $item['firstParam'], $parameters)));
+			
+				if (isset($parameters[$param]))
+					$currentHtml .= WikiParser::__parse_part($page_info, $status, $parameters[$param], $parameters);
+				else
+					$currentHtml .= WikiParser::__parse_part($page_info, $status, $item['firstParam'], $parameters);
+			}
+			// Parse parser functions like {{#if}}
+			elseif ($item['name'] == 'function')
+			{
+				if (!is_array($item['firstParam']))
+					$item['firstParam'] = array($item['firstParam']);
+					
+				$function = $item['firstParam'][0];
+				
+				// Non string function = bad
+				if (!is_string($function))
+					$function = WikiParser::__parse_part($page_info, $status, $function, $parameters); ;
+				
+				if ($function = '#if:')
+				{
+					$condition = $item['firstParam'][1];
+					
+					$result = false;
+					
+					if (!is_array($condition))
+						$result = empty($item['firstParam'][1]);
+					else
+					{				
+						switch ($item['firstParam'][1]['name'])
+						{
+							case 'template_param':
+								$fakeStatus = array();
+								$param = WikiParser::__parse_part($page_info, $fakeStatus, $item['firstParam'][1]['firstParam'], $parameters);
+								$result = isset($parameters[$param]);
+								break;
+							
+							default:
+								$result = false;
+								break;
+						}
+					}
+					
+					if (isset($item['params'][$result ? 0 : 1]))
+						$currentHtml .= WikiParser::__parse_part($page_info, $status, $item['params'][$result ? 0 : 1], $parameters);
+				}
+				// TODO: Make this friendly error
+				else
+					die($function);
+			}
+			elseif ($item['name'] == 'wikilink')
+			{
+				list ($linkNamespace, $linkPage) = __url_page_parse(WikiParser::__parse_part($page_info, $status, $item['firstParam'], $parameters));
+		
+				$link_info = cache_quick_get('wiki-pageinfo-' .  $linkNamespace . '-' . $linkPage, 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
+				
+				if ($linkNamespace == $context['namespace_images']['id'] && $link_info['id'] !== null)
+				{
+					WikiParser::__debug_die($currentHtml, $item);
+					/*
+					if (!empty($groups[3]))
+					{
+						$options = explode('|', $groups[3]);
+						$align = '';
+						$size = '';
+						$caption = '';
+						$alt = '';
+		
+						// Size
+						if (!empty($options[0]))
+						{
+							if ($options[0] == 'thumb')
+								$size = ' width="180"';
+							elseif (is_numeric($options[0]))
+								$size = ' width="' . $options[0] . '"';
+							elseif (strpos($options[0], 'x') !== false)
+							{
+								list ($width, $height) = explode('x', $options[0], 2);
+		
+								if (is_numeric($width) && is_numeric($height))
+								{
+									$size = ' width="' . $width . '" height="' . $height. '"';
+								}
+							}
+						}
+		
+						// Align
+						if (!empty($options[1]) && ($options[1] == 'left' || $options[1] == 'right'))
+							$align = $options[1];
+		
+						// Alt
+						if (!empty($options[2]))
+							$alt = $options[2];
+		
+						// Caption
+						if (!empty($options[3]))
+							$caption = $options[3];
+		
+						if (!empty($align) || !empty($caption))
+							$code = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
+		
+						$code .= '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1]), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
+		
+						if (!empty($align) || !empty($caption))
+							$code .= '</div>';
+		
+						return $code;
+					}
+		
+					return '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1]), 'image')) . '" alt="" /></a>';
+					*/
+				}
+				else
+				{
+					$class = array();
+		
+					if ($link_info['id'] === null)
+						$class[] = 'redlink';
+						
+					$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
+		
+					if (isset($item['params'][0]))
+						$currentHtml .= WikiParser::__parse_part($page_info, $status, $item['params'][0], $parameters);
+					else
+						$currentHtml .= read_urlname(WikiParser::__parse_part($page_info, $status, $item['firstParam'], $parameters));
+						
+					$currentHtml .= '</a>';
+				}				
+			}
+			// TODO: Make this friendly error
+			else
+				WikiParser::__debug_die($currentHtml, $item);
+		} // END content of part
+		
+		return $currentHtml;
+	}
+	
+	private function __paragraph_handler()
+	{
 	}
 	
 	private function __debug_die($currentHtml, $item)
@@ -258,7 +424,7 @@ class WikiParser
 
 		$sections = array();
 
-		$section = array('name' => '(root)', 'parts' => array());
+		$section = array('name' => '(root)', 'level' => 1, 'parts' => array());
 
 		$paragraph = array();
 		$is_new_paragraph = true;
@@ -288,7 +454,7 @@ class WikiParser
 			}
 			elseif ($skip > 0)
 			{
-				$stack[$stackIndex]['current_param'] .= substr($text, $i, $skip);
+				$stack[$stackIndex]['current_param'][] = substr($text, $i, $skip);
 				$i += $skip;
 			}
 
@@ -370,6 +536,7 @@ class WikiParser
 
 					$section = array(
 						'name' => $name,
+						'level' => $c,
 						'parts' => array(),
 					);
 					
@@ -403,6 +570,7 @@ class WikiParser
 						'len' => $len,
 						'contents' => '',
 						'params' => array(),
+						'num_index' => 1,
 						'children' => array(),
 						'lineStart' => ($i > 0 && $text[$i-1] == "\n"),
 					);
@@ -414,7 +582,7 @@ class WikiParser
 					if (empty($stack))
 						$stringTemp .= str_repeat($curChar, $len);
 					else
-						$stack[$stackIndex]['current_param'] .= str_repeat($curChar, $len);
+						$stack[$stackIndex]['current_param'][] = str_repeat($curChar, $len);
 				}
 
 				$i += $len;
@@ -425,14 +593,14 @@ class WikiParser
 					$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
 				elseif ($stack[$stackIndex]['current_param_name'] == null)
 				{
-					if (strpos($stack[$stackIndex]['current_param'], '=') !== false)
+					if (strpos($stack[$stackIndex]['current_param'][0], '=') !== false)
 					{
-						list ($paramName, $paramValue) = explode('=', $stack[$stackIndex]['current_param'], 2);					
-						$stack[$stackIndex]['params'][$paramName] = $paramValue;
+						list ($paramName, $paramValue) = explode('=', $stack[$stackIndex]['current_param'][0], 2);					
+						$stack[$stackIndex]['params'][$paramName] = array($paramValue) + $stack[$stackIndex]['current_param'];
 						unset($paramName, $paramValue);
 					}
 					else
-						$stack[$stackIndex]['params'][] = $stack[$stackIndex]['current_param'];
+						$stack[$stackIndex]['params'][$stack[$stackIndex]['num_index']++] = $stack[$stackIndex]['current_param'];
 				}
 				else
 					$stack[$stackIndex]['params'][$stack[$stackIndex]['current_param_name']] = $stack[$stackIndex]['current_param'];
@@ -463,26 +631,42 @@ class WikiParser
 
 				if ($matchLen <= 0)
 				{
-					$stack[$stackIndex]['current_param'] .= str_repeat($curChar, $len);
+					$piece['current_param'][] = str_repeat($curChar, $len);
 					$i += $len;
 					continue;
 				}
 
 				if ($piece['current_param'] !== null)
 				{
-					if (!isset($stack[$stackIndex]['firstParam']))
-						$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
-					elseif ($stack[$stackIndex]['current_param_name'] == null)
-						$stack[$stackIndex]['params'][] = $stack[$stackIndex]['current_param'];
+					if (!isset($piece['firstParam']))
+						$piece['firstParam'] = $piece['current_param'];
+					elseif ($piece['current_param_name'] == null)
+					{
+						if (strpos($piece['current_param'][0], '=') !== false)
+						{
+							list ($paramName, $paramValue) = explode('=', $piece['current_param'][0], 2);					
+							$piece['params'][$paramName] = array($paramValue) + $piece['current_param'];
+							unset($paramName, $paramValue);
+						}
+						else
+							$piece['params'][$piece['num_index']++] = $piece['current_param'];
+					}
 					else
-						$stack[$stackIndex]['params'][$stack[$stackIndex]['current_param_name']] = $stack[$stackIndex]['current_param'];
+						$piece['params'][$piece['current_param_name']] = $piece['current_param'];
 
-					$stack[$stackIndex]['current_param'] = null;
-					$stack[$stackIndex]['current_param_name'] = null;
+					$piece['current_param'] = null;
+					$piece['current_param_name'] = null;
 				}
 
 				$name = $rule['names'][$matchLen];
 				$params = array();
+				
+				$isFunction = false;
+				
+				if (is_array($piece['firstParam']) && is_string($piece['firstParam'][0]) && substr($piece['firstParam'][0], 0, 1) == '#')
+					$name = 'function';
+				elseif (substr($piece['firstParam'], 0, 1) == '#')
+					$name = 'function';
 
 				if (!empty($piece['params']))
 				{
@@ -492,7 +676,7 @@ class WikiParser
 
 				$thisElement = $piece;
 				$thisElement['name'] = $name;
-
+				
 				$i += $matchLen;
 
 				// Remove last item from stack
@@ -501,20 +685,18 @@ class WikiParser
 				if (!empty($stack))
 				{
 					$stackIndex = count($stack) - 1;
-
+					
 					if ($stack[$stackIndex]['current_param'] === null)
-						$stack[$stackIndex]['current_param'] = $thisElement;
+						$stack[$stackIndex]['current_param'] = array($thisElement);
 					else
-					{
-						$stack[$stackIndex]['current_param'] = trim($stack[$stackIndex]['current_param']);
-
+					{				
 						if (substr($stack[$stackIndex]['current_param'], -1) == '=')
 						{
 							$stack[$stackIndex]['current_param_name'] = substr($stack[$stackIndex]['current_param'], 0, -1);
-							$stack[$stackIndex]['current_param'] = $thisElement;
+							$stack[$stackIndex]['current_param'] = array($thisElement);
 						}
 						else
-							$stack[$stackIndex]['children'][] = $thisElement;
+							$stack[$stackIndex]['current_param'][] = $thisElement;
 					}
 				};
 
@@ -527,7 +709,7 @@ class WikiParser
 					{
 						if (isset($rule['names'][$piece['len']]))
 						{
-							$piece['current_param'] .= str_repeat($piece['opening_char'], $skips);
+							$piece['current_param'][] = str_repeat($piece['opening_char'], $skips);
 
 							$stack[] = $piece;
 							break;
@@ -548,7 +730,7 @@ class WikiParser
 			}
 			elseif ($charType == '')
 			{
-				$stack[$stackIndex]['current_param'] .= $curChar;
+				$stack[$stackIndex]['current_param'][] = $curChar;
 				$i++;
 			}
 		}
@@ -568,6 +750,7 @@ class WikiParser
 	}
 }
 
+/*
 class WikiParserOld
 {
 	var $page_info;
@@ -990,82 +1173,7 @@ class WikiParserOld
 		return $message;
 	}
 
-	function __link_callback($groups)
-	{
-		global $context;
-
-		list ($namespace, $page) = __url_page_parse($groups[1]);
-
-		$page_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
-
-		if ($namespace == $context['namespace_images']['id'] && $page_info['id'] !== null)
-		{
-			if (!empty($groups[3]))
-			{
-				$options = explode('|', $groups[3]);
-				$align = '';
-				$size = '';
-				$caption = '';
-				$alt = '';
-
-				// Size
-				if (!empty($options[0]))
-				{
-					if ($options[0] == 'thumb')
-						$size = ' width="180"';
-					elseif (is_numeric($options[0]))
-						$size = ' width="' . $options[0] . '"';
-					elseif (strpos($options[0], 'x') !== false)
-					{
-						list ($width, $height) = explode('x', $options[0], 2);
-
-						if (is_numeric($width) && is_numeric($height))
-						{
-							$size = ' width="' . $width . '" height="' . $height. '"';
-						}
-					}
-				}
-
-				// Align
-				if (!empty($options[1]) && ($options[1] == 'left' || $options[1] == 'right'))
-					$align = $options[1];
-
-				// Alt
-				if (!empty($options[2]))
-					$alt = $options[2];
-
-				// Caption
-				if (!empty($options[3]))
-					$caption = $options[3];
-
-				if (!empty($align) || !empty($caption))
-					$code = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
-
-				$code .= '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1]), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
-
-				if (!empty($align) || !empty($caption))
-					$code .= '</div>';
-
-				return $code;
-			}
-
-			return '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1]), 'image')) . '" alt="" /></a>';
-		}
-		else
-		{
-			$class = array();
-
-			if ($page_info['id'] === null)
-				$class[] = 'redlink';
-
-			if (empty($groups[3]))
-				$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . read_urlname($groups[1]) . $groups[4] . '</a>';
-			else
-				$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $groups[3] . $groups[4] . '</a>';
-
-			return $link . $groups[5];
-		}
-	}
+	
 }
 
 // Callback for making wikilinks
@@ -1077,6 +1185,6 @@ function wikilink_callback($groups)
 		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . $groups[3] . $groups[4] . '</a>';
 
 	return $link . $groups[5];
-}
+}*/
 
 ?>
