@@ -33,13 +33,17 @@ foreach ($tests as $test)
 		$test = array('text' => $test, 'params' => array());
 	
 	$status = array();
+	
+	$wikiparser = new WikiParser();
 
 	echo '<hr />
 	In:<br />
 	<pre>', $test['text'], '</pre><br />
 	Out: <br />
-	<pre>', var_dump(WikiParser::parse($test['text'], $page_info, $status, 'normal', $test['params'])), '</pre>
+	<pre>', var_dump($wikiparser->parse($test['text'], $page_info, $status, 'normal', $test['params'])), '</pre>
 	<br /> (took: ', microtime(true) - $time, 's';
+	
+	unset($wikiparser);
 
 	echo '
 	<hr />';
