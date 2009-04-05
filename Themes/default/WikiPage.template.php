@@ -34,24 +34,17 @@ function template_wikipage_above()
 function output_toc($baseurl, $blevel, $toc)
 {
 	global $context, $modSettings, $txt;
-
-	foreach ($toc as $x)
+	
+	foreach ($toc as $item)
 	{
-		list ($level, $title, $subtoc) = $x;
-
 		echo '
-		<li><a href="', $baseurl, '#', make_html_safe($title), '">', $blevel, !empty($blevel) ? '.' : '', $level, ' ', $title, '</a>';
+		<li><a href="', $baseurl, '#', $item['id'], '">', $blevel, !empty($blevel) ? '.' : '', $item['level'], ' ', $item['name'], '</a>';
 
-		if (!empty($subtoc))
-		{
+		if (!empty($item['sub']))
 			echo '
-			<ul>';
-
-			output_toc($baseurl, (!empty($blevel) ? $blevel . '.' . $level : $level) , $subtoc);
-
-			echo '
+			<ul>',
+				output_toc($baseurl, (!empty($blevel) ? $blevel . '.' . $item['level'] : $item['level']) , $item['sub']), '
 			</ul>';
-		}
 
 		echo '
 		</li>';
@@ -97,20 +90,20 @@ function template_view_page()
 	</div>';
 	}
 
-	template_wiki_content();
+	template_wiki_content($context['page_content']);
 }
 
-function template_wiki_content()
+function template_wiki_content($page_content)
 {
 	global $context, $modSettings, $txt;
 
-	foreach ($context['page_content']['sections'] as $section)
+	foreach ($page_content['sections'] as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
 			echo '
-			<h', $section['level'] + 1, ' id="', make_html_safe($section['title']), '" class="clearfix">
-				<span class="floatleft">', $section['title'], '</span>';
+			<h', $section['level'] + 1, ' id="', $section['id'], '" class="clearfix">
+				<span class="floatleft">', $section['name'], '</span>';
 
 			if (!empty($context['can_edit_page']))
 				echo '
@@ -123,7 +116,7 @@ function template_wiki_content()
 		elseif ($section['level'] >= 5)
 		{
 			echo '
-			<h6 id="', make_html_safe($section['title']), '" class="clearfix">
+			<h6 id="', $section['id'], '" class="clearfix">
 				<span class="floatleft">', $section['title'], '</span>';
 
 			if (!empty($context['can_edit_page']))
@@ -133,31 +126,19 @@ function template_wiki_content()
 			echo '
 			</h6>';
 		}
-
-		if ($section['level'] == 1 && !empty($context['page_content']['toc']))
+		
+		if ($section['level'] == 1 && !empty($page_content['toc']))
 			echo '
 			<div class="wikitoc floatright">
 				<ul>',
-					output_toc($context['current_page_url'], '', $context['page_content']['toc']), '
+					output_toc($context['current_page_url'], '', $page_content['toc']), '
 				</ul>
 			</div>';
 
 		if ($section['level'] == 1 && isset($context['current_file']))
-		{
 			print_r($context['current_file']);
-		}
 
-		foreach ($section['parts'] as $part)
-		{
-			if ($part['type'] == 'p')
-			{
-				echo '
-			<p>', $part['content'], '</p>';
-			}
-			elseif ($part['type'] == 'raw')
-				echo '
-			', $part['content'];
-		}
+		echo $section['html'];
 	}
 }
 
