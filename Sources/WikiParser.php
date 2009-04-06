@@ -115,6 +115,9 @@ class WikiPage
 		'</table>' => true,
 	);
 	
+	// Tag functions
+	public $tagFunctions = array();
+	
 	// Rules for tags
 	public $rules = array(
 		'[' => array(
@@ -283,7 +286,7 @@ class WikiPage
 					$currentHtml .= str_repeat($item['closing_char'], $item['len']);
 				}
 			}
-			// Parse parser functions like {{#if}}
+			// Parser functions like {{#if}}
 			elseif ($item['name'] == 'function')
 			{
 				if (!is_array($item['firstParam']))
@@ -406,6 +409,8 @@ class WikiPage
 					$currentHtml .= '</a>';
 				}				
 			}
+			elseif ($item['name'] == 'tag')
+				$currentHtml .= call_user_method($this->tagFunctions[$item['tag_name']], $this, $item['content'], $item['attributes']);
 			// TODO: Make this friendly error
 			else
 				$this->__debug_die($currentHtml, $item);
@@ -587,7 +592,7 @@ class WikiPage
 			}
 			else
 			{
-				$search .= '=';
+				$search .= '&=';
 			}
 
 			// Skip to next might be special tag
@@ -679,6 +684,96 @@ class WikiPage
 							
 							continue;
 						}
+					}
+				}
+				// Start or end of tag
+				elseif (substr($text, $i, 4) == '&lt;')
+				{
+					$endPos = strpos($text, '&gt;', $i + 4);
+					
+					$tagCode = substr($text, $i + 4, $endPos - $i - 4);
+					$tagLen = strcspn($tagCode, ' ');
+					$tagName = substr($tagCode, 0, $tagLen);
+					
+					if (isset($this->tagFunctions[$tagName]))
+					{
+						// Last > tag
+						$endPos += 4;
+						
+						$tag = array(
+							'name' => 'tag',
+							'tag_name' => $tagName,
+							'content' => '',
+							'attributes' => array(),
+						);
+						
+						$tagCode = un_htmlspecialchars(trim(substr($tagCode, $tagLen)));
+											
+						while (!empty($tagCode))
+						{
+							$atribLen = strcspn($tagCode, '=');
+							
+							$atrib = substr($tagCode, 0, $atribLen);
+							
+							// Find positions for euals and quotes
+							$eqPos = strpos($tagCode, '=', $atribLen);
+							$eqPos2 = strpos($tagCode, '=', $eqPos + 1);
+							$quotePos = strpos($tagCode, '"', $atribLen);
+							$quote2Pos = strpos($tagCode, '"', $quotePos + 1);
+							
+							if (strpos($tagCode, '"') !== false && $eqPos < $quotePos && ($eqPos2 < $quotePos && $quote2Pos < $eqPos2))
+							{
+								$valueStart = strpos($tagCode, '"');								
+								$valueEnd = strpos($tagCode, '"', $valueStart + 1);
+								$valueLen = $valueEnd - $valueStart - 1;
+								
+								$tag['attributes'][$atrib] = substr($tagCode, $valueStart + 1, $valueLen);
+												
+								$tagCode = trim(substr($tagCode, $valueEnd + 1));						
+							}
+							// Non quoted value
+							// TODO: Add parser warning
+							else
+							{
+								$valueStart = strpos($tagCode, '=');								
+								$valueEnd = strpos($tagCode, ' ', $valueStart + 1);
+								
+								if ($valueEnd === false)
+									$valueEnd = strlen($tagCode);
+								
+								$valueLen = $valueEnd - $valueStart - 1;
+								
+								$tag['attributes'][$atrib] = trim(substr($tagCode, $valueStart + 1, $valueLen));
+												
+								$tagCode = trim(substr($tagCode, $valueEnd + 1));	
+							}
+						}
+						
+						$endTag = '&lt;/' . $tagName . '&gt;';
+						$endTagPos = strpos($text, $endTag, $i);
+						
+						if ($endTagPos !== false)
+						{
+							$tag['content'] = substr($text, $i + 2 + strlen($tagName));
+							
+							$endPos = $endTagPos + strlen($endTag);
+						}
+						
+						if (empty($stack))
+						{	
+							$this->__paragraph_clean($stringTemp);
+							if (!empty($stringTemp))
+								$paragraph[] =  $stringTemp;
+							$stringTemp = '';
+							
+							$paragraph[] = $tag;
+						}
+						else
+							$stack[$stackIndex]['current_param'][] = $tag;
+							
+						$i = $endPos;
+						
+						continue;
 					}
 				}
 				elseif ($curChar == "\n" && $text[$i + 1] == "\n")
