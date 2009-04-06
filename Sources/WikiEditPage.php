@@ -43,7 +43,7 @@ function EditPage()
 	$context['edit_section'] = 0;
 
 	if (!isset($context['page_content_raw']))
-		$context['page_content_raw'] = '';
+		$context['page_content_raw'] = $context['wiki_page']->raw_content;
 
 	if (empty($_REQUEST['section']))
 		$body = $context['page_content_raw'];
@@ -76,7 +76,9 @@ function EditPage()
 	if (isset($_REQUEST['preview']))
 	{
 		preparsecode($preview_content);
-		$context['page_content'] = wikiparser($context['page_info'], $preview_content, true, $context['namespace']['id']);
+		
+		$context['wiki_page_preview'] = new WikiPage($context['page_info'], $context['namespace'], $preview_content);
+		$context['wiki_page_preview']->parse();		
 	}
 
 	$context['comment'] = '';

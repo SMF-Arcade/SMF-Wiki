@@ -233,26 +233,25 @@ function loadWikiPage()
 		return;
 
 	// Load content itself
-	list ($page_data, $context['page_content_raw'], $context['page_content']) = cache_quick_get(
+	$context['wiki_page'] = cache_quick_get(
 		'wiki-page-' .  $context['page_info']['id'] . '-rev' . $revision,
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], $revision)
 	);
-	$context['page_info'] += $page_data;
+	
 	unset($page_data);
 
-	if (!empty($context['page_info']['variables']['title']))
-		$context['page_info']['title'] = $context['page_info']['variables']['title'];
+	$context['page_info']['title'] = $context['wiki_page']->title;
 
 	// Is there file attached to this page?
-	if (!empty($context['page_info']['id_file']))
+	if (!empty($context['wiki_page']->id_file))
 	{
 		$request = $smcFunc['db_query']('', '
 			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
 			FROM {db_prefix}wiki_files
 			WHERE id_file = {int:file}',
 			array(
-				'file' => $context['page_info']['id_file'],
+				'file' => $context['wiki_page']->id_file,
 			)
 		);
 
@@ -341,20 +340,15 @@ function wiki_get_page_content($page_info, $namespace, $revision)
 
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 		fatal_lang_error('wiki_invalid_revision');
-
-	$page_data = array(
-		'id_file' => $row['id_file'],
-		'variables' => wikiparse_variables($row['content']),
-	);
-
-	$page_content_raw = $row['content'];
 	
-	$wikiParser = new WikiParser($page_info);
+	$wikiPage = new WikiPage($page_info, $namespace, $row['content']);
+	$wikiPage->parse();
 	
-	$page_content = $wikiParser->parse($page_content_raw);
-
+	if (!empty($row['id_file']))
+		$wikiPage->addFile($row['id_file']);
+		
 	return array(
-		'data' => array($page_data, $page_content_raw, $page_content),
+		'data' => $wikiPage,
 		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 	);
@@ -428,10 +422,10 @@ function loadWikiMenu()
 		);
 
 	$cacheInfo = wiki_get_page_content($page_info, $context['namespace_internal'], $page_info['current_revision']);
-	list ($page_data, $page_content_raw, $page_content) = $cacheInfo['data'];
+	$wikiPage = $cacheInfo['data'];
 	unset($cacheInfo);
 
-	$menu = preg_split('~<br( /)?' . '>~', $page_content_raw);
+	$menu = preg_split('~<br( /)?' . '>~', $wikiPage->raw_content);
 
 	$current_menu = false;
 

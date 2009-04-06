@@ -57,22 +57,37 @@ function wikiparse_variables($message)
 	return $temp;
 }
 
-class WikiParser
+// Class for WikiPage
+class WikiPage
 {
-	// Little helper for parsing cerating parts like templatenames
-	private $fakeStatus = array('can_paragraph_open' => false);
-	
-	// Container for page info
-	public $page_info;
+	// Basic information about page
+	public $title;
+	public $namespace;
 	
 	// Status
 	private $status;
+	
+	// Raw content
+	public $raw_content;
+	public $id_file;
+	
+	// Preparsed content
+	private $preParsedContent;
+	public $parameters;
+	
+	// Parsed content
+	public $tableOfContents;
+	public $parsedContent;
+	public $pageVariables;
 	
 	// Some settings
 	public $parse_bbc = true;
 	
 	// Contains array parser errors
 	private $parserErrors = array();
+	
+	// Little helper for parsing cerating parts like templatenames
+	private $fakeStatus = array('can_paragraph_open' => false);
 	
 	// Block level tags
 	public $blockTags = array(
@@ -86,14 +101,14 @@ class WikiParser
 		'<code>' => false,
 		'</code>' => true,
 		// Marguee
-		'<marquee>' => true,
+		'<marquee>' => false,
 		'</marquee>' => true,
 		// HR
 		'<hr />' => true,
 		// Quote
-		'<blockquote>' => true,
+		'<blockquote>' => false,
 		'</blockquote>' => true,
-		'<table>' => true,
+		'<table>' => false,
 		'</table>' => true,
 	);
 	
@@ -118,41 +133,45 @@ class WikiParser
 		),
 	);
 	
-	function __construct($page_info)
+	function __construct($page_info, $namespace, $content)
 	{
-		$this->page_info = $page_info;
+		$this->title = $page_info['title'];
+		$this->namespace = $namespace;
+		$this->raw_content = $content;
 	}
 	
-	function parse($content)
+	// Helper for parser function, done like this so settings can be edited before parsing
+	function parse()
 	{
 		// Reset status
 		$this->status = array();
 		
-		// Do actual parsing
-		$sections = $this->__parse($content);
+		// Preparsing
+		$this->preParsedContent = $this->__preprocess($this->raw_content);
 		
-		return array(
-			'toc' => $this->parseTableOfContent($sections),
-			'sections' => $sections,
-		);
+		// Do actual parsing
+		$this->parsedContent = $this->__parse($this->preParsedContent);
+		
+		// Make TOC
+		$this->tableOfContents = $this->parseTableOfContent($this->parsedContent);
 	}
 	
-	private function __parse($content, $mode = 'normal', $parameters = array())
+	function addFile($id_file)
+	{
+		$this->id_file = $id_file;
+	}
+	
+	// Main parser function
+	private function __parse($content)
 	{
 		global $context, $txt;
 		
-		if ($mode == 'normal' || $mode == 'template')
-		{
-			// Run preprocessor to get array of items
-			$content = $this->__preprocess($content, $mode);
-		}
-			
 		$sections = array();
 		
 		$this->status['paragraphOpen'] = isset($this->status['paragraphOpen']) ? $this->status['paragraphOpen'] : false;
-				
+		
 		$htmlIds = array();
-				
+		
 		foreach ($content as $section)
 		{
 			$html_id = $this->make_html_id($section['name']);
@@ -186,7 +205,7 @@ class WikiParser
 				$this->__paragraph_handler($this->status, $currentHtml, 'check');
 				
 				// Parse section to html code
-				$currentHtml .= $this->__parse_part($this->status, $part['content'], $parameters);
+				$currentHtml .= $this->__parse_part($this->status, $part['content']);
 				
 				// Close paragaph if open
 				$this->__paragraph_handler($this->status, $currentHtml, 'close');			
@@ -195,81 +214,10 @@ class WikiParser
 			unset($currentHtml);
 		} // END section
 		
-		if ($mode == 'template')
-		{
-			$currentHtml = '';
-			
-			foreach ($sections as $section)
-			{
-				if ($section['level'] != 1)
-					$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
-				
-				$currentHtml .= $section['html'];
-			}
-				
-			return $currentHtml;
-		}
-		
 		return $sections;
 	}
 	
-	// This function makes html id (anchor) from section name
-	private function make_html_id($name)
-	{
-		global $smcFunc;
-		
-		$name = str_replace(array('%3A', '+', '%'), array(':', '_', '.'), urlencode($name));
-		
-		while($name[0] == '.')
-			$name = substr($name, 1);
-		return $name;
-	}
-	
-	// Make table of content from list of sections
-	private function parseTableOfContent($sections, $main = true, $tlevel = 2)
-	{
-		$stack = array(
-			array(),
-			array(),
-		);
-		$num = 0;
-		$mainToc = array();
-	
-		foreach ($sections as $section)
-		{
-			if ($section['level'] == $tlevel)
-			{
-				if (!empty($stack[0]))
-					$mainToc[] = array(
-						'id' => $stack[0]['id'],
-						'level' => $num,
-						'name' => $stack[0]['name'],
-						'sub' => !empty($stack[1]) ? $this->parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
-					);
-	
-				$stack = array(
-					$section,
-					array()
-				);
-	
-				$num++;
-			}
-			elseif ($section['level'] >= $tlevel)
-				$stack[1][] = $section;
-		}
-	
-		if (!empty($stack[0]))
-			$mainToc[] = array(
-				'id' => $stack[0]['id'],
-				'level' => $num,
-				'name' => $stack[0]['name'],
-				'sub' => !empty($stack[1]) ? $this->parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
-			);
-	
-		return $mainToc;
-	}
-	
-	private function __parse_part(&$status, &$content, $parameters)
+	private function __parse_part(&$status, &$content)
 	{
 		global $context, $txt;
 		
@@ -290,7 +238,7 @@ class WikiParser
 			elseif ($item['name'] == 'template')
 			{
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
-				$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'], $parameters)));
+				$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 
 				list ($namespace, $page) = __url_page_parse($item['firstParam']);
 
@@ -302,13 +250,13 @@ class WikiParser
 
 				if ($template_info['id'] !== null)
 				{
-					list ($template_data, $template_raw_content, $template_content) = cache_quick_get(
+					$templatePage = cache_quick_get(
 						'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
 						'Subs-Wiki.php', 'wiki_get_page_content',
 						array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
 					);
 					
-					$currentHtml .= $this->__parse($template_raw_content, 'template', $item['params']);
+					$currentHtml .= $templatePage->getTemplateCode($item['params']);;
 				}
 				else
 				{
@@ -320,15 +268,15 @@ class WikiParser
 			elseif ($item['name'] == 'template_param')
 			{
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
-				$param = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'], $parameters)));
+				$param = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 			
-				if (isset($parameters[$param]))
-					$currentHtml .= $this->__parse_part($status, $parameters[$param], $parameters);
+				if (isset($this->parameters[$param]))
+					$currentHtml .= $this->__parse_part($status, $this->parameters[$param]);
 				else
-				{
+				{					
 					$this->__paragraph_handler($status, $currentHtml, 'open');
 					$currentHtml .= str_repeat($item['opening_char'], $item['len']);
-					$currentHtml .= $this->__parse_part($status, $item['firstParam'], $parameters);
+					$currentHtml .= $this->__parse_part($status, $item['firstParam']);
 					$currentHtml .= str_repeat($item['closing_char'], $item['len']);
 				}
 			}
@@ -342,7 +290,7 @@ class WikiParser
 				
 				// Non string function = bad
 				if (!is_string($function))
-					$function = $this->__parse_part($this->fakeStatus, $function, $parameters); ;
+					$function = $this->__parse_part($this->fakeStatus, $function); ;
 				
 				if ($function = '#if:')
 				{
@@ -357,8 +305,8 @@ class WikiParser
 						switch ($item['firstParam'][1]['name'])
 						{
 							case 'template_param':
-								$param = $this->__parse_part($this->fakeStatus, $item['firstParam'][1]['firstParam'], $parameters);
-								$result = isset($parameters[$param]);
+								$param = $this->__parse_part($this->fakeStatus, $item['firstParam'][1]['firstParam']);
+								$result = isset($this->parameters[$param]);
 								break;
 							
 							default:
@@ -368,7 +316,7 @@ class WikiParser
 					}
 							
 					if (isset($item['params'][$result ? 1 : 2]))
-						$currentHtml .= $this->__parse_part($status, $item['params'][$result ? 1 : 2], $parameters);
+						$currentHtml .= $this->__parse_part($status, $item['params'][$result ? 1 : 2]);
 				}
 				// TODO: Make this friendly error
 				else
@@ -376,7 +324,7 @@ class WikiParser
 			}
 			elseif ($item['name'] == 'wikilink')
 			{
-				list ($linkNamespace, $linkPage) = __url_page_parse($this->__parse_part($this->fakeStatus, $item['firstParam'], $parameters));
+				list ($linkNamespace, $linkPage) = __url_page_parse($this->__parse_part($this->fakeStatus, $item['firstParam']));
 		
 				$link_info = cache_quick_get('wiki-pageinfo-' .  $linkNamespace . '-' . $linkPage, 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
 				
@@ -448,9 +396,9 @@ class WikiParser
 					$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
 		
 					if (isset($item['params'][0]))
-						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][0], $parameters);
+						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][0]);
 					else
-						$currentHtml .= read_urlname($this->__parse_part($this->fakeStatus, $item['firstParam'], $parameters));
+						$currentHtml .= read_urlname($this->__parse_part($this->fakeStatus, $item['firstParam']));
 						
 					$currentHtml .= '</a>';
 				}				
@@ -463,6 +411,91 @@ class WikiParser
 		return $currentHtml;
 	}
 	
+	private function __debug_die($currentHtml, $item)
+	{
+		echo '
+		PARSE ERROR!!
+		Unable to parse item <pre>', var_dump($item), '</pre>
+		Parsed HTML: <pre>', htmlspecialchars($currentHtml), '</pre>';
+		
+		die();
+	}
+
+	function getTemplateCode($parameters)
+	{
+		$this->parameters = $parameters;
+		unset($parameters);
+		
+		$currentHtml = '';
+		
+		foreach ($this->__parse($this->preParsedContent) as $section)
+		{
+			if ($section['level'] != 1)
+				$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
+			
+			$currentHtml .= $section['html'];
+		}
+
+		return $currentHtml;
+	}
+	
+	// Make table of content from list of sections
+	private function parseTableOfContent($sections, $main = true, $tlevel = 2)
+	{
+		$stack = array(
+			array(),
+			array(),
+		);
+		$num = 0;
+		$mainToc = array();
+	
+		foreach ($sections as $section)
+		{
+			if ($section['level'] == $tlevel)
+			{
+				if (!empty($stack[0]))
+					$mainToc[] = array(
+						'id' => $stack[0]['id'],
+						'level' => $num,
+						'name' => $stack[0]['name'],
+						'sub' => !empty($stack[1]) ? $this->parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
+					);
+	
+				$stack = array(
+					$section,
+					array()
+				);
+	
+				$num++;
+			}
+			elseif ($section['level'] >= $tlevel)
+				$stack[1][] = $section;
+		}
+	
+		if (!empty($stack[0]))
+			$mainToc[] = array(
+				'id' => $stack[0]['id'],
+				'level' => $num,
+				'name' => $stack[0]['name'],
+				'sub' => !empty($stack[1]) ? $this->parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
+			);
+	
+		return $mainToc;
+	}
+	
+	// This function makes html id (anchor) from section name
+	private function make_html_id($name)
+	{
+		global $smcFunc;
+		
+		$name = str_replace(array('%3A', '+', '%'), array(':', '_', '.'), urlencode($name));
+		
+		while($name[0] == '.')
+			$name = substr($name, 1);
+		return $name;
+	}
+	
+	// Opens and closes paragraph based on request if needed and possible
 	private function __paragraph_handler(&$status, &$currentHtml, $mode = 'open')
 	{
 		// Close if open and not allowed to be open
@@ -485,16 +518,7 @@ class WikiParser
 		}
 	}
 	
-	private function __debug_die($currentHtml, $item)
-	{
-		echo '
-		PARSE ERROR!!
-		Unable to parse item <pre>', var_dump($item), '</pre>
-		Parsed HTML: <pre>', htmlspecialchars($currentHtml), '</pre>';
-		
-		die();
-	}
-	
+	// Cleans first and last linebreaks to make sure there won't be empty paragraphs
 	private function __paragraph_clean(&$text)
 	{	
 		if (strlen($text) >= 6 && substr($text, 0, 6) == '<br />')
@@ -509,12 +533,13 @@ class WikiParser
 		return $text;
 	}
 
-	private function __preprocess($text, $mode = 'normal')
+	// Preprocesses page
+	private function __preprocess($text)
 	{
 		$stringTemp = '';
 		$i = 0;
 		
-		$parseSections = $mode == 'normal';
+		$parseSections = true;
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
@@ -623,10 +648,6 @@ class WikiParser
 							
 							continue;
 						}
-					}
-					elseif ($can_paragraph)
-					{
-						die(htmlspecialchars($tag) . ' isn\'t known');
 					}
 				}
 				elseif ($curChar == "\n" && $text[$i + 1] == "\n")
@@ -909,435 +930,5 @@ class WikiParser
 		return $sections;
 	}
 }
-
-/*
-class WikiParserOld
-{
-	var $this->page_info;
-	var $namespace;
-	var $params;
-	var $parse_bbc = true;
-
-	var $tableOfContents = array();
-	var $pageSections = array();
-	var $currentSection = array();
-
-	function parse($message, $params = array())
-	{
-		$this->params = $params;
-
-		if ($this->parse_bbc)
-		{
-			$message = $this->__parse__curls($message);
-			$message = parse_bbc($message);
-			$message = preg_replace_callback('/\[\[(.*?)(\|(.*?))?\]\](.*?)([.,\'"\s]|$|\r\n|\n|\r|<br( \/)?>|<)/', array($this, '__link_callback'), $message);
-		}
-
-		$parts = preg_split(
-			'%(={2,5})\s{0,}(.+?)\s{0,}\1\s{0,}<br />|(<br /><br />|<br />|<!!!>|</!!!>|<div|<ul|<table|<code|</div>|</ul>|</table>|</code>)%',
-			$message,
-			null,
-			PREG_SPLIT_DELIM_CAPTURE
-		);
-
-		$this->currentSection = array(
-			'title' => $this->page_info['title'],
-			'level' => 1,
-			'content' => '',
-			'parts' => array(),
-			'edit_url' => wiki_get_url(array(
-				'page' => wiki_urlname($this->page_info['title'], $this->namespace),
-				'sa' => 'edit',
-			)),
-		);
-
-		// Set current status for parser
-		$para_open = false;
-		$can_para = true;
-		$in_bracket = false;
-		$currentBracket = '';
-
-		$toc = array();
-
-		$contentTemp = '';
-
-		$currentPart = array();
-		$currentType = 'p';
-
-		$i = 0;
-		while ($i < count($parts))
-		{
-			// New Section
-			if (substr($parts[$i], 0, 1) == '=' && strlen($parts[$i]) >= 2 && strlen($parts[$i]) <= 5 && str_replace('=', '', $parts[$i]) == '')
-			{
-				if (!empty($currentPart))
-					$this->currentSection['parts'][] = $currentPart;
-				$currentPart = array();
-
-				$this->pageSections[] = $this->currentSection;
-
-				$toc[] = array(strlen($parts[$i]), $parts[$i + 1]);
-
-				$this->currentSection = array(
-					'title' => $parts[$i + 1],
-					'level' => strlen($parts[$i]),
-					'content' => '',
-					'parts' => array(),
-					'edit_url' => wiki_get_url(array(
-						'page' => wiki_urlname($this->page_info['title'], $this->namespace),
-						'sa' => 'edit',
-						'section' => count($this->pageSections),
-					)),
-				);
-
-				$i += 1;
-			}
-			elseif (!$this->parse_bbc)
-				$this->currentSection['content'] .= $parts[$i];
-			// End of Paragraph?
-			elseif ($parts[$i] == '<br /><br />')
-			{
-				if (!empty($currentPart))
-					$this->currentSection['parts'][] = $currentPart;
-
-				$currentType = 'p';
-				$currentPart = array();
-			}
-			// Block tags can't be in paragraph
-			elseif (in_array($parts[$i], array('<div', '<ul', '<table', '<code')))
-			{
-				if ($currentType != 'raw')
-				{
-					$this->currentSection['parts'][] = $currentPart;
-
-					$currentType = 'raw';
-					$currentPart = array(
-						'type' => 'raw',
-						'content' => '',
-					);
-				}
-
-				$currentPart['content'] .= $parts[$i];
-			}
-			elseif (in_array($parts[$i], array('</div>', '</ul>', '</table>', '</code>')))
-			{
-				if (!empty($currentPart))
-				{
-					$currentPart['content'] .= $parts[$i];
-
-					$this->currentSection['parts'][] = $currentPart;
-				}
-
-				$currentType = 'p';
-				$currentPart = array();
-			}
-			// No paragraphs area
-			elseif ($parts[$i] == '<!!!>')
-			{
-				if (!empty($currentPart))
-					$this->currentSection['parts'][] = $currentPart;
-
-				$currentType = 'raw';
-				$currentPart = array(
-					'type' => 'raw',
-					'content' => '',
-				);
-			}
-			// No paragraphs area
-			elseif ($parts[$i] == '</!!!>')
-			{
-				if (!empty($currentPart))
-					$this->currentSection['parts'][] = $currentPart;
-
-				$currentType = 'p';
-				$currentPart = array();
-			}
-			// Avoid starting paragraph with newline
-			elseif ($parts[$i] == '<br />')
-			{
-				if (!empty($currentPart['content']))
-					$currentPart['content'] .= $parts[$i];
-			}
-			elseif (!empty($parts[$i]))
-			{
-				if (empty($currentPart))
-					$currentPart = array(
-						'type' => $currentType,
-						'content' => '',
-					);
-
-				$currentPart['content'] .= $parts[$i];
-			}
-
-			$i++;
-		}
-
-		$this->currentSection['parts'][] = $currentPart;
-		$this->pageSections[] = $this->currentSection;
-		$this->currentSection = null;
-
-		$this->tableOfContents = do_toctable(2, $toc);
-	}
-
-	function __parse__curls($message, $params = array())
-	{
-		global $context, $txt;
-
-		$parts = preg_split(
-			'%(&lt;nowiki&gt;|&lt;/nowiki&gt;|{{{|}}}|{{|}}|\||&quot;|")%',
-			$message,
-			null,
-			PREG_SPLIT_DELIM_CAPTURE
-		);
-
-		$inBracket = false;
-		$inQuote = false;
-		$wikiParseSection = true;
-		$currentBracket = array(
-			'name' => '',
-			'params' => array(),
-			'data' => array(),
-			'non_parsed' => '',
-		);
-
-		$openBrackets = array();
-
-		$message = '';
-
-		$i = 0;
-
-		while ($i < count($parts))
-		{
-			if (!$inBracket && $parts[$i] == '&lt;nowiki&gt;' && $wikiParseSection)
-				$wikiParseSection = false;
-			elseif (!$inBracket && $parts[$i] == '&lt;/nowiki&gt;' && !$wikiParseSection)
-				$wikiParseSection = true;
-			elseif (!$wikiParseSection && !$inBracket)
-				$message .= $parts[$i];
-			elseif (!$wikiParseSection)
-			{
-				$currentBracket['non_parsed'] .= $parts[$i];
-				$currentBracket['data'][] = $parts[$i];
-			}
-			// Quotes
-			elseif ($inQuote && ($parts[$i] == '&quot;' || $parts[$i] == '&quot;'))
-			{
-				$inQuote = false;
-				$currentBracket['non_parsed'] .= $parts[$i];
-			}
-			elseif ($inQuote)
-			{
-				$currentBracket['non_parsed'] .= $parts[$i];
-				$currentBracket['data'][] = $parts[$i];
-			}
-			elseif (!$inQuote && $inBracket && ($parts[$i] == '&quot;' || $parts[$i] == '&quot;'))
-			{
-				$inQuote = true;
-				$currentBracket['non_parsed'] .= $parts[$i];
-			}
-			// Brackets
-			elseif ($parts[$i] == '{{' && isset($parts[$i + 1]))
-			{
-				if ($inBracket)
-				{
-					$openBrackets[] = $currentBracket;
-					$currentBracket = array(
-						'name' => '',
-						'params' => array(),
-						'data' => array(),
-						'non_parsed' => '',
-					);
-				}
-
-				$currentBracket['non_parsed'] = $parts[$i];
-				$i++;
-
-				$inBracket = true;
-				$currentBracket['type'] = 2;
-				$currentBracket['name'] = $parts[$i];
-				$currentBracket['non_parsed'] .= $parts[$i];
-			}
-			elseif ($parts[$i] == '{{{' && isset($parts[$i + 1]))
-			{
-				if ($inBracket)
-				{
-					$openBrackets[] = $currentBracket;
-					$currentBracket = array(
-						'name' => '',
-						'params' => array(),
-						'data' => array(),
-						'non_parsed' => '',
-					);
-				}
-
-				$currentBracket['non_parsed'] = $parts[$i];
-				$i++;
-
-				$inBracket = true;
-				$currentBracket['type'] = 3;
-				$currentBracket['name'] = $parts[$i];
-				$currentBracket['non_parsed'] .= $parts[$i];
-			}
-			elseif ($inBracket && $parts[$i] == '|')
-			{
-				if (!empty($currentBracket['data']))
-					$currentBracket['params'][] = $currentBracket['data'];
-				$currentBracket['data'] = array('|');
-				$currentBracket['non_parsed'] .= $parts[$i];
-			}
-			elseif (($currentBracket['type'] === 2 && $parts[$i] == '}}' || $currentBracket['type'] === 3 && $parts[$i] == '}}}'))
-			{
-				$currentBracket['non_parsed'] .= $parts[$i];
-
-				// is there param?
-				if (!empty($currentBracket['data']))
-				{
-					$currentBracket['params'][] = $currentBracket['data'];
-					$currentBracket['data'] = array();
-				}
-
-				$currentBracket['parsed'] = '';
-
-				if ($currentBracket['type'] == 3)
-				{
-					if (isset($params[$currentBracket['name']]))
-					{
-						$currentBracket['parsed'] .= $params[$currentBracket['name']];
-						$currentBracket['boolean_value'] = true;
-					}
-					else
-					{
-						$currentBracket['parsed'] .= $currentBracket['non_parsed'];
-						$currentBracket['boolean_value'] = false;
-					}
-				}
-				elseif ($currentBracket['type'] == 2)
-				{
-					if (substr($currentBracket['name'], 0, 1) == '#')
-					{
-						$prams = array();
-
-						list ($function, $param1) = explode(':', substr($currentBracket['name'], 1), 2);
-
-						$funcParams = array();
-
-						if (trim($param1) != '')
-							$funcParams[] = trim($param1);
-
-						foreach ($currentBracket['params'] as $temp)
-						{
-							$param = array();
-							$dynamicParams = array();
-
-							foreach ($temp as $ib => $part)
-							{
-								// Separator
-								if ($ib == 0 && is_string($part) && $part == '|' && empty($funcParams))
-									$funcParams[] = $param;
-								elseif ($ib == 0 && is_string($part) && $part == '|')
-									continue;
-								elseif (is_string($part))
-									$param[] = $part;
-								elseif (is_array($part))
-								{
-									$dynamicParams[] = $part;
-									$param[] = $part['parsed'];
-								}
-							}
-
-							if (count($dynamicParams) == 1 && trim($dynamicParams[0]['parsed']) == trim(implode('', $param)))
-								$funcParams[] = $dynamicParams[0];
-							else
-								$funcParams[] = trim(implode('', $param));
-						}
-
-						$function = trim($function);
-
-						if ($function == 'if')
-						{
-							if (isset($funcParams[0]) && is_array($funcParams[0]))
-							{
-								if (isset($funcParams[0]['boolean_value']) && $funcParams[0]['boolean_value'] === true)
-									$currentBracket['parsed'] .= isset($funcParams[1]) ? $funcParams[1] : '';
-								else
-									$currentBracket['parsed'] .= isset($funcParams[2]) ? $funcParams[2] : '';
-							}
-							elseif (isset($funcParams[0]))
-							{
-								if (trim($funcParams[0]) == true)
-									$currentBracket['parsed'] .= isset($funcParams[1]) ? $funcParams[1] : '';
-								else
-									$currentBracket['parsed'] .= isset($funcParams[2]) ? $funcParams[2] : '';
-							}
-						}
-					}
-					elseif (isset($this->page_info['variables'][$currentBracket['name']]))
-						$currentBracket['parsed'] .= $this->page_info['variables'][$currentBracket['name']];
-					elseif (isset($context['wiki_variables'][$currentBracket['name']]))
-						$currentBracket['parsed'] .= $context['wiki_variables'][$currentBracket['name']];
-					else
-					{
-	
-					}
-				}
-				else
-					$currentBracket['parsed'] .= $currentBracket['non_parsed'];
-
-				if (empty($openBrackets))
-				{
-					$inBracket = false;
-
-					$message .= $currentBracket['parsed'];
-
-					$currentBracket = array(
-						'name' => '',
-						'params' => array(),
-						'non_parsed' => '',
-					);
-				}
-				else
-				{
-					$parsedBracket = $currentBracket;
-
-					$currentBracket = array_pop($openBrackets);
-					$currentBracket['non_parsed'] .= $parsedBracket['non_parsed'];
-					$currentBracket['data'][] = $parsedBracket;
-				}
-			}
-			elseif ($inBracket && !empty($parts[$i]))
-			{
-				$currentBracket['non_parsed'] .= $parts[$i];
-				$currentBracket['data'][] = $parts[$i];
-			}
-			elseif (!$inBracket && !empty($parts[$i]))
-				$message .= $parts[$i];
-
-			$i++;
-		}
-
-		// Try to fix mistakes
-		if (!empty($currentBracket['non_parsed']))
-		{
-			foreach ($openBrackets as $brc)
-				$message .= $brc['non_parsed'];
-			$message .= $currentBracket['non_parsed'];
-		}
-
-		return $message;
-	}
-
-	
-}
-
-// Callback for making wikilinks
-function wikilink_callback($groups)
-{
-	if (empty($groups[3]))
-		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . read_urlname($groups[1]) . $groups[4] . '</a>';
-	else
-		$link = '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '">' . $groups[3] . $groups[4] . '</a>';
-
-	return $link . $groups[5];
-}*/
 
 ?>

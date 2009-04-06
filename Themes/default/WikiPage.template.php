@@ -90,14 +90,14 @@ function template_view_page()
 	</div>';
 	}
 
-	template_wiki_content($context['page_content']);
+	template_wiki_content($context['wiki_page']);
 }
 
-function template_wiki_content($page_content)
+function template_wiki_content($wikiPage)
 {
 	global $context, $modSettings, $txt;
-
-	foreach ($page_content['sections'] as $section)
+	
+	foreach ($wikiPage->parsedContent as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
@@ -131,7 +131,7 @@ function template_wiki_content($page_content)
 			echo '
 			<div class="wikitoc floatright">
 				<ul>',
-					output_toc($context['current_page_url'], '', $page_content['toc']), '
+					output_toc($context['current_page_url'], '', $wikiPage->tableOfContents), '
 				</ul>
 			</div>';
 
@@ -262,9 +262,9 @@ function template_edit_page()
 		}
 	// ]]></script>';
 
-	if (isset($context['page_content']))
+	if (isset($context['wiki_page_preview']))
 	{
-		template_wiki_content();
+		template_wiki_content($context['wiki_page_preview']);
 
 		echo '
 		<hr />';
