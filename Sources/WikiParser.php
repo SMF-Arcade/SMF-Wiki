@@ -89,6 +89,9 @@ class WikiPage
 	// Little helper for parsing cerating parts like templatenames
 	private $fakeStatus = array('can_paragraph_open' => false);
 	
+	// Inline Tags
+	public $inlineTags = array(
+	);
 	// Block level tags
 	public $blockTags = array(
 		// DIV
@@ -540,6 +543,8 @@ class WikiPage
 		$i = 0;
 		
 		$parseSections = true;
+
+		$text = str_replace(array('[html]', '[/html]'), array('<nowiki>[html]', '[/html]</nowiki>'), $text); 
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
@@ -558,6 +563,8 @@ class WikiPage
 		$sections = array();
 
 		$section = array('name' => '(root)', 'level' => 1, 'parts' => array());
+
+		$blockLevelNesting = 0;
 
 		$paragraph = array();
 		$can_paragraph = true;
@@ -583,6 +590,7 @@ class WikiPage
 				$search .= '=';
 			}
 
+			// Skip to next might be special tag
 			$skip = strcspn($text, $search, $i);
 
 			if ($skip > 0 && empty($stack))
@@ -595,7 +603,26 @@ class WikiPage
 				$stack[$stackIndex]['current_param'][] = substr($text, $i, $skip);
 				$i += $skip;
 			}
-
+			
+			// nowiki tag
+			if (substr($text, $i, 8) == '<nowiki>')
+			{
+				$i += 8;
+				
+				$endPos = strpos($text, '</nowiki>', $i);
+	
+				if ($endPos > 0 && empty($stack))
+				{
+					$stringTemp .= substr($text, $i, $endPos - $i);
+					$i = $endPos + 9;
+				}
+				elseif ($endPos > 0)
+				{
+					$stack[$stackIndex]['current_param'][] = substr($text, $i, $endPos - $i);
+					$i = $endPos + 9;
+				}
+			}
+			
 			if ($i >= $textLen)
 				break;
 			else
@@ -628,7 +655,7 @@ class WikiPage
 				elseif ($curChar == '<')
 				{
 					$tagLen = strcspn($text, ' >', $i + 1);
-					$tag = '<' . htmlspecialchars(substr($text, $i + 1, $tagLen)) . '>';
+					$tag = '<' . substr($text, $i + 1, $tagLen) . '>';
 					
 					if (isset($this->blockTags[$tag]))
 					{
@@ -636,11 +663,15 @@ class WikiPage
 						{
 							$charType = 'new-paragraph-special';
 							$can_paragraph = false;
+							
+							$blockLevelNesting++;
 						}
 						elseif (!$can_paragraph)
 						{
+							$blockLevelNesting--;
+							
 							$charType = '';
-							$can_paragraph = true;
+							$can_paragraph = $blockLevelNesting == 0;
 							
 							$stringTemp .= $tag;
 							
