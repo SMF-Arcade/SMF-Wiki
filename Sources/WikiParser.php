@@ -61,6 +61,7 @@ function wikiparse_variables($message)
 class WikiPage
 {
 	// Basic information about page
+	public $page;
 	public $title;
 	public $namespace;
 	
@@ -141,6 +142,7 @@ class WikiPage
 	
 	function __construct($page_info, $namespace, $content)
 	{
+		$this->page = $page_info['name'];
 		$this->title = $page_info['title'];
 		$this->namespace = $namespace;
 		$this->raw_content = $content;
@@ -194,6 +196,7 @@ class WikiPage
 				'id' => $html_id,
 				'name' => $section['name'],
 				'level' => $section['level'],
+				'edit_url' => wiki_get_url(array('page' => $this->page, 'sa' => 'edit', 'section' => $sectionID)),
 				'html' => '',
 			);
 			
@@ -326,7 +329,10 @@ class WikiPage
 				}
 				// TODO: Make this friendly error
 				else
-					die($function);
+				{
+					$this->__paragraph_handler($status, $currentHtml, 'open');
+					$currentHtml .= '<span style="color: red">' . sprintf($txt['invalid_function'], $function). '</span>';					
+				}
 			}
 			elseif ($item['name'] == 'wikilink')
 			{
@@ -411,22 +417,16 @@ class WikiPage
 			}
 			elseif ($item['name'] == 'tag')
 				$currentHtml .= call_user_method($this->tagFunctions[$item['tag_name']], $this, $item['content'], $item['attributes']);
-			// TODO: Make this friendly error
 			else
-				$this->__debug_die($currentHtml, $item);
+				$this->logError('Unable to parse item!', array($item));
 		} // END content of part
 		
 		return $currentHtml;
 	}
 	
-	private function __debug_die($currentHtml, $item)
+	private function logError($error, $data)
 	{
-		echo '
-		PARSE ERROR!!
-		Unable to parse item <pre>', var_dump($item), '</pre>
-		Parsed HTML: <pre>', htmlspecialchars($currentHtml), '</pre>';
-		
-		die();
+		$this->parserErrors[] = array($error, $data);
 	}
 
 	function getTemplateCode($parameters)
@@ -506,6 +506,9 @@ class WikiPage
 	// Opens and closes paragraph based on request if needed and possible
 	private function __paragraph_handler(&$status, &$currentHtml, $mode = 'open')
 	{
+		if (!$this->parse_bbc)
+			return;
+		
 		// Close if open and not allowed to be open
 		if ($status['paragraphOpen'] && !$status['can_paragraph_open'])
 		{
@@ -610,7 +613,7 @@ class WikiPage
 			}
 			
 			// nowiki tag
-			if (substr($text, $i, 8) == '<nowiki>')
+			if ($this->parse_bbc && substr($text, $i, 8) == '<nowiki>')
 			{
 				$i += 8;
 				
@@ -638,7 +641,7 @@ class WikiPage
 				if ($curChar == $closeTag)
 					$charType = 'close';
 				// Start char?
-				elseif (isset($this->rules[$curChar]))
+				elseif ($this->parse_bbc && isset($this->rules[$curChar]))
 				{
 					$rule = $this->rules[$curChar];
 					$charType = 'open';
@@ -657,7 +660,7 @@ class WikiPage
 						$charType = 'new-section';
 				}
 				// Start or end of tag
-				elseif ($curChar == '<')
+				elseif ($this->parse_bbc && $curChar == '<')
 				{
 					$tagLen = strcspn($text, ' >', $i + 1);
 					$tag = '<' . substr($text, $i + 1, $tagLen) . '>';
@@ -687,7 +690,7 @@ class WikiPage
 					}
 				}
 				// Start or end of tag
-				elseif (substr($text, $i, 4) == '&lt;')
+				elseif ($this->parse_bbc && substr($text, $i, 4) == '&lt;')
 				{
 					$endPos = strpos($text, '&gt;', $i + 4);
 					
@@ -776,7 +779,7 @@ class WikiPage
 						continue;
 					}
 				}
-				elseif ($curChar == "\n" && $text[$i + 1] == "\n")
+				elseif ($this->parse_bbc && $curChar == "\n" && $text[$i + 1] == "\n")
 				{
 					$charType = 'new-paragraph';
 

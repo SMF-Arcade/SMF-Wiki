@@ -49,16 +49,18 @@ function EditPage()
 		$body = $context['page_content_raw'];
 	else
 	{
-		$b = wikiparser($context['page_info'], $context['page_content_raw'], false);
-
-		if (!isset($b['sections'][$_REQUEST['section']]))
+		// Reparse without bbc conversion or any fixes
+		$context['wiki_page']->parse_bbc = false;
+		$context['wiki_page']->parse();
+		
+		if (!isset($context['wiki_page']->parsedContent[$_REQUEST['section']]))
 			$body = $context['page_content_raw'];
 		else
 		{
 			$context['edit_section'] = $_REQUEST['section'];
-			$sect = &$b['sections'][$_REQUEST['section']];
-
-			$body = str_repeat('=', $sect['level']) . ' ' . $sect['title'] . ' ' . str_repeat('=', $sect['level']) . '<br />' . $sect['content'];
+			$section = $context['wiki_page']->parsedContent[$_REQUEST['section']];
+			
+			$body = str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />' . $section['html'];
 		}
 	}
 
@@ -161,23 +163,36 @@ function EditPage2()
 		$body = $_POST['wiki_content'];
 	else
 	{
-		$b = wikiparser($context['page_info'], $context['page_content_raw'], false);
-
-		if (!isset($b['sections'][$_REQUEST['section']]))
+		$context['wiki_page']->parse_bbc = false;
+		$context['wiki_page']->parse();
+		
+		if (!isset($context['wiki_page']->parsedContent[$_REQUEST['section']]))
 			$body = $_POST['wiki_content'];
 		else
 		{
 			$body = '';
-
-			foreach ($b['sections'] as $id => $sect)
+			
+			if (substr($_POST['wiki_content'], -6) != '<br />')
+				$_POST['wiki_content'] .= '<br />';
+					
+			foreach ($context['wiki_page']->parsedContent as $id => $section)
 			{
-				if ($sect['level'] == 1)
-					$body .= $sect['content'];
+				if (substr($section['html'], -6) != '<br />')
+					$section['html'] .= '<br />';
+				
+				if ($section['level'] == 1)
+					$body .= $section['html'];
 				elseif ($id != $_REQUEST['section'])
-					$body .= str_repeat('=', $sect['level']) . ' ' . $sect['title'] . ' ' . str_repeat('=', $sect['level']) . '<br />' . $sect['content'];
+					$body .= str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />' . $section['html'];
 				else
 					$body .= $_POST['wiki_content'];
 			}
+			
+			// Trim start and end
+			while (substr($body, 0, 6) == '<br />')
+				$body = substr($body, 6);			
+			while (substr($body, -6) == '<br />')
+				$body = substr($body, 0, -6);
 		}
 	}
 
