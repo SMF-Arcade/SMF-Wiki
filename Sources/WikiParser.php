@@ -170,7 +170,7 @@ class WikiPage
 				continue;
 
 			// Make reference, since it's easier to read this way
-			$currentHtml = &$this->sections[$sectionID]['html'];
+			$currentHtml = &$this->sections[$this->currentSection]['html'];
 					
 			foreach ($section['part'] as $part)
 			{
@@ -1017,8 +1017,8 @@ class WikiPage
 				$name = $rule['names'][$matchLen];
 				
 				// Variable never has piped style params, so it's template
-				if ($name == 'variable' && $piece['has_params'])
-					$name = 'template';
+				/*if ($name == 'variable' && $piece['has_params'])
+					$name = 'template';*/
 				
 				$isFunction = false;
 				

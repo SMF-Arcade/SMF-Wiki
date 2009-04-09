@@ -148,12 +148,6 @@ function is_valid_pagename($page, $namespace)
 	return str_replace(array('[', ']', '{', '}', '|'), '', $page) == $page;
 }
 
-// Makes string safe to use as id for html element
-function make_html_safe($string)
-{
-	return str_replace(array(' ', '[', ']', '{', '}'), '_', $string);
-}
-
 // Cleans illegal characters from pagename
 function clean_pagename($string, $namespace = false)
 {
