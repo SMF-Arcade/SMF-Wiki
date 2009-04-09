@@ -33,7 +33,7 @@ function WikiAdmin()
 	isAllowedTo('wiki_admin');
 	loadWiki('admin');
 
-	$context[$context['admin_menu_name']]['tab_data']['title'] = &$txt['wiki_admin_title'];
+	$context[$context['admin_menu_name']]['tab_data']['title'] = $txt['wiki_admin_title'];
 	$context[$context['admin_menu_name']]['tab_data']['description'] = $txt['wiki_admin_desc'];
 
 	$context['page_title'] = $txt['admin_wiki'];
@@ -79,7 +79,7 @@ function WikiAdminSettings($return_config = false)
 	$config_vars = array(
 			array('check', 'wikiEnabled'),
 		$txt['wiki_standalone_mode'],
-			array('select', 'wikiStandalone', array(&$txt['wikiStandalone_0'], &$txt['wikiStandalone_1'], &$txt['wikiStandalone_2'])),
+			array('select', 'wikiStandalone', array($txt['wikiStandalone_0'], $txt['wikiStandalone_1'], $txt['wikiStandalone_2'])),
 			array('text', 'wikiStandaloneUrl'),
 			array('select', 'wikiTalkBoard', $boards),
 		'',

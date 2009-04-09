@@ -65,6 +65,21 @@
 		</operation>
 	</file>
 
+	<file name="$sourcedir/ManageSettings.php">
+		<operation>
+			<search position="after"><![CDATA[	);
+
+	// Are we getting info for the help section.]]></search>
+			<add><![CDATA[		// wiki = wiki
+		'wiki' => array(
+			'url' => 'action=admin;area=wiki',
+			'settings' => array(
+				'wikiEnabled' => 1,
+			),
+		),]]></add>
+		</operation>
+	</file>
+
 	<file name="$sourcedir/ManagePermissions.php">
 		<operation>
 			<search position="before"><![CDATA[			'profile_remote_avatar' => array(false, 'profile', 'use_avatar'),]]></search>
@@ -102,6 +117,12 @@
 			<add><![CDATA[
 // SMF Wiki
 $txt['wiki'] = 'Wiki';
+
+// Core Features
+$txt['core_settings_item_wiki'] = 'Wiki';
+$txt['core_settings_item_arcade_desc'] = '';
+
+// Admin menu strings
 $txt['admin_wiki'] = 'Wiki';
 $txt['admin_wiki_information'] = 'Information';
 $txt['admin_wiki_settings'] = 'Settings';
@@ -109,8 +130,9 @@ $txt['admin_wiki_settings'] = 'Settings';
 // Permission Names
 $txt['permissiongroup_wiki'] = 'Wiki';
 $txt['permissionname_wiki_access'] = 'Access Wiki';
-$txt['permissionname_wiki_delete'] = 'Delete Pages from Wiki';
 $txt['permissionname_wiki_edit'] = 'Edit Pages In Wiki';
+$txt['permissionname_wiki_delete'] = 'Delete Pages from Wiki';
+$txt['permissionname_wiki_upload'] = 'Upload Files to Wiki';
 $txt['permissionname_wiki_admin'] = 'Administrate Wiki';
 
 // Simple permission gropus
@@ -119,6 +141,7 @@ $txt['permissiongroup_simple_wiki'] = 'Use Wiki';
 // Errors
 $txt['cannot_wiki_access'] = 'You are not allowed to access Wiki.';
 $txt['cannot_wiki_edit'] = 'You are not allowed to edit pages.';
+$txt['cannot_wiki_upload'] = 'You are not allowed to upload files.';
 $txt['cannot_wiki_admin'] = 'You are not allowed to administrate Wiki.';
 ]]></add>
 		</operation>

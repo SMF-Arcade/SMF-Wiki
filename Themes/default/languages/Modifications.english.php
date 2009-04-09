@@ -5,6 +5,12 @@
 
 // SMF Wiki
 $txt['wiki'] = 'Wiki';
+
+// Core Features
+$txt['core_settings_item_wiki'] = 'Wiki';
+$txt['core_settings_item_arcade_desc'] = '';
+
+// Admin menu strings
 $txt['admin_wiki'] = 'Wiki';
 $txt['admin_wiki_information'] = 'Information';
 $txt['admin_wiki_settings'] = 'Settings';
