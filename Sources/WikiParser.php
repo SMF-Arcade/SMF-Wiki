@@ -121,7 +121,7 @@ class WikiPage
 		$this->preParsedContent = $this->__preprocess($this->raw_content);
 		
 		// Do actual parsing
-		$this->parsedContent = $this->__parse($this->preParsedContent);
+		$this->parsedContent = $this->__parse();
 		
 		// Make TOC
 		$this->tableOfContents = $this->parseTableOfContent($this->parsedContent);
@@ -133,7 +133,7 @@ class WikiPage
 	}
 	
 	// Main parser function
-	private function __parse($content)
+	private function __parse()
 	{
 		global $context, $txt;
 		
@@ -143,7 +143,7 @@ class WikiPage
 		
 		$htmlIds = array();
 		
-		foreach ($content as $section)
+		foreach ($this->preParsedContent as $section)
 		{
 			$html_id = $this->make_html_id($section['name']);
 			
@@ -438,7 +438,7 @@ class WikiPage
 		
 		$currentHtml = '';
 		
-		foreach ($this->__parse($this->preParsedContent) as $section)
+		foreach ($this->__parse() as $section)
 		{
 			if ($section['level'] != 1)
 				$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
