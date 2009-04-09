@@ -8,7 +8,7 @@ $txt['wiki'] = 'Wiki';
 
 // Core Features
 $txt['core_settings_item_wiki'] = 'Wiki';
-$txt['core_settings_item_arcade_desc'] = '';
+$txt['core_settings_item_wiki_desc'] = '';
 
 // Admin menu strings
 $txt['admin_wiki'] = 'Wiki';

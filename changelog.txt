@@ -9,6 +9,9 @@ April 2009
  + New Installer code
  ! Don't show Wiki in Admin when disabled
  + Added support for adding variables
+ ! Wrong sting name (arcade instead of wiki)
+ ! Wikilinked images didn't work
+ ! 
 
 February 2009
 --------------------------------------------------------------------------------

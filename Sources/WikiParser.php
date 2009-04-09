@@ -342,59 +342,61 @@ class WikiPage
 				
 				if ($linkNamespace == $context['namespace_images']['id'] && $link_info['id'] !== null)
 				{
-					$this->__debug_die($currentHtml, $item);
-					/*
-					if (!empty($groups[3]))
+					if (!empty($item['params']))
 					{
-						$options = explode('|', $groups[3]);
 						$align = '';
 						$size = '';
 						$caption = '';
 						$alt = '';
 		
 						// Size
-						if (!empty($options[0]))
+						if (!empty($item['params'][1]))
 						{
-							if ($options[0] == 'thumb')
+							$size = $this->__parse_part($this->fakeStatus, $item['params'][1]);
+							
+							if ($size == 'thumb')
 								$size = ' width="180"';
-							elseif (is_numeric($options[0]))
-								$size = ' width="' . $options[0] . '"';
-							elseif (strpos($options[0], 'x') !== false)
+							elseif (is_numeric($size))
+								$size = ' width="' . $size . '"';
+							elseif (strpos($size, 'x') !== false)
 							{
-								list ($width, $height) = explode('x', $options[0], 2);
+								list ($width, $height) = explode('x', $size, 2);
 		
 								if (is_numeric($width) && is_numeric($height))
-								{
 									$size = ' width="' . $width . '" height="' . $height. '"';
-								}
 							}
+							else
+								$size = '';
 						}
 		
 						// Align
-						if (!empty($options[1]) && ($options[1] == 'left' || $options[1] == 'right'))
-							$align = $options[1];
+						if (!empty($item['params'][2]))
+						{
+							$align = trim($this->__parse_part($this->fakeStatus, $item['params'][2]));
+							$align = ($align == 'left' || $align == 'right') ? $align : '';
+						}
 		
 						// Alt
-						if (!empty($options[2]))
-							$alt = $options[2];
+						if (!empty($options[3]))
+							$alt = $this->__parse_part($this->fakeStatus, $item['params'][3]);
 		
 						// Caption
-						if (!empty($options[3]))
-							$caption = $options[3];
+						if (!empty($options[4]))
+							$alt = $this->__parse_part($this->fakeStatus, $item['params'][4]);
 		
 						if (!empty($align) || !empty($caption))
-							$code = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
-		
-						$code .= '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1]), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
+						{
+							$this->__paragraph_handler($status, $currentHtml, 'close');
+							$currentHtml = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
+						}
+						
+						$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($linkPage, $linkNamespace), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
 		
 						if (!empty($align) || !empty($caption))
-							$code .= '</div>';
-		
-						return $code;
+							$currentHtml .= '</div>';
 					}
-		
-					return '<a href="' . wiki_get_url(wiki_urlname($groups[1])) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($groups[1]), 'image')) . '" alt="" /></a>';
-					*/
+					else
+						$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($linkPage, $linkNamespace), 'image')) . '" alt="" /></a>';
 				}
 				else
 				{
@@ -990,10 +992,10 @@ class WikiPage
 				
 				$i += $matchLen;
 				
-				if ($text[$i + 1] == "\n")
+				if ($thisElement['lineStart'] && $text[$i + 1] == "\n" && $text[$i + 2] != "\n")
 				{
 					$thisElement['lineEnd'] = true;
-					$text[$i + 1] = '';
+					$i++;
 				}
 
 				// Remove last item from stack
