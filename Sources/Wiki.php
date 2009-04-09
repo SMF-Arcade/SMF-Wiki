@@ -50,9 +50,20 @@ function loadWiki($mode = '')
 		$context['template_layers'][] = 'wiki';
 		
 		$context['wiki_parser_extensions'] = array(
+			// Custom variables 
+			// format 'variable' (lowercase only) => array(function to call, can have parameter)
+			// function: (&wiki_parser, variable[, value]) (value is present when parameter given, otherwise null)
+			// returns html code for display
 			'variables' => array(
 				'wiki_version' => array(create_function('&$wiki_parser, $variable', 'return $GLOBALS[\'wiki_version\'];'), false),
 				'displaytitle' => array(create_function('&$wiki_parser, $variable, $value', 'if ($value === null) { return $wiki_parser->title; } else { $wiki_parser->title = $value; return true; }'), true),
+			),
+			// format 'switch' => function to call
+			// function: (&wiki_parser)
+			// returns nothing
+			'behaviour_switch' => array(
+				'noindex' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = true;'),
+				'index' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = false;'),
 			),
 		);
 	}

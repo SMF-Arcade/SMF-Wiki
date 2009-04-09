@@ -170,7 +170,7 @@ class WikiPage
 				continue;
 
 			// Make reference, since it's easier to read this way
-			$currentHtml = &$sections[$sectionID]['html'];
+			$currentHtml = &$this->sections[$sectionID]['html'];
 					
 			foreach ($section['part'] as $part)
 			{
@@ -208,6 +208,17 @@ class WikiPage
 				$currentHtml .= $item;
 				
 				continue;
+			}
+			// Behaviour Switch
+			elseif ($item['name'] == 'behaviour_switch')
+			{
+				if (isset($context['wiki_parser_extensions']['behaviour_switch'][strtolower($item['switch'])]))
+					$context['wiki_parser_extensions']['behaviour_switch'][strtolower($item['switch'])]($this, $item['switch']);
+				else
+				{
+					$this->__paragraph_handler($status, $currentHtml, 'open');
+					$currentHtml .= '__' . $item['switch'] . '__';
+				}
 			}
 			elseif ($item['name'] == 'variable')
 			{
@@ -598,7 +609,7 @@ class WikiPage
 			}
 			else
 			{
-				$search .= '&=';
+				$search .= '&=_';
 			}
 
 			// Skip to next might be special tag
@@ -651,10 +662,10 @@ class WikiPage
 				}
 				elseif ($curChar == '|')
 					$charType = 'pipe';
-				elseif ($parseSections && ($i == 0 || $text[$i - 1] == "\n") && $curChar == "=")
+				elseif ($parseSections && ($i == 0 || $text[$i - 1] == "\n") && $curChar == '=')
 					$charType = 'new-section';
 				// There might be block level closing tag
-				elseif ($parseSections && ($text[$i - 1] == ">") && $curChar == "=")
+				elseif ($parseSections && ($text[$i - 1] == '>') && $curChar == '=')
 				{
 					$pos = strrpos(substr($text, 0, $i - 1), '<');
 					$tag = substr($text, $pos, $i - $pos);
@@ -787,6 +798,37 @@ class WikiPage
 					$charType = 'new-paragraph';
 
 					$i += 2;
+				}
+				// Behaviour switch
+				elseif ($this->parse_bbc && $curChar == '_' && $text[$i + 1] == '_')
+				{
+					// Find next space
+					$bLen = strcspn($text, " \n", $i + 2);
+					$bSwitch = substr($text, $i + 2, $bLen);
+					
+					if (substr($bSwitch, -2) == '__')
+					{
+						$tag = array(
+							'name' => 'behaviour_switch',
+							'switch' => substr($bSwitch, 0, -2),
+						);
+						
+						if (empty($stack))
+						{	
+							$this->__paragraph_clean($stringTemp);
+							if (!empty($stringTemp))
+								$paragraph[] =  $stringTemp;
+							$stringTemp = '';
+							
+							$paragraph[] = $tag;
+						}
+						else
+							$stack[$stackIndex]['current_param'][] = $tag;
+							
+						$i += $bLen + 2;
+						
+						continue;
+					}
 				}
 			}
 
