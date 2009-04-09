@@ -28,7 +28,8 @@ function loadWiki($mode = '')
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
 
 	require_once($sourcedir . '/Subs-Wiki.php');
-	require_once($sourcedir . '/WikiParser.php');
+	
+	loadClassFile('WikiParser.php');
 
 	// Wiki Version
 	$wiki_version = '0.1';
@@ -44,14 +45,16 @@ function loadWiki($mode = '')
 			'url' => wiki_get_url('Main_Page'),
 			'name' => $txt['wiki'],
 		);
-
-		// Wiki Variables
-		$context['wiki_variables'] = array(
-			'wikiversion' => $wiki_version,
-		);
-
+		
 		// Template
 		$context['template_layers'][] = 'wiki';
+		
+		$context['wiki_parser_extensions'] = array(
+			'variables' => array(
+				'wiki_version' => array(create_function('&$wiki_parser, $variable', 'return $GLOBALS[\'wiki_version\'];'), false),
+				'displaytitle' => array(create_function('&$wiki_parser, $variable, $value', 'if ($value === null) { return $wiki_parser->title; } else { $wiki_parser->title = $value; return true; }'), true),
+			),
+		);
 	}
 	// Admin Mode
 	elseif ($mode == 'admin')
@@ -172,14 +175,6 @@ function Wiki($standalone = false)
 
 		if ($_REQUEST['sa'] == 'edit' || $_REQUEST['sa'] == 'edit2')
 			unset($context['page_content']);
-
-		if ($_REQUEST['sa'] == 'edit2' && isset($_POST['wiki_content']))
-		{
-			$context['page_info']['variables'] = wikiparse_variables($_POST['wiki_content']);
-
-			if (isset($context['page_info']['variables']['title']))
-				$context['page_info']['title'] = $context['page_info']['variables']['title'];
-		}
 
 		// Setup tabs
 		$context['wikimenu'] = array(

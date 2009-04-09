@@ -80,7 +80,9 @@ function EditPage()
 		preparsecode($preview_content);
 		
 		$context['wiki_page_preview'] = new WikiPage($context['page_info'], $context['namespace'], $preview_content);
-		$context['wiki_page_preview']->parse();		
+		$context['wiki_page_preview']->parse();
+		
+		$context['current_page_title'] = $context['wiki_page_preview']->title;
 	}
 
 	$context['comment'] = '';
@@ -102,8 +104,8 @@ function EditPage()
 
 	// Template
 	loadTemplate('WikiPage', array('article'));
-	$context['page_title'] = sprintf($txt['edit_page'], $context['page_info']['title']);
-	$context['current_page_title'] = sprintf($txt['edit_page'], $context['page_info']['title']);
+	$context['page_title'] = sprintf($txt['edit_page'], $context['current_page_title']);
+	$context['current_page_title'] = sprintf($txt['edit_page'], $context['current_page_title']);
 	$context['sub_template'] = 'edit_page';
 }
 

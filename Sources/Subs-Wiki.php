@@ -383,10 +383,10 @@ function loadWikiPage_old($name, $namespace = '', $revision = null)
 
 	$title = read_urlname($row['title']);
 
-	$variables = wikiparse_variables($row['content']);
+	/*$variables = wikiparse_variables($row['content']);
 
 	if (!empty($variables['title']))
-		$title = $variables['title'];
+		$title = $variables['title'];*/
 
 	return array(
 		'id' => $row['id_page'],

@@ -8,6 +8,7 @@ April 2009
  + Rewritten WikiParser (started in March)
  + New Installer code
  ! Don't show Wiki in Admin when disabled
+ + Added support for adding variables
 
 February 2009
 --------------------------------------------------------------------------------

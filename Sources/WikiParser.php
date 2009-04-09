@@ -20,43 +20,6 @@
 * The latest version can always be found at http://www.simplemachines.org.        *
 **********************************************************************************/
 
-// Callback for wikivariables
-function wikivariable_callback($groups)
-{
-	global $context, $pageVariables;
-
-	if (empty($groups[2]))
-	{
-		if (isset($pageVariables[$groups[1]]))
-			return $pageVariables[$groups[1]];
-		elseif (isset($context['wiki_variables'][$groups[1]]))
-			return $context['wiki_variables'][$groups[1]];
-	}
-	else
-	{
-		if (isset($pageVariables))
-			$pageVariables[$groups[1]] = $groups[2];
-		return '';
-	}
-
-	return $groups[0];
-}
-
-// Parses variables from content
-function wikiparse_variables($message)
-{
-	global $rep_temp, $pageVariables;
-
-	$pageVariables = array();
-
-	$message = preg_replace_callback('%{{([a-zA-Z]+):(.+?)}}%', 'wikivariable_callback', $message);
-
-	$temp = $pageVariables;
-	unset($pageVariables);
-
-	return $temp;
-}
-
 // Class for WikiPage
 class WikiPage
 {
@@ -228,7 +191,7 @@ class WikiPage
 	
 	private function __parse_part(&$status, &$content)
 	{
-		global $context, $txt;
+		global $smcFunc, $context, $txt;
 		
 		$currentHtml = '';
 		
@@ -243,12 +206,40 @@ class WikiPage
 
 				$currentHtml .= $item;
 			}
-			// Replace templates
+			// Replace templates / variables
 			elseif ($item['name'] == 'template')
 			{
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
 				$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 
+				// Is it variable?
+				if (strpos($item['firstParam'], ':') === false)
+				{
+					$variable = $item['firstParam'];
+					$value = null;
+				}
+				else
+					list ($variable, $value) = explode(':', $item['firstParam'], 2);
+					
+				if (isset($context['wiki_parser_extensions']['variables'][$variable]))
+				{
+					$return = null;
+					
+					$variable =  $smcFunc['strtolower']($variable);
+					
+					// May it take parameter?
+					if ($context['wiki_parser_extensions']['variables'][$variable][1])
+						$return = $context['wiki_parser_extensions']['variables'][$variable][0]($this, $variable, $value);
+					elseif ($value === null)
+						$return = $context['wiki_parser_extensions']['variables'][$variable][0]($this, $variable);
+						
+					if ($return !== false && $return !== true)
+						$currentHtml .= $return . (!empty($item['lineEnd']) ? '<br />' : '');
+						
+					if ($return !== null)
+						continue;
+				}
+				
 				list ($namespace, $page) = __url_page_parse($item['firstParam']);
 
 				// TODO: Make Template special namespace
@@ -552,7 +543,7 @@ class WikiPage
 		
 		$parseSections = true;
 
-		$text = str_replace(array('[html]', '[/html]'), array('<nowiki>[html]', '[/html]</nowiki>'), $text); 
+		$text = str_replace(array('&lt;nowiki&gt;', '&lt;/nowiki&gt;', '[nobbc]', '[/nobbc]', '[html]', '[/html]'), array('<nowiki>[nobbc]', '[/nobbc]</nowiki>', '<nowiki>[nobbc]', '[/nobbc]</nowiki>', '<nowiki>[html]', '[/html]</nowiki>'), $text); 
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
@@ -877,6 +868,7 @@ class WikiPage
 						'num_index' => 1,
 						'children' => array(),
 						'lineStart' => ($i > 0 && $text[$i-1] == "\n"),
+						'lineEnd' => false,
 					);
 
 					$stack[] = $piece;
@@ -982,6 +974,12 @@ class WikiPage
 				$thisElement['name'] = $name;
 				
 				$i += $matchLen;
+				
+				if ($text[$i + 1] == "\n")
+				{
+					$thisElement['lineEnd'] = true;
+					$text[$i + 1] = '';
+				}
 
 				// Remove last item from stack
 				array_pop($stack);
