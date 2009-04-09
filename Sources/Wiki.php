@@ -173,9 +173,6 @@ function Wiki($standalone = false)
 		if ($context['namespace']['type'] != 0 && $context['page_info']['id'] === null)
 			$context['can_edit_page'] = false;
 
-		if ($_REQUEST['sa'] == 'edit' || $_REQUEST['sa'] == 'edit2')
-			unset($context['page_content']);
-
 		// Setup tabs
 		$context['wikimenu'] = array(
 			'view' => array(

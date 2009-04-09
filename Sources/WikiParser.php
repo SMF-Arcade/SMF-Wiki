@@ -97,7 +97,7 @@ class WikiPage
 			'min' => 2,
 			'max' => 3,
 			'names' => array(
-				2 => 'template',
+				2 => 'variable',
 				3 => 'template_param',
 			),
 		),
@@ -205,27 +205,28 @@ class WikiPage
 				$this->__paragraph_handler($status, $currentHtml, 'open');
 
 				$currentHtml .= $item;
+				
+				continue;
 			}
-			// Replace templates / variables
-			elseif ($item['name'] == 'template')
+			elseif ($item['name'] == 'variable')
 			{
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
-				$item['firstParam'] = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
+				$firstParam = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 
 				// Is it variable?
-				if (strpos($item['firstParam'], ':') === false)
+				if (strpos($firstParam, ':') === false)
 				{
-					$variable = $item['firstParam'];
+					$variable = $firstParam;
 					$value = null;
 				}
 				else
-					list ($variable, $value) = explode(':', $item['firstParam'], 2);
+					list ($variable, $value) = explode(':', $firstParam, 2);
 					
 				if (isset($context['wiki_parser_extensions']['variables'][$variable]))
 				{
 					$return = null;
 					
-					$variable =  $smcFunc['strtolower']($variable);
+					$variable = $smcFunc['strtolower']($variable);
 					
 					// May it take parameter?
 					if ($context['wiki_parser_extensions']['variables'][$variable][1])
@@ -233,14 +234,22 @@ class WikiPage
 					elseif ($value === null)
 						$return = $context['wiki_parser_extensions']['variables'][$variable][0]($this, $variable);
 						
-					if ($return !== false && $return !== true)
+					if ($return == null)
+						$item['name'] = 'template';
+					elseif ($return !== false && $return !== true)
 						$currentHtml .= $return . (!empty($item['lineEnd']) ? '<br />' : '');
-						
-					if ($return !== null)
-						continue;
 				}
-				
-				list ($namespace, $page) = __url_page_parse($item['firstParam']);
+				else
+					$item['name'] = 'template';
+			}
+			// Replace templates
+			// This needs to be if because $item[name] may change from varaible to template in code above
+			if ($item['name'] == 'template')
+			{
+				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
+				$firstParam = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
+			
+				list ($namespace, $page) = __url_page_parse($firstParam);
 
 				// TODO: Make Template special namespace
 				if (empty($namespace))
@@ -256,7 +265,7 @@ class WikiPage
 						array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
 					);
 					
-					$currentHtml .= $templatePage->getTemplateCode($item['params']);;
+					$currentHtml .= $templatePage->getTemplateCode($item['params']);
 				}
 				else
 				{
@@ -885,6 +894,8 @@ class WikiPage
 			}
 			elseif ($charType == 'pipe')
 			{
+				$stack[$stackIndex]['has_params'] = true;
+					
 				if (!isset($stack[$stackIndex]['firstParam']))
 					$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
 				elseif ($stack[$stackIndex]['current_param_name'] == null)
@@ -956,6 +967,10 @@ class WikiPage
 
 				$name = $rule['names'][$matchLen];
 				$params = array();
+				
+				// Variable never has piped style params, so it's template
+				if ($name == 'variable' && $piece['has_params'])
+					$name = 'template';
 				
 				$isFunction = false;
 				
