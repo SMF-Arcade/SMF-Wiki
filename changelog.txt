@@ -6,6 +6,8 @@ SMF Wiki 0.1                                                                   ?
 April 2009
 --------------------------------------------------------------------------------
  + Rewritten WikiParser (started in March)
+ + New Installer code
+ ! Don't show Wiki in Admin when disabled
 
 February 2009
 --------------------------------------------------------------------------------

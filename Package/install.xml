@@ -38,6 +38,7 @@
 					'label' => $txt['admin_wiki'],
 					'file' => 'WikiAdmin.php',
 					'function' => 'WikiAdmin',
+					'enabled' => !empty($modSettings['wikiEnabled']),
 					'subsections' => array(
 						'main' => array($txt['admin_wiki_information']),
 						'settings' => array($txt['admin_wiki_settings']),
