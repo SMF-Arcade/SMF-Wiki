@@ -97,7 +97,7 @@ function template_wiki_content($wikiPage)
 {
 	global $context, $modSettings, $txt;
 	
-	foreach ($wikiPage->parsedContent as $section)
+	foreach ($wikiPage->sections as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{

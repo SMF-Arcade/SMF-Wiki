@@ -39,9 +39,12 @@ class WikiPage
 	private $preParsedContent;
 	public $parameters;
 	
+	// Parser temporary
+	public $currentSection;
+	
 	// Parsed content
 	public $tableOfContents;
-	public $parsedContent;
+	public $sections;
 	public $pageVariables;
 	
 	// Some settings
@@ -121,10 +124,10 @@ class WikiPage
 		$this->preParsedContent = $this->__preprocess($this->raw_content);
 		
 		// Do actual parsing
-		$this->parsedContent = $this->__parse();
+		$this->__parse();
 		
 		// Make TOC
-		$this->tableOfContents = $this->parseTableOfContent($this->parsedContent);
+		$this->tableOfContents = $this->parseTableOfContent($this->sections);
 	}
 	
 	function addFile($id_file)
@@ -154,12 +157,12 @@ class WikiPage
 				$html_id = $this->make_html_id($section['name']) . '_'. $i++;
 			$htmlIds[] = $html_id;
 				
-			$sectionID = count($sections);
-			$sections[] = array(
+			$this->currentSection = count($this->sections);
+			$this->sections[] = array(
 				'id' => $html_id,
 				'name' => $section['name'],
 				'level' => $section['level'],
-				'edit_url' => wiki_get_url(array('page' => $this->page, 'sa' => 'edit', 'section' => $sectionID)),
+				'edit_url' => wiki_get_url(array('page' => $this->page, 'sa' => 'edit', 'section' => $this->currentSection)),
 				'html' => '',
 			);
 			
@@ -185,8 +188,6 @@ class WikiPage
 			
 			unset($currentHtml);
 		} // END section
-		
-		return $sections;
 	}
 	
 	private function __parse_part(&$status, &$content)

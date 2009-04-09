@@ -53,12 +53,12 @@ function EditPage()
 		$context['wiki_page']->parse_bbc = false;
 		$context['wiki_page']->parse();
 		
-		if (!isset($context['wiki_page']->parsedContent[$_REQUEST['section']]))
+		if (!isset($context['wiki_page']->sections[$_REQUEST['section']]))
 			$body = $context['page_content_raw'];
 		else
 		{
 			$context['edit_section'] = $_REQUEST['section'];
-			$section = $context['wiki_page']->parsedContent[$_REQUEST['section']];
+			$section = $context['wiki_page']->sections[$_REQUEST['section']];
 			
 			$body = str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />' . $section['html'];
 		}
@@ -168,7 +168,7 @@ function EditPage2()
 		$context['wiki_page']->parse_bbc = false;
 		$context['wiki_page']->parse();
 		
-		if (!isset($context['wiki_page']->parsedContent[$_REQUEST['section']]))
+		if (!isset($context['wiki_page']->sections[$_REQUEST['section']]))
 			$body = $_POST['wiki_content'];
 		else
 		{
@@ -177,7 +177,7 @@ function EditPage2()
 			if (substr($_POST['wiki_content'], -6) != '<br />')
 				$_POST['wiki_content'] .= '<br />';
 					
-			foreach ($context['wiki_page']->parsedContent as $id => $section)
+			foreach ($context['wiki_page']->sections as $id => $section)
 			{
 				if (substr($section['html'], -6) != '<br />')
 					$section['html'] .= '<br />';
