@@ -102,6 +102,7 @@ $specialNamespaces = array(
 	2 => array('name' => 'File', 'default_page' => 'List'),
 	3 => array('name' => 'Image', 'default_page' => 'List'),
 	4 => array('name' => 'SMFWiki', 'default_page' => 'List'),
+	5 => array('name' => 'Category', 'default_page' => 'List'),
 );
 
 foreach ($specialNamespaces as $type => $data)

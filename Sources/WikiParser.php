@@ -29,7 +29,7 @@ class WikiPage
 	public $namespace;
 	
 	// Status
-	private $status;
+	public $status;
 	
 	// Raw content
 	public $raw_content;
@@ -112,14 +112,14 @@ class WikiPage
 		$this->title = $page_info['title'];
 		$this->namespace = $namespace;
 		$this->raw_content = $content;
+		
+		// Reset status
+		$this->status = array();
 	}
 	
 	// Helper for parser function, done like this so settings can be edited before parsing
 	function parse()
 	{
-		// Reset status
-		$this->status = array();
-		
 		// Preparsing
 		$this->preParsedContent = $this->__preprocess($this->raw_content);
 		
@@ -140,7 +140,7 @@ class WikiPage
 	{
 		global $context, $txt;
 		
-		$sections = array();
+		$this->sections = array();
 		
 		$this->status['paragraphOpen'] = isset($this->status['paragraphOpen']) ? $this->status['paragraphOpen'] : false;
 		
@@ -277,7 +277,9 @@ class WikiPage
 						array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
 					);
 					
+					$templatePage->status = $this->status;
 					$currentHtml .= $templatePage->getTemplateCode($item['params']);
+					$this->status = $templatePage->status;
 				}
 				else
 				{
@@ -450,14 +452,16 @@ class WikiPage
 		
 		$currentHtml = '';
 		
-		foreach ($this->__parse() as $section)
+		$this->__parse();
+		
+		foreach ($this->sections as $section)
 		{
 			if ($section['level'] != 1)
 				$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
 			
 			$currentHtml .= $section['html'];
 		}
-
+		
 		return $currentHtml;
 	}
 	
@@ -566,7 +570,7 @@ class WikiPage
 		
 		$parseSections = true;
 
-		$text = str_replace(array('&lt;nowiki&gt;', '&lt;/nowiki&gt;', '[nobbc]', '[/nobbc]', '[html]', '[/html]'), array('<nowiki>[nobbc]', '[/nobbc]</nowiki>', '<nowiki>[nobbc]', '[/nobbc]</nowiki>', '<nowiki>[html]', '[/html]</nowiki>'), $text); 
+		$text = str_replace(array('&lt;nowiki&gt;', '&lt;/nowiki&gt;', '[nobbc]', '[/nobbc]'), array('<nowiki>[nobbc]', '[/nobbc]</nowiki>', '<nowiki>[nobbc]', '[/nobbc]</nowiki>'), $text); 
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
@@ -1011,7 +1015,6 @@ class WikiPage
 				}
 
 				$name = $rule['names'][$matchLen];
-				$params = array();
 				
 				// Variable never has piped style params, so it's template
 				if ($name == 'variable' && $piece['has_params'])
@@ -1023,12 +1026,6 @@ class WikiPage
 					$name = 'function';
 				elseif (substr($piece['firstParam'], 0, 1) == '#')
 					$name = 'function';
-
-				if (!empty($piece['params']))
-				{
-					foreach ($piece['params'] as $p)
-						$params[] = $p;
-				}
 
 				$thisElement = $piece;
 				$thisElement['name'] = $name;

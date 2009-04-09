@@ -182,9 +182,14 @@ function loadNamespace()
 			$context['namespace_images'] = &$context['namespaces'][$id];
 		elseif ($ns['type'] == 4 && !isset($context['namespace_internal']))
 			$context['namespace_internal'] = &$context['namespaces'][$id];
+		elseif ($ns['type'] == 5 && !isset($context['namespace_category']))
+			$context['namespace_category'] = &$context['namespaces'][$id];
 		elseif ($ns['type'] != 0)
 			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($id)));
 	}
+	
+	if (!isset($context['namespace_special']) || !isset($context['namespace_files']) || !isset($context['namespace_images']) || !isset($context['namespace_internal']) || !isset($context['namespace_category']))
+		fatal_lang_error('wiki_namespace_broken', false, '(n/a)');
 }
 
 function wiki_get_namespaces()
