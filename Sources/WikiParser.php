@@ -82,9 +82,6 @@ class WikiPage
 		'</table>' => true,
 	);
 	
-	// Tag functions
-	public $tagFunctions = array();
-	
 	// Rules for tags
 	public $rules = array(
 		'[' => array(
@@ -261,7 +258,7 @@ class WikiPage
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
 				$firstParam = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 			
-				list ($namespace, $page) = __url_page_parse($firstParam);
+				list ($namespace, $page) = __url_page_parse($firstParam, true);
 
 				// TODO: Make Template special namespace
 				if (empty($namespace))
@@ -350,7 +347,7 @@ class WikiPage
 			}
 			elseif ($item['name'] == 'wikilink')
 			{
-				list ($linkNamespace, $linkPage) = __url_page_parse($this->__parse_part($this->fakeStatus, $item['firstParam']));
+				list ($linkNamespace, $linkPage) = __url_page_parse($this->__parse_part($this->fakeStatus, $item['firstParam']), true);
 		
 				$link_info = cache_quick_get('wiki-pageinfo-' .  $linkNamespace . '-' . $linkPage, 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
 				
@@ -404,7 +401,7 @@ class WikiPage
 							$currentHtml = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
 						}
 						
-						$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($linkPage, $linkNamespace), 'image')) . '" alt="' . $alt . '"' . $size . ' /></a>';
+						$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($linkPage, $linkNamespace), 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
 		
 						if (!empty($align) || !empty($caption))
 							$currentHtml .= '</div>';
@@ -432,7 +429,7 @@ class WikiPage
 				}				
 			}
 			elseif ($item['name'] == 'tag')
-				$currentHtml .= call_user_method($this->tagFunctions[$item['tag_name']], $this, $item['content'], $item['attributes']);
+				$currentHtml .= $context['wiki_parser_extensions']['tags'][$item['tag_name']][0]($this, $item['content'], $item['attributes']);
 			else
 				$this->logError('Unable to parse item!', array($item));
 		} // END content of part
@@ -565,6 +562,8 @@ class WikiPage
 	// Preprocesses page
 	private function __preprocess($text)
 	{
+		global $context;
+		
 		$stringTemp = '';
 		$i = 0;
 		
@@ -576,8 +575,6 @@ class WikiPage
 			$text = parse_bbc($text);
 		
 		$text = str_replace(array("\r\n", "\r", '<br />', '<br>'), "\n", $text);
-
-		$currentItem = array();
 
 		$stack = array();
 		$piece = null;
@@ -716,7 +713,7 @@ class WikiPage
 					$tagLen = strcspn($tagCode, ' ');
 					$tagName = substr($tagCode, 0, $tagLen);
 					
-					if (isset($this->tagFunctions[$tagName]))
+					if (isset($context['wiki_parser_extensions']['tags'][$tagName]))
 					{
 						// Last > tag
 						$endPos += 4;
@@ -1020,11 +1017,7 @@ class WikiPage
 				/*if ($name == 'variable' && $piece['has_params'])
 					$name = 'template';*/
 				
-				$isFunction = false;
-				
 				if (is_array($piece['firstParam']) && is_string($piece['firstParam'][0]) && substr($piece['firstParam'][0], 0, 1) == '#')
-					$name = 'function';
-				elseif (substr($piece['firstParam'], 0, 1) == '#')
 					$name = 'function';
 
 				$thisElement = $piece;
@@ -1032,7 +1025,7 @@ class WikiPage
 				
 				$i += $matchLen;
 				
-				if ($thisElement['lineStart'] && $text[$i + 1] == "\n" && $text[$i + 2] != "\n")
+				if ($thisElement['lineStart'] && $text[$i + 1] == "\n" && (!isset($text[$i + 2]) ||$text[$i + 2] != "\n"))
 				{
 					$thisElement['lineEnd'] = true;
 					$i++;

@@ -11,6 +11,8 @@ April 2009
  + Added support for adding variables
  ! Wikilinked images didn't work
  ! Section breaks didn't work
+ ! Table of contents wasn't shown
+ ! In some cases existing pages was shown with redlink
 
 February 2009
 --------------------------------------------------------------------------------

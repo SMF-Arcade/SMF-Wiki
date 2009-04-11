@@ -127,7 +127,7 @@ function template_wiki_content($wikiPage)
 			</h6>';
 		}
 		
-		if ($section['level'] == 1 && !empty($page_content['toc']))
+		if ($section['level'] == 1 && !empty($wikiPage->tableOfContents))
 			echo '
 			<div class="wikitoc floatright">
 				<ul>',

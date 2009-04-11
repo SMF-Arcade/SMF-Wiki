@@ -105,7 +105,7 @@ function read_urlname($url)
 }
 
 // Gets Namespace and Page from url style (Namespace:Page_Title)
-function __url_page_parse($page)
+function __url_page_parse($page, $clean = false)
 {
 	global $context;
 
@@ -118,6 +118,12 @@ function __url_page_parse($page)
 	{
 		$page = $namespace . ':' . $page;
 		$namespace = '';
+	}
+	
+	if ($clean)
+	{
+		$namespace = clean_pagename($namespace, true);
+		$page = clean_pagename($page);
 	}
 
 	return array($namespace, $page);

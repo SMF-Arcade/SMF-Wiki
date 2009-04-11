@@ -65,6 +65,13 @@ function loadWiki($mode = '')
 				'noindex' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = true;'),
 				'index' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = false;'),
 			),
+			// XML Tags
+			// format 'variable' (lowercase only) => array(function to call)
+			// function: (&wiki_parser, content, attributes)
+			// returns html code for display
+			'tags' => array(
+				'test_tag' => array(create_function('&$wiki_parser, $content, $attributes', 'return $content;')),
+			),
 		);
 	}
 	// Admin Mode
