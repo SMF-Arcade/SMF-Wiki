@@ -886,7 +886,13 @@ class WikiPage
 				
 				$i++;
 			}
-			elseif ($charType == 'pipe' || ($charType == 'fdelim'))
+			// Fdelim as normal char
+			elseif ($charType == 'fdelim')
+			{
+				$stack[$stackIndex]['current_param'][] = $curChar;
+				$i++;
+			}
+			elseif ($charType == 'pipe')
 			{			
 				if (!isset($stack[$stackIndex]['firstParam']))
 					$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
