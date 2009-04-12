@@ -54,7 +54,7 @@ class WikiPage
 	private $parserErrors = array();
 	
 	// Little helper for parsing cerating parts like templatenames
-	private $fakeStatus = array('can_paragraph_open' => false);
+	public $fakeStatus = array('can_paragraph_open' => false);
 	
 	// Inline Tags
 	public $inlineTags = array(
@@ -97,7 +97,7 @@ class WikiPage
 			'min' => 2,
 			'max' => 3,
 			'names' => array(
-				2 => 'variable',
+				2 => 'template',
 				3 => 'template_param',
 			),
 		),
@@ -187,7 +187,7 @@ class WikiPage
 		} // END section
 	}
 	
-	private function __parse_part(&$status, &$content)
+	public function __parse_part(&$status, &$content, $condition_test = false)
 	{
 		global $smcFunc, $context, $txt;
 		
@@ -219,41 +219,22 @@ class WikiPage
 			}
 			elseif ($item['name'] == 'variable')
 			{
-				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
-				$firstParam = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
-
-				// Is it variable?
-				if (strpos($firstParam, ':') === false)
-				{
-					$variable = $firstParam;
-					$value = null;
-				}
-				else
-					list ($variable, $value) = explode(':', $firstParam, 2);
+				$return = null;
+				
+				// May it take parameter?
+				if ($context['wiki_parser_extensions']['variables'][$item['var_parsed']][1])
+					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed'], trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam']))));
+				elseif (empty($item['firstParam']))
+					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed']);
 					
-				if (isset($context['wiki_parser_extensions']['variables'][$variable]))
-				{
-					$return = null;
-					
-					$variable = $smcFunc['strtolower']($variable);
-					
-					// May it take parameter?
-					if ($context['wiki_parser_extensions']['variables'][$variable][1])
-						$return = $context['wiki_parser_extensions']['variables'][$variable][0]($this, $variable, $value);
-					elseif ($value === null)
-						$return = $context['wiki_parser_extensions']['variables'][$variable][0]($this, $variable);
-						
-					if ($return == null)
-						$item['name'] = 'template';
-					elseif ($return !== false && $return !== true)
-						$currentHtml .= $return . (!empty($item['lineEnd']) ? '<br />' : '');
-				}
-				else
-					$item['name'] = 'template';
+				if ($return !== false && $return !== true)
+					$currentHtml .= $return . (!empty($item['lineEnd']) ? '<br />' : '');
 			}
+			// Parser functions like {{#if}}
+			elseif ($item['name'] == 'function')
+				$currentHtml .= $context['wiki_parser_extensions']['functions'][$item['var_parsed']][0]($this, $item);
 			// Replace templates
-			// This needs to be if because $item[name] may change from varaible to template in code above
-			if ($item['name'] == 'template')
+			elseif ($item['name'] == 'template')
 			{
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
 				$firstParam = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
@@ -292,57 +273,12 @@ class WikiPage
 			
 				if (isset($this->parameters[$param]))
 					$currentHtml .= $this->__parse_part($status, $this->parameters[$param]);
-				else
+				elseif (!$condition_test)
 				{					
 					$this->__paragraph_handler($status, $currentHtml, 'open');
 					$currentHtml .= str_repeat($item['opening_char'], $item['len']);
 					$currentHtml .= $this->__parse_part($status, $item['firstParam']);
 					$currentHtml .= str_repeat($item['closing_char'], $item['len']);
-				}
-			}
-			// Parser functions like {{#if}}
-			elseif ($item['name'] == 'function')
-			{
-				if (!is_array($item['firstParam']))
-					$item['firstParam'] = array($item['firstParam']);
-					
-				$function = $item['firstParam'][0];
-				
-				// Non string function = bad
-				if (!is_string($function))
-					$function = $this->__parse_part($this->fakeStatus, $function); ;
-				
-				if ($function = '#if:')
-				{
-					$condition = $item['firstParam'][1];
-					
-					$result = false;
-					
-					if (!is_array($condition))
-						$result = empty($item['firstParam'][1]);
-					else
-					{				
-						switch ($item['firstParam'][1]['name'])
-						{
-							case 'template_param':
-								$param = $this->__parse_part($this->fakeStatus, $item['firstParam'][1]['firstParam']);
-								$result = isset($this->parameters[$param]);
-								break;
-							
-							default:
-								$result = false;
-								break;
-						}
-					}
-							
-					if (isset($item['params'][$result ? 1 : 2]))
-						$currentHtml .= $this->__parse_part($status, $item['params'][$result ? 1 : 2]);
-				}
-				// TODO: Make this friendly error
-				else
-				{
-					$this->__paragraph_handler($status, $currentHtml, 'open');
-					$currentHtml .= '<span style="color: red">' . sprintf($txt['invalid_function'], $function). '</span>';					
 				}
 			}
 			elseif ($item['name'] == 'wikilink')
@@ -604,7 +540,7 @@ class WikiPage
 			if (!empty($stack))
 			{
 				$piece = end($stack);
-				$search .= $piece['closing_char'] . '|';// . '|';
+				$search .= $piece['closing_char'] . '|'. ($piece['closing_char'] == '}' ? ':' : '');
 				$closeTag = $piece['closing_char'];
 				unset($piece);
 			}
@@ -661,8 +597,12 @@ class WikiPage
 					$rule = $this->rules[$curChar];
 					$charType = 'open';
 				}
+				// Parameter delimiter
 				elseif ($curChar == '|')
 					$charType = 'pipe';
+				// Function delimiter / variable value delimeter
+				elseif ($curChar == ':')
+					$charType = 'fdelim';
 				elseif ($parseSections && ($i == 0 || $text[$i - 1] == "\n") && $curChar == '=')
 					$charType = 'new-section';
 				// There might be block level closing tag
@@ -711,7 +651,7 @@ class WikiPage
 					
 					$tagCode = substr($text, $i + 4, $endPos - $i - 4);
 					$tagLen = strcspn($tagCode, ' ');
-					$tagName = substr($tagCode, 0, $tagLen);
+					$tagName = strtolower(substr($tagCode, 0, $tagLen));
 					
 					if (isset($context['wiki_parser_extensions']['tags'][$tagName]))
 					{
@@ -938,10 +878,16 @@ class WikiPage
 
 				$i += $len;
 			}
-			elseif ($charType == 'pipe')
+			elseif ($charType == 'fdelim' && !isset($stack[$stackIndex]['var']))
 			{
-				$stack[$stackIndex]['has_params'] = true;
-					
+				$stack[$stackIndex]['var'] = $stack[$stackIndex]['current_param'];				
+				$stack[$stackIndex]['current_param'] = null;
+				$stack[$stackIndex]['current_param_name'] = null;
+				
+				$i++;
+			}
+			elseif ($charType == 'pipe' || ($charType == 'fdelim'))
+			{			
 				if (!isset($stack[$stackIndex]['firstParam']))
 					$stack[$stackIndex]['firstParam'] = $stack[$stackIndex]['current_param'];
 				elseif ($stack[$stackIndex]['current_param_name'] == null)
@@ -1013,12 +959,21 @@ class WikiPage
 
 				$name = $rule['names'][$matchLen];
 				
-				// Variable never has piped style params, so it's template
-				/*if ($name == 'variable' && $piece['has_params'])
-					$name = 'template';*/
-				
-				if (is_array($piece['firstParam']) && is_string($piece['firstParam'][0]) && substr($piece['firstParam'][0], 0, 1) == '#')
-					$name = 'function';
+				if (!empty($piece['var']) && $name == 'template')
+				{
+					$piece['var_parsed'] = strtolower(trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $piece['var']))));
+					if (isset($context['wiki_parser_extensions']['variables'][$piece['var_parsed']]))
+						$name = 'variable';
+					elseif (isset($context['wiki_parser_extensions']['functions'][$piece['var_parsed']]))
+						$name = 'function';
+					else
+					{
+						$piece['var'][] = ':';
+						$piece['firstParam'] = array_merge($piece['var'], $piece['firstParam']);
+						unset($piece['var']);
+						unset($piece['var_parsed']);
+					}
+				}
 
 				$thisElement = $piece;
 				$thisElement['name'] = $name;

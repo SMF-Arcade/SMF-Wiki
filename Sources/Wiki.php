@@ -58,6 +58,18 @@ function loadWiki($mode = '')
 				'wikiversion' => array(create_function('&$wiki_parser, $variable', 'return $GLOBALS[\'wiki_version\'];'), false),
 				'displaytitle' => array(create_function('&$wiki_parser, $variable, $value', 'if ($value === null) { return $wiki_parser->title; } else { $wiki_parser->title = $value; return true; }'), true),
 			),
+			// Functions
+			// format 'function' (lowercase only) => array(function to call)
+			// function: (&wiki_parser, item)
+			// returns html code for display
+			'functions' => array(
+				'#if' => array(create_function('&$wiki_parser, $item', '							
+					$result = trim(str_replace(array(\'<br />\', \'&nbsp;\'), array("\n", \' \'), $wiki_parser->__parse_part($wiki_parser->fakeStatus, $item[\'firstParam\'], true)));
+							
+					if (isset($item[\'params\'][!empty($result) ? 1 : 2]))
+						return $wiki_parser->__parse_part($status, $item[\'params\'][!empty($result) ? 1 : 2]);
+					return \'\';')),
+			),
 			// format 'switch' => function to call
 			// function: (&wiki_parser)
 			// returns nothing
@@ -66,7 +78,7 @@ function loadWiki($mode = '')
 				'index' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = false;'),
 			),
 			// XML Tags
-			// format 'variable' (lowercase only) => array(function to call)
+			// format 'tag' (lowercase only) => array(function to call)
 			// function: (&wiki_parser, content, attributes)
 			// returns html code for display
 			'tags' => array(
