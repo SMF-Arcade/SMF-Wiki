@@ -505,7 +505,21 @@ class WikiPage
 		
 		$parseSections = true;
 
-		$text = str_replace(array('&lt;nowiki&gt;', '&lt;/nowiki&gt;', '[nobbc]', '[/nobbc]'), array('<nowiki>[nobbc]', '[/nobbc]</nowiki>', '<nowiki>[nobbc]', '[/nobbc]</nowiki>'), $text); 
+		$text = str_replace(
+			array(
+				'&lt;nowiki&gt;', '&lt;/nowiki&gt;',
+				'[nobbc]', '[/nobbc]',
+				'[code' , '[/code]',
+				'[php]' , '[/php]',
+			),
+			array(
+				'<nowiki>[nobbc]', '[/nobbc]</nowiki>',
+				'<nowiki>[nobbc]', '[/nobbc]</nowiki>',
+				'<nowiki>[code', '[/code]</nowiki>',
+				'<nowiki>[php]', '[/php]</nowiki>',
+			),
+			$text
+		); 
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
