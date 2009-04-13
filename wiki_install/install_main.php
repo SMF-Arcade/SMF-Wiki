@@ -119,7 +119,7 @@ foreach ($specialNamespaces as $type => $data)
 	$row = $smcFunc['db_fetch_assoc']($request);
 
 	if (!$row)
-		$smcFunc['db_insert']('ignore',
+		$smcFunc['db_insert']('replace',
 			'{db_prefix}wiki_namespace',
 			array(
 				'namespace' => 'string',

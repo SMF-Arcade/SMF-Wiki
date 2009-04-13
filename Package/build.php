@@ -28,6 +28,7 @@ $build_info = array(
 	'build_replaces' => 'build_replaces_wiki01',
 	'extra_files' => array(
 		'changelog.txt',
+		'wikistandalone.php',
 		'modification.xsl' => 'Package/modification.xsl',
 		'package-info.xsl' => 'Package/package-info.xsl',
 		'extra/Themes/default/languages/Modifications.english.php' => 'Themes/default/languages/Modifications.english.php',
