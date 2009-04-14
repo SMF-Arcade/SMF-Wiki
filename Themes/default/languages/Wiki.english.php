@@ -15,6 +15,7 @@ $txt['wiki_main_page'] = 'Main Page';
 
 // View Page
 $txt['wiki_edit_section'] = 'edit';
+$txt['wiki_categories'] = 'Categories';
 
 // Edit
 $txt['edit_page'] = 'Edit page %s';

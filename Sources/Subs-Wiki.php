@@ -97,9 +97,12 @@ function wiki_get_url($params)
 }
 
 // Makes Readable name form urlname
-function read_urlname($url)
+function read_urlname($url, $include_namespace = false)
 {
 	global $smcFunc;
+	
+	if (!$include_namespace)
+		list (, $url) = __url_page_parse($url);
 
 	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', un_htmlspecialchars($url))));
 }
@@ -108,8 +111,11 @@ function read_urlname($url)
 function __url_page_parse($page, $clean = false)
 {
 	global $context;
+	
+	if ($page[0] == ':')
+		$page = substr($page, 1);
 
-	if (strpos($page, ':'))
+	if (strpos($page, ':') !== false)
 		list ($namespace, $page) = explode(':', $page, 2);
 	else
 		$namespace = '';

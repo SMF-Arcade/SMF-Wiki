@@ -140,6 +140,29 @@ function template_wiki_content($wikiPage)
 
 		echo $section['html'];
 	}
+	
+	if (!empty($wikiPage->categories))
+	{
+		echo '
+		<div class="tborder">', $txt['wiki_categories'], ': ';
+		
+		$first = true;
+		
+		foreach ($wikiPage->categories as $category)
+		{
+			// Make sure delimeter is only after first
+			if (!$first)
+				echo ' | ';
+			else
+				$first = false;
+				
+			echo '
+			<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['name'], '</a>';
+		}
+		
+		echo '
+		</div>';
+	}
 }
 
 function template_talk_page()

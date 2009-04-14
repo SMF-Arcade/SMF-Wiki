@@ -47,6 +47,8 @@ class WikiPage
 	public $sections;
 	public $pageVariables;
 	
+	public $categories;
+	
 	// Some settings
 	public $parse_bbc = true;
 	
@@ -57,8 +59,7 @@ class WikiPage
 	public $fakeStatus = array('can_paragraph_open' => false);
 	
 	// Inline Tags
-	public $inlineTags = array(
-	);
+	public $inlineTags = array();
 	// Block level tags
 	public $blockTags = array(
 		// DIV
@@ -192,10 +193,7 @@ class WikiPage
 		global $smcFunc, $context, $txt;
 		
 		$currentHtml = '';
-		
-		if (is_string($content))
-			return $content;
-		
+			
 		foreach ($content as $item)
 		{
 			if (is_string($item))
@@ -223,7 +221,7 @@ class WikiPage
 				
 				// May it take parameter?
 				if ($context['wiki_parser_extensions']['variables'][$item['var_parsed']][1])
-					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed'], trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam']))));
+					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed'], trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), !empty($item['firstParam']) ? $this->__parse_part($this->fakeStatus, $item['firstParam']) : '')));
 				elseif (empty($item['firstParam']))
 					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed']);
 					
@@ -283,7 +281,11 @@ class WikiPage
 			}
 			elseif ($item['name'] == 'wikilink')
 			{
-				list ($linkNamespace, $linkPage) = __url_page_parse($this->__parse_part($this->fakeStatus, $item['firstParam']), true);
+				$parsedPage = $this->__parse_part($this->fakeStatus, $item['firstParam']);
+				
+				list ($linkNamespace, $linkPage) = __url_page_parse($parsedPage, true);
+		
+				$realLink = wiki_urlname($linkPage, $linkNamespace);
 		
 				$link_info = cache_quick_get('wiki-pageinfo-' .  $linkNamespace . '-' . $linkPage, 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
 				
@@ -337,13 +339,21 @@ class WikiPage
 							$currentHtml = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
 						}
 						
-						$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($linkPage, $linkNamespace), 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
+						$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
 		
 						if (!empty($align) || !empty($caption))
 							$currentHtml .= '</div>';
 					}
 					else
-						$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"><img src="' . wiki_get_url(array('page' => wiki_urlname($linkPage, $linkNamespace), 'image')) . '" alt="" /></a>';
+						$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="" /></a>';
+				}
+				elseif ($parsedPage[0] !== ':' && $linkNamespace == $context['namespace_category']['id'])
+				{
+					$this->categories[$realLink] = array(
+						'link' => wiki_get_url($realLink),
+						'name' => read_urlname($realLink),
+						'exists' => $link_info['id'] !== null,
+					);
 				}
 				else
 				{
@@ -354,7 +364,7 @@ class WikiPage
 					if ($link_info['id'] === null)
 						$class[] = 'redlink';
 						
-					$currentHtml .= '<a href="' . wiki_get_url(wiki_urlname($linkPage, $linkNamespace)) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
+					$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
 		
 					if (isset($item['params'][0]))
 						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][0]);

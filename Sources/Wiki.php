@@ -200,7 +200,7 @@ function Wiki($standalone = false)
 		$context['can_lock_page'] = allowedTo('wiki_admin');
 
 		// Don't let anyone create page if it's not "normal" page (ie. file)
-		if ($context['namespace']['type'] != 0 && $context['page_info']['id'] === null)
+		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
 			$context['can_edit_page'] = false;
 
 		// Setup tabs

@@ -13,6 +13,8 @@ April 2009
  ! Section breaks didn't work
  ! Table of contents wasn't shown
  ! In some cases existing pages was shown with redlink
+ ! Unable to create categories
+ + Categories now shown on pages
 
 February 2009
 --------------------------------------------------------------------------------
