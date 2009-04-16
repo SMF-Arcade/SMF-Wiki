@@ -334,7 +334,7 @@ function wiki_get_page_info($page, $namespace)
 	);
 }
 
-function wiki_get_page_content($page_info, $namespace, $revision)
+function wiki_get_page_content($page_info, $namespace, $revision, $include = false)
 {
 	global $smcFunc;
 
@@ -352,7 +352,7 @@ function wiki_get_page_content($page_info, $namespace, $revision)
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 		fatal_lang_error('wiki_invalid_revision');
 	
-	$wikiPage = new WikiPage($page_info, $namespace, $row['content']);
+	$wikiPage = new WikiPage($page_info, $namespace, $row['content'], $include);
 	$wikiPage->parse();
 	
 	if (!empty($row['id_file']))
@@ -362,55 +362,6 @@ function wiki_get_page_content($page_info, $namespace, $revision)
 		'data' => $wikiPage,
 		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
-	);
-}
-
-function loadWikiPage_old($name, $namespace = '', $revision = null)
-{
-	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
-
-	$request = $smcFunc['db_query']('', '
-		SELECT info.id_page, info.title, info.namespace, con.content, info.id_revision_current, con.id_revision,
-			info.id_topic, info.is_locked, info.id_file
-		FROM {db_prefix}wiki_pages AS info
-			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = {raw:revision}
-				AND con.id_page = info.id_page)
-		WHERE info.title = {string:article}
-			AND info.namespace = {string:namespace}',
-		array(
-			'article' => $name,
-			'namespace' => $namespace,
-			'revision' => !empty($revision) ? $revision : 'info.id_revision_current',
-		)
-	);
-
-	if (!$row = $smcFunc['db_fetch_assoc']($request))
-	{
-		$smcFunc['db_free_result']($request);
-
-		return false;
-	}
-	$smcFunc['db_free_result']($request);
-
-	$title = read_urlname($row['title']);
-
-	/*$variables = wikiparse_variables($row['content']);
-
-	if (!empty($variables['title']))
-		$title = $variables['title'];*/
-
-	return array(
-		'id' => $row['id_page'],
-		'title' => $title,
-		'name' => wiki_urlname($row['title'], $row['namespace']),
-		'namespace' => $row['namespace'],
-		'topic' => $row['id_topic'],
-		'is_current' => $row['id_revision'] == $row['id_revision_current'],
-		'is_locked' => !empty($row['is_locked']),
-		'revision' => $row['id_revision'],
-		'current_revision' => $row['id_revision_current'],
-		'body' => $row['content'],
-		'variables' => $variables,
 	);
 }
 

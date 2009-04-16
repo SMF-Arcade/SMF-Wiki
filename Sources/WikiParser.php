@@ -50,6 +50,7 @@ class WikiPage
 	public $categories;
 	
 	// Some settings
+	private $mode = 'normal'; 
 	public $parse_bbc = true;
 	
 	// Contains array parser errors
@@ -104,12 +105,15 @@ class WikiPage
 		),
 	);
 	
-	function __construct($page_info, $namespace, $content)
+	function __construct($page_info, $namespace, $content, $include)
 	{
 		$this->page = $page_info['name'];
 		$this->title = $page_info['title'];
 		$this->namespace = $namespace;
 		$this->raw_content = $content;
+		
+		// Mode
+		$this->mode = $include ? 'include' : 'normal';
 		
 		// Reset status
 		$this->status = array();
@@ -248,9 +252,9 @@ class WikiPage
 				if ($template_info['id'] !== null)
 				{
 					$templatePage = cache_quick_get(
-						'wiki-page-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
+						'wiki-page-include-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
 						'Subs-Wiki.php', 'wiki_get_page_content',
-						array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'])
+						array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'], true)
 					);
 					
 					$templatePage->status = $this->status;

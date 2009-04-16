@@ -48,20 +48,17 @@ function DiffPage()
 	// This is pretty much duplicate content
 	$context['robot_no_index'] = true;
 
-	if (empty($_REQUEST['old_revision']))
+	if (empty($_REQUEST['old_revision']) || (!empty($_REQUEST['revision']) && $_REQUEST['revision'] < $_REQUEST['old_revision']))
 		fatal_lang_error('wiki_old_revision_not_selected', false);
 
-	if (!empty($_REQUEST['revision']) && $_REQUEST['revision'] < $_REQUEST['old_revision'])
-	{
-		$context['diff_page'] = $context['page_info'];
-		$context['page_info'] = loadWikiPage_old($_REQUEST['page'], $_REQUEST['namespace'], (int) $_REQUEST['old_revision']);
-	}
-	else
-	{
-		$context['diff_page'] = loadWikiPage_old($_REQUEST['page'], $_REQUEST['namespace'], (int) $_REQUEST['old_revision']);
-	}
+	// Load content itself
+	$context['wiki_parser_compare'] = cache_quick_get(
+		'wiki-page-' .  $context['page_info']['id'] . '-rev' . $revision,
+		'Subs-Wiki.php', 'wiki_get_page_content',
+		array($context['page_info'], $context['namespace'], (int) $_REQUEST['old_revision'])
+	);
 
-	$diff = diff(explode("\n", un_preparsecode($context['diff_page']['body'])), explode("\n", un_preparsecode($context['page_info']['body'])));
+	$diff = diff(explode("\n", un_preparsecode($context['wiki_parser_compare']->raw_content)), explode("\n", un_preparsecode($context['wiki_parser']->raw_content)));
 
 	$context['diff'] = array();
 
