@@ -332,14 +332,30 @@ class WikiPage
 						// Caption
 						if (!empty($options[4]))
 							$alt = $this->__parse_part($this->fakeStatus, $item['params'][4]);
-		
+								
 						if (!empty($align) || !empty($caption))
 						{
 							$this->__paragraph_handler($status, $currentHtml, 'close');
-							$currentHtml = '<div' . (!empty($align) ? $code .= ' style="float: ' . $align . '; clear: ' . $align . '"' : '') . '>';
+							
+							$style = array();
+							$class = array();
+								
+							if (!empty($align))
+							{
+								$style[] = 'float: ' . $align;
+								$style[] = 'clear: ' . $align;
+							}
+
+							if (!empty($caption))
+							{
+								$class[] = 'tborder';
+								$style[] = 'padding: 5px';
+							}
+							
+							$currentHtml = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>';
 						}
 						
-						$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
+						$currentHtml .= '<a href="' . wiki_get_url($realLinkl) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
 		
 						if (!empty($align) || !empty($caption))
 							$currentHtml .= '</div>';

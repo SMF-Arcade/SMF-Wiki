@@ -104,7 +104,7 @@ function read_urlname($url, $include_namespace = false)
 	if (!$include_namespace)
 		list (, $url) = __url_page_parse($url);
 
-	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20', '/'), ' ', un_htmlspecialchars($url))));
+	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($url))));
 }
 
 // Gets Namespace and Page from url style (Namespace:Page_Title)
