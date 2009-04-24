@@ -57,8 +57,8 @@ function DiffPage()
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], (int) $_REQUEST['old_revision'])
 	);
-
-	$diff = diff(explode("\n", un_preparsecode($context['wiki_parser_compare']->raw_content)), explode("\n", un_preparsecode($context['wiki_parser']->raw_content)));
+	
+	$context['wiki_parser']->compareTo($context['wiki_parser_compare']);
 
 	$context['diff'] = array();
 

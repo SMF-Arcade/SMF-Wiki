@@ -129,14 +129,92 @@ class WikiPage
 		$this->__parse();
 		
 		// Make TOC
-		$this->tableOfContents = $this->parseTableOfContent($this->sections);
+		$this->tableOfContents = $this->__parseTableOfContent($this->sections);
 	}
 	
+	// Add file to this page
 	function addFile($id_file)
 	{
 		$this->id_file = $id_file;
 	}
+
+	// This gives template code for including page
+	function getTemplateCode($parameters)
+	{
+		$this->parameters = $parameters;
+		unset($parameters);
+		
+		$currentHtml = '';
+		
+		$this->__parse();
+		
+		foreach ($this->sections as $section)
+		{
+			if ($section['level'] != 1)
+				$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
+			
+			$currentHtml .= $section['html'];
+		}
+		
+		return $currentHtml;
+	}
 	
+	// Compare
+	function compareTo($wikiparser)
+	{
+		return $this->__diff(explode("\n", un_preparsecode($wikiparser->raw_content)), explode("\n", un_preparsecode($this->raw_content)));
+	}
+
+	/*
+			Paul's Simple Diff Algorithm v 0.1
+			(C) Paul Butler 2007 <http://www.paulbutler.org/>
+			May be used and distributed under the zlib/libpng license.
+	
+			This code is intended for learning purposes; it was written with short
+			code taking priority over performance. It could be used in a practical
+			application, but there are a few ways it could be optimized.
+	
+			Given two arrays, the function diff will return an array of the changes.
+			I won't describe the format of the array, but it will be obvious
+			if you use print_r() on the result of a diff on some test data.
+	
+			htmlDiff is a wrapper for the diff command, it takes two strings and
+			returns the differences in HTML. The tags used are <ins> and <del>,
+			which can easily be styled with CSS.
+	*/
+
+	private function __diff($old, $new)
+	{
+		$maxlen = 0;
+	
+		foreach($old as $oindex => $ovalue)
+		{
+			$nkeys = array_keys($new, $ovalue);
+			foreach($nkeys as $nindex)
+			{
+				$matrix[$oindex][$nindex] = isset($matrix[$oindex - 1][$nindex - 1]) ?
+					$matrix[$oindex - 1][$nindex - 1] + 1 : 1;
+				if ($matrix[$oindex][$nindex] > $maxlen)
+				{
+					$maxlen = $matrix[$oindex][$nindex];
+					$omax = $oindex + 1 - $maxlen;
+					$nmax = $nindex + 1 - $maxlen;
+				}
+			}
+		}
+	
+		if ($maxlen == 0)
+			return array(
+				array('d' => $old, 'i'=> $new)
+			);
+	
+		return array_merge(
+			$this->__diff(array_slice($old, 0, $omax), array_slice($new, 0, $nmax)),
+			array_slice($new, $nmax, $maxlen),
+			$this->__diff(array_slice($old, $omax + $maxlen), array_slice($new, $nmax + $maxlen))
+		);
+	}
+
 	// Main parser function
 	private function __parse()
 	{
@@ -150,13 +228,13 @@ class WikiPage
 		
 		foreach ($this->preParsedContent as $section)
 		{
-			$html_id = $this->make_html_id($section['name']);
+			$html_id = $this->__make_html_id($section['name']);
 			
 			$i = 1;
 			
 			// Make sure html_id is unique in page context
 			while (in_array($html_id, $htmlIds))
-				$html_id = $this->make_html_id($section['name']) . '_'. $i++;
+				$html_id = $this->__make_html_id($section['name'] . '_'. $i++);
 			$htmlIds[] = $html_id;
 				
 			$this->currentSection = count($this->sections);
@@ -192,6 +270,7 @@ class WikiPage
 		} // END section
 	}
 	
+	// Parser parts of paragraph
 	public function __parse_part(&$status, &$content, $condition_test = false)
 	{
 		global $smcFunc, $context, $txt;
@@ -397,39 +476,20 @@ class WikiPage
 			elseif ($item['name'] == 'tag')
 				$currentHtml .= $context['wiki_parser_extensions']['tags'][$item['tag_name']][0]($this, $item['content'], $item['attributes']);
 			else
-				$this->logError('Unable to parse item!', array($item));
+				$this->__logError('Unable to parse item!', array($item));
 		} // END content of part
 		
 		return $currentHtml;
 	}
 	
-	private function logError($error, $data)
+	// Log error during parsing
+	private function __logError($error, $data)
 	{
 		$this->parserErrors[] = array($error, $data);
 	}
-
-	function getTemplateCode($parameters)
-	{
-		$this->parameters = $parameters;
-		unset($parameters);
-		
-		$currentHtml = '';
-		
-		$this->__parse();
-		
-		foreach ($this->sections as $section)
-		{
-			if ($section['level'] != 1)
-				$currentHtml .= (!empty($currentHtml) ? '<br />' : '') . str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />';
-			
-			$currentHtml .= $section['html'];
-		}
-		
-		return $currentHtml;
-	}
 	
 	// Make table of content from list of sections
-	private function parseTableOfContent($sections, $main = true, $tlevel = 2)
+	private function __parseTableOfContent($sections, $main = true, $tlevel = 2)
 	{
 		$stack = array(
 			array(),
@@ -447,7 +507,7 @@ class WikiPage
 						'id' => $stack[0]['id'],
 						'level' => $num,
 						'name' => $stack[0]['name'],
-						'sub' => !empty($stack[1]) ? $this->parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
+						'sub' => !empty($stack[1]) ? $this->__parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
 					);
 	
 				$stack = array(
@@ -466,14 +526,14 @@ class WikiPage
 				'id' => $stack[0]['id'],
 				'level' => $num,
 				'name' => $stack[0]['name'],
-				'sub' => !empty($stack[1]) ? $this->parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
+				'sub' => !empty($stack[1]) ? $this->__parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
 			);
 	
 		return $mainToc;
 	}
 	
 	// This function makes html id (anchor) from section name
-	private function make_html_id($name)
+	private function __make_html_id($name)
 	{
 		global $smcFunc;
 		
@@ -511,7 +571,7 @@ class WikiPage
 	}
 	
 	// Cleans first and last linebreaks to make sure there won't be empty paragraphs
-	private function __paragraph_clean(&$text)
+	private function __paragraphClean(&$text)
 	{	
 		if (strlen($text) >= 6 && substr($text, 0, 6) == '<br />')
 			$text = substr($text, 6);
@@ -763,7 +823,7 @@ class WikiPage
 						
 						if (empty($stack))
 						{	
-							$this->__paragraph_clean($stringTemp);
+							$this->__paragraphClean($stringTemp);
 							if (!empty($stringTemp))
 								$paragraph[] =  $stringTemp;
 							$stringTemp = '';
@@ -800,7 +860,7 @@ class WikiPage
 						
 						if (empty($stack))
 						{	
-							$this->__paragraph_clean($stringTemp);
+							$this->__paragraphClean($stringTemp);
 							if (!empty($stringTemp))
 								$paragraph[] =  $stringTemp;
 							$stringTemp = '';
@@ -819,7 +879,7 @@ class WikiPage
 
 			if ($charType == 'new-paragraph' || $charType == 'new-paragraph-special' || ($can_paragraph != $is_paragraph))
 			{
-				$this->__paragraph_clean($stringTemp);
+				$this->__paragraphClean($stringTemp);
 				if (!empty($stringTemp))
 					$paragraph[] = $stringTemp;
 				if (!empty($paragraph))
@@ -851,7 +911,7 @@ class WikiPage
 
 				if ($c == $c2)
 				{
-					$this->__paragraph_clean($stringTemp);
+					$this->__paragraphClean($stringTemp);
 					
 					if (!empty($stringTemp))
 						$paragraph[] = $stringTemp;
@@ -893,7 +953,7 @@ class WikiPage
 
 				if ($len >= $rule['min'])
 				{
-					$this->__paragraph_clean($stringTemp);
+					$this->__paragraphClean($stringTemp);
 					if (!empty($stringTemp))
 						$paragraph[] =  $stringTemp;
 					$stringTemp = '';
@@ -1097,7 +1157,7 @@ class WikiPage
 			}
 		}
 
-		$this->__paragraph_clean($stringTemp);
+		$this->__paragraphClean($stringTemp);
 		
 		if (!empty($stringTemp))
 			$paragraph[] = $stringTemp;
