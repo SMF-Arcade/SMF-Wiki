@@ -35,9 +35,23 @@ function ViewTalkPage()
 		'page' => $context['current_page_name'],
 		'sa' => 'talk2',
 	));
-
-	$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic}', array('topic' => $context['page_info']['topic']), '', 'm.id_msg DESC', 'array');
-
+	
+	if (!empty($context['page_info']['topic']))
+	{
+		$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic} AND i.id_board = {int:board}', array('topic' => $context['page_info']['topic'], 'board' => $modSettings['wikiTalkBoard']), '', 'm.id_msg DESC', 'array');
+	
+		if (empty($context['comments']))
+			$smcFunc['db_query']('' ,'
+				UPDATE {db_prefix}wiki_pages
+				SET id_topic = {int:topic}
+				WHERE id_page = {int:page}',
+				array(
+					'page' => $context['page_info']['id'],
+					'topic' => 0,
+				)
+			);
+	}
+	
 	$context['current_page_title'] = sprintf($txt['talk_page'], $context['page_info']['title']);
 
 	// Template
