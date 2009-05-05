@@ -38,7 +38,7 @@ function ViewTalkPage()
 	
 	if (!empty($context['page_info']['topic']))
 	{
-		$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic} AND i.id_board = {int:board}', array('topic' => $context['page_info']['topic'], 'board' => $modSettings['wikiTalkBoard']), '', 'm.id_msg DESC', 'array');
+		$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic} AND m.id_board = {int:board}', array('topic' => $context['page_info']['topic'], 'board' => $modSettings['wikiTalkBoard']), '', 'm.id_msg DESC', 'array');
 	
 		if (empty($context['comments']))
 			$smcFunc['db_query']('' ,'
