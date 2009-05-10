@@ -47,6 +47,7 @@ class WikiPage
 	public $sections;
 	public $pageVariables;
 	
+	// Categories this page is assigned to
 	public $categories;
 	
 	// Some settings
@@ -449,7 +450,10 @@ class WikiPage
 				elseif ($parsedPage[0] !== ':' && $linkNamespace == $context['namespace_category']['id'])
 				{
 					$this->categories[$realLink] = array(
+						'id' => $link_info['id'],
 						'link' => wiki_get_url($realLink),
+						'namespace' => $linkNamespace,
+						'title' => $linkPage,
 						'name' => read_urlname($realLink),
 						'exists' => $link_info['id'] !== null,
 					);

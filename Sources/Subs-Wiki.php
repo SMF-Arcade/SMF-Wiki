@@ -536,7 +536,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 			'revision' => $id_revision,
 		)
 	);
-
+	
 	// If editing menu, clear cached menu
 	if ($row['namespace'] == $context['namespace_internal']['id'] && $row['title'] == 'Sidebar')
 		cache_put_data('wiki-navigation', null, 360);

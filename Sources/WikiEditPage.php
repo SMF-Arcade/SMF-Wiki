@@ -217,6 +217,39 @@ function EditPage2()
 		$pageOptions['lock'] = !empty($_REQUEST['lock_page']);
 
 	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
+	
+	// Update relations
+	$context['wiki_page']->parse_bbc = true;
+	$context['wiki_page']->raw_content = $body;
+	$context['wiki_page']->parse();
+	
+	// Categories
+	$rows = array();
+	
+	foreach ($context['wiki_page']->categories as $cat)
+		$rows[$cat['id']] = array($context['page_info']['id'], $cat['id']);
+	
+	// Remove categories that aren't in new page
+	$smcFunc['db_query']('', '
+		DELETE FROM {db_prefix}wiki_category
+		WHERE id_page = {int:page}
+			AND NOT id_page_cat IN({array_int:categories})',
+		array(
+			'page' => $context['page_info']['id'],
+			'categories' => array_keys($rows),
+		)
+	);
+	
+	// Insert new categories
+	$smcFunc['db_insert']('replace',
+		'{db_prefix}wiki_category',
+		array(
+			'id_page' => 'int',
+			'id_page_cat' => 'int',
+		),
+		$rows,
+		array('id_page', 'id_page_cat')
+	);
 
 	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $context['namespace']['id'])));
 }

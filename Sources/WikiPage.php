@@ -58,7 +58,7 @@ function DiffPage()
 		array($context['page_info'], $context['namespace'], (int) $_REQUEST['old_revision'])
 	);
 	
-	$context['wiki_parser']->compareTo($context['wiki_parser_compare']);
+	$diff = $context['wiki_parser']->compareTo($context['wiki_parser_compare']);
 
 	$context['diff'] = array();
 

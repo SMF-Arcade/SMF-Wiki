@@ -75,14 +75,14 @@ $tables = array(
 				'size' => '45',
 				'default' => '',
 			),
-			array(
+			/*array(
 				'name' => 'page_header',
 				'type' => 'text',
 			),
 			array(
 				'name' => 'page_footer',
 				'type' => 'text',
-			),
+			),*/
 			array(
 				'name' => 'default_page',
 				'type' => 'varchar',
@@ -218,6 +218,38 @@ $tables = array(
 			),
 		)
 	),
+	// Wiki Category
+	'wiki_category' => array(
+		'name' => 'wiki_category',
+		'columns' => array(
+			array(
+				'name' => 'id_page',
+				'type' => 'int',
+				'unsigned' => true,
+			),
+			array(
+				'name' => 'id_page_cat',
+				'type' => 'int',
+				'unsigned' => true,
+			),		
+		),
+		'indexes' => array(
+			array(
+				'type' => 'primary',
+				'columns' => array('id_page', 'id_page_cat'),
+			),
+			array(
+				'name' => 'id_page',
+				'type' => 'index',
+				'columns' => array('id_page')
+			),
+			array(
+				'name' => 'id_page_cat',
+				'type' => 'index',
+				'columns' => array('id_page_cat')
+			),
+		)
+	),	
 	// Files
 	'wiki_files' => array(
 		'name' => 'wiki_files',
