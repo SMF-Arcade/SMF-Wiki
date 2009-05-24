@@ -22,7 +22,7 @@ function template_wiki_above()
 
 		echo '
 		</h3>
-		<ul class="windowbg2">';
+		<ul class="reset windowbg2">';
 
 		foreach ($group['items'] as $item)
 		{

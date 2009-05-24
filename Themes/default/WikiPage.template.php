@@ -6,7 +6,7 @@ function template_wikipage_above()
 	global $context, $modSettings, $txt;
 
 	echo '
-	<ul class="wikimenu">';
+	<ul class="reset wikimenu">';
 
 	foreach ($context['wikimenu'] as $id => $item)
 	{
@@ -42,7 +42,7 @@ function output_toc($baseurl, $blevel, $toc)
 
 		if (!empty($item['sub']))
 			echo '
-			<ul>',
+			<ul class="reset">',
 				output_toc($baseurl, (!empty($blevel) ? $blevel . '.' . $item['level'] : $item['level']) , $item['sub']), '
 			</ul>';
 
@@ -130,7 +130,7 @@ function template_wiki_content($wikiPage)
 		if ($section['level'] == 1 && !empty($wikiPage->tableOfContents))
 			echo '
 			<div class="wikitoc floatright">
-				<ul>',
+				<ul class="reset">',
 					output_toc($context['current_page_url'], '', $wikiPage->tableOfContents), '
 				</ul>
 			</div>';
@@ -211,7 +211,7 @@ function template_recent_changes()
 
 	echo '
 	<form action="', $context['form_url'], '">
-		<ul class="recent_changes">';
+		<ul class="reset recent_changes">';
 
 	foreach ($context['recent_changes'] as $item)
 	{
@@ -239,7 +239,7 @@ function template_page_history()
 
 	echo '
 	<form action="', $context['form_url'], '" method="post">
-		<ul class="wikihistory">';
+		<ul class="reset wikihistory">';
 
 	foreach ($context['history'] as $item)
 	{
