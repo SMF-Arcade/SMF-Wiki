@@ -171,6 +171,12 @@ function clean_pagename($string, $namespace = false)
 	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
 }
 
+// Makes namespace pagename + page name safe for use in cachefile name
+function wiki_cache_escape($namespace, $page)
+{
+	return sha1($namespace) . '-' . sha1($page);
+}
+
 function loadNamespace()
 {
 	global $smcFunc, $context;
@@ -231,7 +237,7 @@ function loadWikiPage()
 {
 	global $smcFunc, $context;
 
-	$context['page_info'] = cache_quick_get('wiki-pageinfo-' .  $context['namespace']['id'] . '-' . $_REQUEST['page'], 'Subs-Wiki.php', 'wiki_get_page_info', array($_REQUEST['page'], $context['namespace']));
+	$context['page_info'] = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($context['namespace']['id'], $_REQUEST['page']), 'Subs-Wiki.php', 'wiki_get_page_info', array($_REQUEST['page'], $context['namespace']));
 
 	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $context['page_info']['current_revision'];
 
@@ -541,7 +547,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 	if ($row['namespace'] == $context['namespace_internal']['id'] && $row['title'] == 'Sidebar')
 		cache_put_data('wiki-navigation', null, 360);
 
-	cache_put_data('wiki-pageinfo-' . $row['namespace'] . '-' . $row['title'], null, 360);
+	cache_put_data('wiki-pageinfo-' . wiki_cache_escape($row['namespace'], $row['title']), null, 360);
 
 	return true;
 }

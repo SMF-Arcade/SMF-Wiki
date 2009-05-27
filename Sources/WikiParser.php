@@ -327,7 +327,7 @@ class WikiPage
 				if (empty($namespace))
 					$namespace = 'Template';
 					
-				$template_info = cache_quick_get('wiki-pageinfo-' .  $namespace . '-' . $page, 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
+				$template_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace, $page), 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
 
 				if ($template_info['id'] !== null)
 				{
@@ -371,7 +371,7 @@ class WikiPage
 		
 				$realLink = wiki_urlname($linkPage, $linkNamespace);
 		
-				$link_info = cache_quick_get('wiki-pageinfo-' .  $linkNamespace . '-' . $linkPage, 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
+				$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
 				
 				if ($linkNamespace == $context['namespace_images']['id'] && $link_info['id'] !== null)
 				{

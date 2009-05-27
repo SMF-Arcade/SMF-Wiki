@@ -117,7 +117,7 @@ function ViewTalkPage2()
 			)
 		);
 
-		cache_put_data('wiki-pageinfo-' . $context['namespace']['id'] . '-' . $_REQUEST['page'], null, 360);
+		cache_put_data('wiki-pageinfo-' . wiki_cache_escape($context['namespace']['id'], $_REQUEST['page']), null, 360);
 	}
 
 	redirectexit(wiki_get_url(array('page' => $context['page_info']['name'], 'sa' => 'talk')));
