@@ -53,12 +53,12 @@ function DiffPage()
 
 	// Load content itself
 	$context['wiki_parser_compare'] = cache_quick_get(
-		'wiki-page-' .  $context['page_info']['id'] . '-rev' . $revision,
+		'wiki-page-' .  $context['page_info']['id'] . '-rev' . (int) $_REQUEST['old_revision'],
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], (int) $_REQUEST['old_revision'])
 	);
 	
-	$diff = $context['wiki_parser']->compareTo($context['wiki_parser_compare']);
+	$diff = $context['wiki_page']->compareTo($context['wiki_parser_compare']);
 
 	$context['diff'] = array();
 
