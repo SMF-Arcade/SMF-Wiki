@@ -106,7 +106,7 @@ class WikiPage
 		),
 	);
 	
-	function __construct($page_info, $namespace, $content, $include)
+	function __construct($page_info, $namespace, $content, $include = false)
 	{
 		$this->page = $page_info['name'];
 		$this->title = $page_info['title'];

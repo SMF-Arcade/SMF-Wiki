@@ -158,7 +158,7 @@ function EditPage2()
 	}
 
 	// Handle sections
-	if (empty($_REQUEST['section']))
+	if (empty($_REQUEST['section']) || !isset($context['wiki_page']))
 		$body = $_POST['wiki_content'];
 	else
 	{
@@ -216,6 +216,10 @@ function EditPage2()
 	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
 	
 	// Update relations
+	
+	if (!isset($context['wiki_page']))
+		$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
+	
 	$context['wiki_page']->parse_bbc = true;
 	$context['wiki_page']->raw_content = $body;
 	$context['wiki_page']->parse();
@@ -224,7 +228,8 @@ function EditPage2()
 	$rows = array();
 	
 	foreach ($context['wiki_page']->categories as $cat)
-		$rows[$cat['id']] = array($context['page_info']['id'], $cat['id']);
+		if (!empty($cat['id']))
+			$rows[$cat['id']] = array($context['page_info']['id'], $cat['id']);
 	
 	// Remove categories that aren't in new page
 	$smcFunc['db_query']('', '
@@ -237,19 +242,14 @@ function EditPage2()
 		)
 	);
 	
-	if (!empty($rows))
-	{		
-		// Insert new categories
+	// Insert new categories
+	if (!empty($rows))		
 		$smcFunc['db_insert']('replace',
 			'{db_prefix}wiki_category',
-			array(
-				'id_page' => 'int',
-				'id_page_cat' => 'int',
-			),
+			array('id_page' => 'int', 'id_page_cat' => 'int',),
 			$rows,
 			array('id_page', 'id_page_cat')
 		);
-	}
 
 	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $context['namespace']['id'])));
 }
