@@ -209,7 +209,7 @@ function wiki_get_namespaces()
 	global $smcFunc;
 
 	$request = $smcFunc['db_query']('', '
-		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
+		SELECT namespace, ns_prefix, default_page, namespace_type
 		FROM {db_prefix}wiki_namespace',
 		array(
 		)

@@ -108,7 +108,7 @@ $specialNamespaces = array(
 foreach ($specialNamespaces as $type => $data)
 {
 	$request = $smcFunc['db_query']('', '
-		SELECT namespace, ns_prefix, page_header, page_footer, default_page, namespace_type
+		SELECT namespace, ns_prefix, default_page, namespace_type
 		FROM {db_prefix}wiki_namespace
 		WHERE namespace_type = {int:type}',
 		array(
@@ -124,16 +124,12 @@ foreach ($specialNamespaces as $type => $data)
 			array(
 				'namespace' => 'string',
 				'ns_prefix' => 'string',
-				'page_header' => 'string',
-				'page_footer' => 'string',
 				'default_page' => 'string',
 				'namespace_type' => 'int',
 			),
 			array(
 				array(
 					$data['name'],
-					'',
-					'',
 					'',
 					$data['default_page'],
 					$type,
