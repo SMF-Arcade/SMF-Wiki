@@ -25,7 +25,7 @@ if (!defined('SMF'))
 
 function doTables($tables, $columnRename = array())
 {
-	global $smcFunc, $db_prefix, $db_type;
+	global $smcFunc, $db_prefix, $db_type, $db_show_debug;
 
 	$log = array();
 	$existingTables = $smcFunc['db_list_tables']();
@@ -130,7 +130,7 @@ function doTables($tables, $columnRename = array())
 					if ($table['upgrade']['columns'][$col['name']] == 'drop')
 						$smcFunc['db_remove_column']($table_name, $col['name']);
 				}
-				elseif (!$exists && empty($table['smf']))
+				elseif (!$exists && !empty($db_show_debug) && empty($table['smf']))
 					$log[] = sprintf('Table %s has non-required column %s', $table_name, $col['name']);
 			}
 
@@ -199,12 +199,12 @@ function doTables($tables, $columnRename = array())
 								$smcFunc['db_remove_index']($table_name, 'primary');
 							elseif (isset($index['name']) && isset($index2['name']) && $index['name'] == $index2['name'] && $index['type'] == $index2['type'] && $index['columns'] === $index2['columns'])
 								$smcFunc['db_remove_index']($table_name, $index['name']);
-							else
-								$log[] = $table_name . ' has Unneeded index ' . var_dump($index);
+							elseif (!empty($db_show_debug))
+								$log[] = $table_name . ' has Unneeded index ' . print_r($index, true);
 						}
 					}
-					else
-						$log[] = $table_name . ' has Unneeded index ' . var_dump($index);
+					elseif (!empty($db_show_debug))
+						$log[] = $table_name . ' has Unneeded index ' . print_r($index, true);
 				}
 			}
 		}
