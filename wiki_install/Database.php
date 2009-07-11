@@ -75,14 +75,6 @@ $tables = array(
 				'size' => '45',
 				'default' => '',
 			),
-			/*array(
-				'name' => 'page_header',
-				'type' => 'text',
-			),
-			array(
-				'name' => 'page_footer',
-				'type' => 'text',
-			),*/
 			array(
 				'name' => 'default_page',
 				'type' => 'varchar',
