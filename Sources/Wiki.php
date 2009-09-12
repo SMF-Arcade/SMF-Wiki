@@ -134,6 +134,9 @@ function Wiki($standalone = false)
 			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
 		)
 	);
+	
+	if (empty($modSettings['wikiTalkBoard']))
+		unset($subActions['normal']['talk'], $subActions['normal']['talk2']);
 
 	// show error page for invalid titles
 	if (!is_valid_pagename($_REQUEST['page'], $context['namespace']))
