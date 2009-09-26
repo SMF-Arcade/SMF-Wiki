@@ -38,11 +38,11 @@ function doTables($tables, $columnRename = array())
 
 		// Create table
 		if (!$tableExists && empty($table['smf']))
-			$smcFunc['db_create_table']($table_name, $table['columns'], $table['indexes']);
+			$smcFunc['db_create_table']('{db_prefix}' . $table_name, $table['columns'], $table['indexes']);
 		// Update table
 		else
 		{
-			$currentTable = $smcFunc['db_table_structure']($table_name);
+			$currentTable = $smcFunc['db_table_structure']('{db_prefix}' . $table_name);
 
 			// Renames in this table?
 			if (!empty($table['rename']))
@@ -54,7 +54,7 @@ function doTables($tables, $columnRename = array())
 						$old_name = $column['name'];
 						$column['name'] = $table['rename'][$column['name']];
 
-						$smcFunc['db_change_column']($table_name, $old_name, $column);
+						$smcFunc['db_change_column']('{db_prefix}' . $table_name, $old_name, $column);
 					}
 				}
 			}
@@ -68,7 +68,7 @@ function doTables($tables, $columnRename = array())
 					{
 						$old_name = $column['name'];
 						$column['name'] = $columnRename[$column['name']];
-						$smcFunc['db_change_column']($table_name, $old_name, $column);
+						$smcFunc['db_change_column']('{db_prefix}' . $table_name, $old_name, $column);
 					}
 				}
 			}
@@ -90,25 +90,7 @@ function doTables($tables, $columnRename = array())
 
 				// Add missing columns
 				if (!$exists)
-					$smcFunc['db_add_column']($table_name, $col);
-
-				// TEMPORARY until SMF package functions works with this
-				if (isset($column['unsigned']) && $db_type == 'mysql')
-				{
-					$column['size'] = isset($column['size']) ? $column['size'] : null;
-
-					list ($type, $size) = $smcFunc['db_calculate_type']($column['type'], $column['size']);
-					if ($size !== null)
-						$type = $type . '(' . $size . ')';
-
-					$smcFunc['db_query']('', "
-						ALTER TABLE {db_prefix}$table_name
-						CHANGE COLUMN $column[name] $column[name] $type UNSIGNED " . (empty($column['null']) ? 'NOT NULL' : '') . ' ' .
-							(empty($column['default']) ? '' : "default '$column[default]'") . ' ' .
-							(empty($column['auto']) ? '' : 'auto_increment') . ' ',
-						'security_override'
-					);
-				}
+					$smcFunc['db_add_column']('{db_prefix}' . $table_name, $col);
 			}
 
 			// Remove any unnecassary columns
@@ -128,7 +110,7 @@ function doTables($tables, $columnRename = array())
 				if (!$exists && isset($table['upgrade']['columns'][$col['name']]))
 				{
 					if ($table['upgrade']['columns'][$col['name']] == 'drop')
-						$smcFunc['db_remove_column']($table_name, $col['name']);
+						$smcFunc['db_remove_column']('{db_prefix}' . $table_name, $col['name']);
 				}
 				elseif (!$exists && !empty($db_show_debug) && empty($table['smf']))
 					$log[] = sprintf('Table %s has non-required column %s', $table_name, $col['name']);
@@ -148,8 +130,8 @@ function doTables($tables, $columnRename = array())
 
 						if ($index['columns'] !== $index2['columns'])
 						{
-							$smcFunc['db_remove_index']($table_name, 'primary');
-							$smcFunc['db_add_index']($table_name, $index);
+							$smcFunc['db_remove_index']('{db_prefix}' . $table_name, 'primary');
+							$smcFunc['db_add_index']('{db_prefix}' . $table_name, $index);
 						}
 
 						break;
@@ -162,8 +144,8 @@ function doTables($tables, $columnRename = array())
 						// Need to be changed?
 						if ($index['type'] != $index2['type'] || $index['columns'] !== $index2['columns'])
 						{
-							$smcFunc['db_remove_index']($table_name, $index['name']);
-							$smcFunc['db_add_index']($table_name, $index);
+							$smcFunc['db_remove_index']('{db_prefix}' . $table_name, $index['name']);
+							$smcFunc['db_add_index']('{db_prefix}' . $table_name, $index);
 						}
 
 						break;
@@ -171,7 +153,7 @@ function doTables($tables, $columnRename = array())
 				}
 
 				if (!$exists)
-					$smcFunc['db_add_index']($table_name, $index);
+					$smcFunc['db_add_index']('{db_prefix}' . $table_name, $index);
 			}
 
 			// Remove unnecassary indexes
@@ -196,15 +178,15 @@ function doTables($tables, $columnRename = array())
 						foreach ($table['upgrade']['indexes'] as $index2)
 						{
 							if ($index['type'] == 'primary' && $index2['type'] == 'primary' && $index['columns'] === $index2['columns'])
-								$smcFunc['db_remove_index']($table_name, 'primary');
+								$smcFunc['db_remove_index']('{db_prefix}' . $table_name, 'primary');
 							elseif (isset($index['name']) && isset($index2['name']) && $index['name'] == $index2['name'] && $index['type'] == $index2['type'] && $index['columns'] === $index2['columns'])
-								$smcFunc['db_remove_index']($table_name, $index['name']);
+								$smcFunc['db_remove_index']('{db_prefix}' . $table_name, $index['name']);
 							elseif (!empty($db_show_debug))
-								$log[] = $table_name . ' has Unneeded index ' . print_r($index, true);
+								$log[] = $table_name . ' has Unneeded index ' . var_dump($index);
 						}
 					}
 					elseif (!empty($db_show_debug))
-						$log[] = $table_name . ' has Unneeded index ' . print_r($index, true);
+						$log[] = $table_name . ' has Unneeded index ' . var_dump($index);
 				}
 			}
 		}
