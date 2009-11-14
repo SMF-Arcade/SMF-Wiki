@@ -11,7 +11,7 @@ function template_wiki_above()
 	foreach ($context['wiki_navigation'] as $group)
 	{
 		echo '
-		<h3 class="catbg headerpadding', $group['selected'] ? ' selected' : '', '">';
+		<h3 class="catbg', $group['selected'] ? ' selected' : '', '"><span class="left"></span>';
 
 		if (!empty($group['url']))
 			echo '
@@ -22,20 +22,24 @@ function template_wiki_above()
 
 		echo '
 		</h3>
-		<ul class="reset windowbg2">';
+		<div class="windowbg2">
+			<span class="topslice"><span></span></span>
+			<ul class="reset windowbg2">';
 
 		foreach ($group['items'] as $item)
 		{
 			if (!empty($item['url']))
 				echo '
-			<li', $item['selected'] ? ' class="selected"' : '', '><a href="', $item['url'], '">', $item['title'], '</a></li>';
+				<li', $item['selected'] ? ' class="selected"' : '', '><a href="', $item['url'], '">', $item['title'], '</a></li>';
 			else
 				echo '
-			<li>', $item['title'], '</li>';
+				<li>', $item['title'], '</li>';
 		}
 
 		echo '
-		</ul>';
+			</ul>
+			<span class="botslice"><span></span></span>
+		</div>';
 	}
 
 	echo '

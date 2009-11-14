@@ -102,7 +102,7 @@ function template_wiki_content($wikiPage)
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
 			echo '
-			<h', $section['level'] + 1, ' id="', $section['id'], '" class="clearfix">
+			<h', $section['level'] + 1, ' id="', $section['id'], '">
 				<span class="floatleft">', $section['name'], '</span>';
 
 			if (!empty($context['can_edit_page']))
@@ -110,6 +110,7 @@ function template_wiki_content($wikiPage)
 				<span class="floatright smalltext">[<a href="', $section['edit_url'], '">', $txt['wiki_edit_section'], '</a>]</span>';
 
 			echo '
+				<br class="clearright" />
 			</h', $section['level'] + 1, '>';
 		}
 		// Replace this
@@ -124,6 +125,7 @@ function template_wiki_content($wikiPage)
 				<span class="floatright smalltext">[<a href="', $section['edit_url'], '">', $txt['wiki_edit_section'], '</a>]</span>';
 
 			echo '
+				<br class="clearright" />
 			</h6>';
 		}
 		
@@ -296,18 +298,12 @@ function template_edit_page()
 	echo '
 	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editarticle" id="editarticle" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
 		<div style="width: 95%; margin: auto">
-			<div>
-				', template_control_richedit($context['post_box_name'], 'bbc'), '
-			</div>
-			<div>
-				', template_control_richedit($context['post_box_name'], 'smileys'), '<br />
-			</div>
-			<div>
-				', template_control_richedit($context['post_box_name'], 'message'), '
-			</div>
+			<div id="bbcBox_message"></div>
+			<div id="smileyBox_message"></div>
+			', template_control_richedit($context['post_box_name'], 'smileyBox_message', 'bbcBox_message'), '
 			<div style="text-align: center">
 				<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
-				', template_control_richedit($context['post_box_name'], 'buttons'), '
+				', template_control_richedit_buttons($context['post_box_name']), '
 			</div>
 			<div>
 				', $txt['edit_summary'], ': <br />
