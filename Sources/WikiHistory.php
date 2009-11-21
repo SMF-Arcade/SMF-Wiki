@@ -35,9 +35,9 @@ function WikiRecentChanges()
 		SELECT
 			con.id_revision, con.id_page, con.timestamp, con.comment, mem.id_member, mem.real_name, MAX(prev.id_revision) AS id_prev_revision,
 			page.title, page.namespace
-		FROM {db_prefix}wiki_content AS con
-			INNER JOIN {db_prefix}wiki_pages AS page ON (page.id_page = con.id_page)
-			LEFT JOIN {db_prefix}wiki_content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = con.id_page)
+		FROM {wiki_prefix}content AS con
+			INNER JOIN {wiki_prefix}pages AS page ON (page.id_page = con.id_page)
+			LEFT JOIN {wiki_prefix}content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = con.id_page)
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = con.id_author)
 		GROUP BY con.id_revision
 		ORDER BY con.id_revision DESC',
@@ -96,8 +96,8 @@ function ViewPageHistory()
 
 	$request = $smcFunc['db_query']('', '
 		SELECT con.id_revision, con.id_page, con.timestamp, con.comment, mem.id_member, mem.real_name, MAX(prev.id_revision) AS id_prev_revision
-		FROM {db_prefix}wiki_content AS con
-			LEFT JOIN {db_prefix}wiki_content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = {int:page})
+		FROM {wiki_prefix}content AS con
+			LEFT JOIN {wiki_prefix}content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = {int:page})
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = con.id_author)
 		WHERE con.id_page = {int:page}
 		GROUP BY con.id_revision

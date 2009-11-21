@@ -42,7 +42,7 @@ function ViewTalkPage()
 	
 		if (empty($context['comments']))
 			$smcFunc['db_query']('' ,'
-				UPDATE {db_prefix}wiki_pages
+				UPDATE {wiki_prefix}pages
 				SET id_topic = {int:topic}
 				WHERE id_page = {int:page}',
 				array(
@@ -108,7 +108,7 @@ function ViewTalkPage2()
 	if (empty($context['page_info']['topic']))
 	{
 		$smcFunc['db_query']('' ,'
-			UPDATE {db_prefix}wiki_pages
+			UPDATE {wiki_prefix}pages
 			SET id_topic = {int:topic}
 			WHERE id_page = {int:page}',
 			array(

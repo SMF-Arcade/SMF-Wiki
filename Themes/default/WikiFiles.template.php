@@ -29,22 +29,16 @@ function template_wiki_file_upload()
 					</tr><tr>
 						<td align="right" width="25%">', $txt['file_description'], '</td>
 						<td>
-							<div>
-								', template_control_richedit($context['post_box_name'], 'bbc'), '
-							</div>
-							<div>
-								', template_control_richedit($context['post_box_name'], 'smileys'), '<br />
-							</div>
-							<div>
-								', template_control_richedit($context['post_box_name'], 'message'), '
-							</div>
+							<div id="bbcBox_message"></div>
+							<div id="smileyBox_message"></div>
+							', template_control_richedit($context['post_box_name'], 'smileyBox_message', 'bbcBox_message'), '
 						</td>
 					</tr>
 				</table>
 			</div>
 			<div class="windowbg2 smallpadding" style="text-align: center">
 				<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
-				', template_control_richedit($context['post_box_name'], 'buttons'), '
+				', template_control_richedit_buttons($context['post_box_name']), '
 			</div>
 		</div>
 

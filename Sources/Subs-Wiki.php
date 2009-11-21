@@ -210,7 +210,7 @@ function wiki_get_namespaces()
 
 	$request = $smcFunc['db_query']('', '
 		SELECT namespace, ns_prefix, default_page, namespace_type
-		FROM {db_prefix}wiki_namespace',
+		FROM {wiki_prefix}namespace',
 		array(
 		)
 	);
@@ -265,7 +265,7 @@ function loadWikiPage()
 	{
 		$request = $smcFunc['db_query']('', '
 			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
-			FROM {db_prefix}wiki_files
+			FROM {wiki_prefix}files
 			WHERE id_file = {int:file}',
 			array(
 				'file' => $context['wiki_page']->id_file,
@@ -297,7 +297,7 @@ function wiki_get_page_info($page, $namespace)
 
 	$request = $smcFunc['db_query']('', '
 		SELECT id_page, title, id_revision_current, id_topic, is_locked
-		FROM {db_prefix}wiki_pages
+		FROM {wiki_prefix}pages
 		WHERE title = {string:page}
 			AND namespace = {string:namespace}',
 		array(
@@ -346,7 +346,7 @@ function wiki_get_page_content($page_info, $namespace, $revision, $include = fal
 
 	$request = $smcFunc['db_query']('', '
 		SELECT content, id_file
-		FROM {db_prefix}wiki_content
+		FROM {wiki_prefix}content
 		WHERE id_page = {int:page}
 			AND id_revision = {raw:revision}',
 		array(
@@ -469,7 +469,7 @@ function createPage($title, $namespace)
 	global $smcFunc;
 
 	$smcFunc['db_insert']('insert',
-		'{db_prefix}wiki_pages',
+		'{wiki_prefix}pages',
 		array(
 			'title' => 'string-255',
 			'namespace' => 'string-255',
@@ -481,7 +481,7 @@ function createPage($title, $namespace)
 		array('id_page')
 	);
 
-	return $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_page');
+	return $smcFunc['db_insert_id']('{wiki_prefix}pages', 'id_page');
 }
 
 // Creates new revision for page
@@ -491,7 +491,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 
 	$request = $smcFunc['db_query']('', '
 		SELECT title, namespace
-		FROM {db_prefix}wiki_pages
+		FROM {wiki_prefix}pages
 		WHERE id_page = {int:page}
 		LIMIT 1',
 		array(
@@ -506,7 +506,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 		return false;
 
 	$smcFunc['db_insert']('insert',
-		'{db_prefix}wiki_content',
+		'{wiki_prefix}content',
 		array(
 			'id_page' => 'int',
 			'id_author' => 'int',
@@ -526,10 +526,10 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 		array('id_revision')
 	);
 
-	$id_revision = $smcFunc['db_insert_id']('{db_prefix}wiki_content', 'id_revision');
+	$id_revision = $smcFunc['db_insert_id']('{wiki_prefix}content', 'id_revision');
 
 	$smcFunc['db_query']('' ,'
-		UPDATE {db_prefix}wiki_pages
+		UPDATE {wiki_prefix}pages
 		SET
 			id_revision_current = {int:revision}' . (isset($pageOptions['lock']) ? ',
 			is_locked = {int:lock}' : '') . (!empty($revisionOptions['file']) ? ',
@@ -566,7 +566,7 @@ function removeWikiRevisions($page, $revisions)
 	// Get newest revision that isn't going to be removed
 	$request = $smcFunc['db_query']('', '
 		SELECT id_page, id_revision
-		FROM {db_prefix}wiki_content
+		FROM {wiki_prefix}content
 		WHERE id_page = {int:pages}
 			AND id_revision NOT IN ({array_int:revisions})
 		ORDER BY id_revision DESC
@@ -584,7 +584,7 @@ function removeWikiRevisions($page, $revisions)
 	$smcFunc['db_free_result']($request);
 
 	$smcFunc['db_query']('', '
-		UPDATE {db_prefix}wiki_pages
+		UPDATE {wiki_prefix}pages
 		SET id_revision_current = {int:new_revision}
 		WHERE id_page = {int:page}
 		LIMIT 1',
@@ -596,7 +596,7 @@ function removeWikiRevisions($page, $revisions)
 
 	// Lastly, delete the revisions.
 	$smcFunc['db_query']('', '
-		DELETE FROM {db_prefix}wiki_content
+		DELETE FROM {wiki_prefix}content
 		WHERE id_revision IN ({array_int:revisions})',
 		array(
 			'revisions' => $revisions,
@@ -614,14 +614,14 @@ function removeWikiPages($page)
 		$page = array((int) $page);
 
 	$smcFunc['db_query']('', '
-		DELETE FROM {db_prefix}wiki_pages
+		DELETE FROM {wiki_prefix}pages
 		WHERE id_page IN({array_int:page})',
 		array(
 			'page' => $page,
 		)
 	);
 	$smcFunc['db_query']('', '
-		DELETE FROM {db_prefix}wiki_content
+		DELETE FROM {wiki_prefix}content
 		WHERE id_page IN({array_int:page})',
 		array(
 			'page' => $page,

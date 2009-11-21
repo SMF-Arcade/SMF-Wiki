@@ -179,7 +179,7 @@ function WikiFileUpload()
 
 		$request = $smcFunc['db_query']('', '
 			SELECT id_page, id_file
-			FROM {db_prefix}wiki_pages
+			FROM {wiki_prefix}pages
 			WHERE namespace = {string:namespace}
 				AND title = {string:name}',
 			array(
@@ -216,7 +216,7 @@ function WikiFileUpload()
 
 		// Insert file into database
 		$smcFunc['db_insert']('',
-			'{db_prefix}wiki_files',
+			'{wiki_prefix}files',
 			array(
 				'id_page' => 'int',
 				'localname' => 'string-255',
@@ -244,7 +244,7 @@ function WikiFileUpload()
 			array('id_file')
 		);
 
-		$id_file = $smcFunc['db_insert_id']('{db_prefix}wiki_files', 'id_file');
+		$id_file = $smcFunc['db_insert_id']('{wiki_prefix}files', 'id_file');
 
 		$pageOptions = array();
 		$revisionOptions = array(
@@ -262,7 +262,7 @@ function WikiFileUpload()
 
 		if ($id_file_old !== null)
 			$smcFunc['db_query']('' ,'
-				UPDATE {db_prefix}wiki_files
+				UPDATE {wiki_prefix}files
 				SET is_current = {int:not_current}
 				WHERE id_file = {int:file}',
 				array(

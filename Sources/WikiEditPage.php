@@ -233,7 +233,7 @@ function EditPage2()
 	
 	// Remove categories that aren't in new page
 	$smcFunc['db_query']('', '
-		DELETE FROM {db_prefix}wiki_category
+		DELETE FROM {wiki_prefix}category
 		WHERE id_page = {int:page}'. (!empty($rows) ? '
 			AND NOT id_page_cat IN({array_int:categories})' : ''),
 		array(
@@ -245,7 +245,7 @@ function EditPage2()
 	// Insert new categories
 	if (!empty($rows))		
 		$smcFunc['db_insert']('replace',
-			'{db_prefix}wiki_category',
+			'{wiki_prefix}category',
 			array('id_page' => 'int', 'id_page_cat' => 'int',),
 			$rows,
 			array('id_page', 'id_page_cat')

@@ -23,14 +23,18 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
-function loadWiki($mode = '')
+function loadWiki($mode = '', $prefix = '')
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version, $wiki_prefix, $db_prefix;
 
 	require_once($sourcedir . '/Subs-Wiki.php');
 	
 	loadClassFile('WikiParser.php');
-
+	
+	// Set up wiki_prefix (for running multiple wikis)
+	if (empty($wiki_prefix))
+		$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
+	
 	// Wiki Version
 	$wiki_version = '0.1';
 
@@ -317,6 +321,15 @@ function Wiki($standalone = false)
 	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['page_info']['title']);
 	$context['current_page_title'] = $context['page_info']['title'];
 
+	// Invalid special page?
+	if ($namespaceGroup == 'special' && !isset($subActions[$namespaceGroup][$subaction]))
+	{
+		// Template
+		loadTemplate('WikiPage');
+		$context['template_layers'][] = 'wikipage';
+		$context['sub_template'] = 'not_found';		
+	}
+		
 	require_once($sourcedir . '/' . $subActions[$namespaceGroup][$subaction][0]);
 	$subActions[$namespaceGroup][$subaction][1]();
 }
