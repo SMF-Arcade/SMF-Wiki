@@ -25,7 +25,7 @@ if (!defined('SMF'))
 
 function WikiAdmin($prefix = null)
 {
-	global $context, $smcFunc, $sourcedir, $user_info, $txt, $db_prefix;
+	global $context, $smcFunc, $sourcedir, $user_info, $txt;
 
 	require_once($sourcedir . '/Wiki.php');
 	require_once($sourcedir . '/ManageServer.php');

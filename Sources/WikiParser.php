@@ -305,7 +305,7 @@ class WikiPage
 				$return = null;
 				
 				// May it take parameter?
-				if ($context['wiki_parser_extensions']['variables'][$item['var_parsed']][1])
+				if (!empty($item['firstParam']) && $context['wiki_parser_extensions']['variables'][$item['var_parsed']][1])
 					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed'], trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), !empty($item['firstParam']) ? $this->__parse_part($this->fakeStatus, $item['firstParam']) : '')));
 				elseif (empty($item['firstParam']))
 					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed']);
@@ -1074,14 +1074,26 @@ class WikiPage
 
 				$name = $rule['names'][$matchLen];
 				
-				if (!empty($piece['var']) && $name == 'template')
+				if ($name == 'template')
 				{
-					$piece['var_parsed'] = strtolower(trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $piece['var']))));
+					$source = isset($piece['var']) ? $piece['var'] : $piece['firstParam'];
+					$piece['var_parsed'] = strtolower(trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $source))));
+					
 					if (isset($context['wiki_parser_extensions']['variables'][$piece['var_parsed']]))
+					{
 						$name = 'variable';
+						
+						if (!isset($piece['var']))
+							unset($piece['firstParam']);
+					}
 					elseif (isset($context['wiki_parser_extensions']['functions'][$piece['var_parsed']]))
+					{
 						$name = 'function';
-					else
+						
+						if (!isset($piece['var']))
+							unset($piece['firstParam']);
+					}
+					elseif (isset($piece['var']))
 					{
 						$piece['var'][] = ':';
 						$piece['firstParam'] = array_merge($piece['var'], $piece['firstParam']);
@@ -1095,7 +1107,7 @@ class WikiPage
 				
 				$i += $matchLen;
 				
-				if ($thisElement['lineStart'] && $text[$i + 1] == "\n" && (!isset($text[$i + 2]) ||$text[$i + 2] != "\n"))
+				if ($thisElement['lineStart'] && $text[$i + 1] == "\n" && (!isset($text[$i + 2]) || $text[$i + 2] != "\n"))
 				{
 					$thisElement['lineEnd'] = true;
 					$i++;
