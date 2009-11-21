@@ -216,9 +216,7 @@ function EditPage2()
 	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
 	
 	// Update relations
-	
-	if (!isset($context['wiki_page']))
-		$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
+	$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
 	
 	$context['wiki_page']->parse_bbc = true;
 	$context['wiki_page']->raw_content = $body;
@@ -230,18 +228,16 @@ function EditPage2()
 	foreach ($context['wiki_page']->categories as $cat)
 		$rows[$cat['title']] = array($context['page_info']['id'], $cat['title']);
 	
-	// Remove categories that aren't in new page
+	// Remove categories first
 	$smcFunc['db_query']('', '
 		DELETE FROM {wiki_prefix}category
-		WHERE id_page = {int:page}'. (!empty($rows) ? '
-			AND NOT category IN({array_string:categories})' : ''),
+		WHERE id_page = {int:page}',
 		array(
 			'page' => $context['page_info']['id'],
-			'categories' => !empty($rows) ? array_keys($rows) : array(),
 		)
 	);
 	
-	// Insert new categories
+	// then insert new categories
 	if (!empty($rows))		
 		$smcFunc['db_insert']('replace',
 			'{wiki_prefix}category',
