@@ -20,6 +20,7 @@
 		<!-- More files to include -->
 		<file-include source="{BASEDIR}">modification.xsl</file-include>
 		<file-include source="{BASEDIR}">package-info.xsl</file-include>
+		<file-include source="{BASEDIR}">wikistandalone.php</file-include>
 		
 		<!-- Define languages to be included -->
 		<!--<language-info>
