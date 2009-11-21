@@ -323,6 +323,9 @@ function Wiki($standalone = false, $prefix = null)
 	// Invalid special page?
 	if ($namespaceGroup == 'special' && !isset($subActions[$namespaceGroup][$subaction]))
 	{
+		$namespaceGroup = 'normal';
+		$subaction = 'view';
+		
 		// Template
 		loadTemplate('WikiPage');
 		$context['template_layers'][] = 'wikipage';
