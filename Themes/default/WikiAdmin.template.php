@@ -47,7 +47,7 @@ function template_wiki_admin_main()
 			setInnerHTML(document.getElementById("wiki_latest_version"), window.wikiCurrentVersion);
 		}
 	// ]]></script>
-	<script language="JavaScript" type="text/javascript" src="http://service.smfarcade.info/wiki/news.js?v=', urlencode($wiki_version), '" defer="defer"></script>';
+	<script language="JavaScript" type="text/javascript" src="http://service.smfwiki.net/news.js?v=', urlencode($wiki_version), '" defer="defer"></script>';
 }
 
 ?>
