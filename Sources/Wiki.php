@@ -23,17 +23,13 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
-function loadWiki($mode = '', $prefix = '')
+function loadWiki($mode = '')
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version, $wiki_prefix, $db_prefix;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
 
 	require_once($sourcedir . '/Subs-Wiki.php');
 	
 	loadClassFile('WikiParser.php');
-	
-	// Set up wiki_prefix (for running multiple wikis)
-	if (empty($wiki_prefix))
-		$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
 	
 	// Wiki Version
 	$wiki_version = '0.1';
@@ -97,10 +93,13 @@ function loadWiki($mode = '', $prefix = '')
 	loadNamespace();
 }
 
-function Wiki($standalone = false)
+function Wiki($standalone = false, $prefix = null)
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_prefix, $db_prefix;
 
+	// Set up wiki_prefix (for running multiple wikis)
+	$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
+	
 	loadWiki();
 
 	if (!isset($_REQUEST['page']))

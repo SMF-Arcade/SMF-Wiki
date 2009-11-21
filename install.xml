@@ -113,6 +113,11 @@
 
 	<file name="$sourcedir/Subs-Db-mysql.php">
 		<operation>
+			<search position="replace"><![CDATA[strpos($db_string, '{db_prefix}') !== false]]></search>
+			<add><![CDATA[strpos($db_string, '{db_prefix}') !== false || strpos($db_string, '{wiki_prefix}') !== false]]></add>
+		</operation>
+		
+		<operation>
 			<search position="after"><![CDATA[
 	if (!isset($matches[2]))]]></search>
 			<add><![CDATA[
@@ -126,7 +131,8 @@
 
 	$table = str_replace('{db_prefix}', $db_prefix, $table);]]></search>
 			<add><![CDATA[
-	$table = str_replace('{wiki_prefix}', $GLOBALS['wiki_prefix'], $table);
+	if (isset($GLOBALS['wiki_prefix']))
+		$table = str_replace('{wiki_prefix}', $GLOBALS['wiki_prefix'], $table);
 ]]></add>
 		</operation>
 		
@@ -134,7 +140,8 @@
 			<search position="before"><![CDATA[	// Replace the prefix holder with the actual prefix.
 	$table = str_replace('{db_prefix}', $db_prefix, $table);]]></search>
 			<add><![CDATA[
-	$table = str_replace('{wiki_prefix}', $GLOBALS['wiki_prefix'], $table);
+	if (isset($GLOBALS['wiki_prefix']))
+		$table = str_replace('{wiki_prefix}', $GLOBALS['wiki_prefix'], $table);
 ]]></add>
 		</operation>
 	</file>
