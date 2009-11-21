@@ -265,7 +265,7 @@ function Wiki($standalone = false, $prefix = null)
 
 		$context['page_info'] = array(
 			'id' => null,
-			'title' => read_urlname($_REQUEST['page'], true),
+			'title' => read_urlname($_REQUEST['page'], $context['namespace']['id']),
 			'name' => $pageName,
 			'namespace' => $context['namespace']['id'],
 			'is_locked' => false,
