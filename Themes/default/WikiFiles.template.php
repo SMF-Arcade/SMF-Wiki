@@ -19,10 +19,11 @@ function template_wiki_file_upload()
 		}
 	// ]]></script>
 	<form action="', $context['current_page_url'], '" method="post" accept-charset="', $context['character_set'], '" name="uploadfile" id="uploadfile" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
-		<div class="tborder">
-			<h3 class="catbg headerpadding">', $txt['wiki_upload_file'], '</h3>
-			<div class="windowbg2 smallpadding">
-				<table cellpadding="4" width="100%">
+		<div class="wikicontent">
+			<h3 class="catbg headerpadding"><span class="left"></span>', $txt['wiki_upload_file'], '</h3>
+			<div class="windowbg2">
+				<span class="topslice"><span></span></span>
+				<table cellpadding="4" width="95%">
 					<tr>
 						<td align="right" width="25%"></td>
 						<td><input type="file" size="48" name="file" /></td>
@@ -35,10 +36,11 @@ function template_wiki_file_upload()
 						</td>
 					</tr>
 				</table>
-			</div>
-			<div class="windowbg2 smallpadding" style="text-align: center">
-				<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
-				', template_control_richedit_buttons($context['post_box_name']), '
+				<div style="text-align: center">
+					<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
+					', template_control_richedit_buttons($context['post_box_name']), '
+				</div>
+				<span class="botslice"><span></span></span>
 			</div>
 		</div>
 
