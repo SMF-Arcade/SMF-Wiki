@@ -25,8 +25,11 @@ if (!defined('SMF'))
 
 function loadWiki($mode = '')
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version;
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version, $wiki_prefix, $db_prefix;
 
+	// Set up wiki_prefix (for running multiple wikis)
+	$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
+	
 	require_once($sourcedir . '/Subs-Wiki.php');
 	
 	loadClassFile('WikiParser.php');
@@ -74,8 +77,8 @@ function loadWiki($mode = '')
 			// function: (&wiki_parser)
 			// returns nothing
 			'behaviour_switch' => array(
-				'noindex' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = true;'),
-				'index' => create_function('&$wiki_parser', 'global $context; $context[\'robot_no_index\'] = false;'),
+				'noindex' => create_function('&$wiki_parser', '$wiki_parser->pageSettings[\'no_index\'] = true;'),
+				'index' => create_function('&$wiki_parser', '$wiki_parser->pageSettings[\'no_index\'] = false;'),
 			),
 			// XML Tags
 			// format 'tag' (lowercase only) => array(function to call)
@@ -95,16 +98,15 @@ function loadWiki($mode = '')
 
 function Wiki($standalone = false, $prefix = null)
 {
-	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_prefix, $db_prefix;
-
-	// Set up wiki_prefix (for running multiple wikis)
-	$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
+	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 	
-	loadWiki();
+	loadWiki('', $prefix);
 
-	if (!isset($_REQUEST['page']))
-		$_REQUEST['page'] = '';
-
+	// Go to default page if not defined
+	if (!isset($_REQUEST['page']) || empty($_REQUEST['page']))
+		redirectexit(wiki_get_url('Main_Page'));
+	
+	// Parse namespace from page
 	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
 
 	$context['namespace'] = &$context['namespaces'][$_REQUEST['namespace']];
@@ -115,7 +117,8 @@ function Wiki($standalone = false, $prefix = null)
 			'url' =>  $context['namespace']['url'],
 			'name' => $context['namespace']['prefix'],
 		);
-
+		
+	// Variable for current page
 	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'], false);
 
 	// Subactions
@@ -138,6 +141,7 @@ function Wiki($standalone = false, $prefix = null)
 		)
 	);
 	
+	// Don't allow talk actions if it's not enalbed
 	if (empty($modSettings['wikiTalkBoard']))
 		unset($subActions['normal']['talk'], $subActions['normal']['talk2']);
 
@@ -284,9 +288,6 @@ function Wiki($standalone = false, $prefix = null)
 		redirectexit(wiki_get_url($newUrl));
 	}
 
-	// Name of current page
-	$context['current_page_name'] = $context['page_info']['name'];
-
 	// Base array for calling wiki_get_url for this page
 	$context['wiki_url'] = array(
 		'page' => $context['current_page_name'],
@@ -318,6 +319,8 @@ function Wiki($standalone = false, $prefix = null)
 
 	// Page Title
 	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['page_info']['title']);
+	
+	// Have display name of page in variable
 	$context['current_page_title'] = $context['page_info']['title'];
 
 	// Invalid special page?

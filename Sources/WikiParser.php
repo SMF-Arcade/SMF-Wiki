@@ -46,6 +46,7 @@ class WikiPage
 	public $tableOfContents;
 	public $sections;
 	public $pageVariables;
+	public $pageSettings;
 	
 	// Categories this page is assigned to
 	public $categories;

@@ -35,6 +35,10 @@ function ViewPage()
 	}
 	else
 	{
+		// Check if page has index tag
+		if (isset($context['wiki_page']->pageSettings['no_index']))
+			$context['robot_no_index'] = $context['wiki_page']->pageSettings['no_index'];
+		
 		$context['sub_template'] = 'view_page';
 	}
 }
