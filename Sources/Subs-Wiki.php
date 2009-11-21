@@ -289,6 +289,33 @@ function loadWikiPage()
 			'is_image' => !empty($row['mime_type']),
 		);
 	}
+	
+	if ($context['namespace'] == $context['namespace_category'])
+	{
+		list (, $category) = __url_page_parse($context['wiki_page']->page);
+		
+		$request = $smcFunc['db_query']('', '
+			SELECT page.id_page, page.title, page.namespace
+			FROM {wiki_prefix}category AS cat
+				INNER JOIN {wiki_prefix}pages AS page ON (cat.id_page = page.id_page)
+			WHERE cat.category = {string:category}
+			ORDER BY page.title',
+			array(
+				'category' => $category,
+			)
+		);
+		
+		$context['category_members'] = array();
+		
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+		{
+			$context['category_members'][] = array(
+				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'title' => read_urlname($row['title']),
+			);
+		}
+		$smcFunc['db_free_result']($request);
+	}
 }
 
 function wiki_get_page_info($page, $namespace)

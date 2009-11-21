@@ -220,15 +220,15 @@ $tables = array(
 				'unsigned' => true,
 			),
 			array(
-				'name' => 'id_page_cat',
-				'type' => 'int',
-				'unsigned' => true,
+				'name' => 'category',
+				'type' => 'varchar',
+				'size' => 255,
 			),		
 		),
 		'indexes' => array(
 			array(
 				'type' => 'primary',
-				'columns' => array('id_page', 'id_page_cat'),
+				'columns' => array('id_page', 'category'),
 			),
 			array(
 				'name' => 'id_page',
@@ -236,9 +236,9 @@ $tables = array(
 				'columns' => array('id_page')
 			),
 			array(
-				'name' => 'id_page_cat',
+				'name' => 'category',
 				'type' => 'index',
-				'columns' => array('id_page_cat')
+				'columns' => array('category')
 			),
 		)
 	),	

@@ -54,7 +54,7 @@ function output_toc($baseurl, $blevel, $toc)
 function template_view_page()
 {
 	global $context, $modSettings, $txt;
-
+	
 	if (isset($context['diff']))
 	{
 		echo '
@@ -91,6 +91,22 @@ function template_view_page()
 	}
 
 	template_wiki_content($context['wiki_page']);
+	
+	if (!empty($context['category_members']))
+	{
+		echo '
+		<h2>', sprintf($txt['wiki_pages_in_category'], $context['wiki_page']->title), '</h2>
+		<ul>';
+		
+		foreach ($context['category_members'] as $category)
+			echo '
+			<li><a href="', wiki_get_url($category['page']), '">', $category['title'], '</a></li>';
+		
+		echo '
+		</ul>';
+	}
+
+
 }
 
 function template_wiki_content($wikiPage)

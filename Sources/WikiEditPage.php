@@ -228,14 +228,13 @@ function EditPage2()
 	$rows = array();
 	
 	foreach ($context['wiki_page']->categories as $cat)
-		if (!empty($cat['id']))
-			$rows[$cat['id']] = array($context['page_info']['id'], $cat['id']);
+		$rows[$cat['title']] = array($context['page_info']['id'], $cat['title']);
 	
 	// Remove categories that aren't in new page
 	$smcFunc['db_query']('', '
 		DELETE FROM {wiki_prefix}category
 		WHERE id_page = {int:page}'. (!empty($rows) ? '
-			AND NOT id_page_cat IN({array_int:categories})' : ''),
+			AND NOT category IN({array_string:categories})' : ''),
 		array(
 			'page' => $context['page_info']['id'],
 			'categories' => !empty($rows) ? array_keys($rows) : array(),
@@ -246,9 +245,9 @@ function EditPage2()
 	if (!empty($rows))		
 		$smcFunc['db_insert']('replace',
 			'{wiki_prefix}category',
-			array('id_page' => 'int', 'id_page_cat' => 'int',),
+			array('id_page' => 'int', 'category' => 'string',),
 			$rows,
-			array('id_page', 'id_page_cat')
+			array('id_page', 'category')
 		);
 
 	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $context['namespace']['id'])));
