@@ -17,6 +17,8 @@ $txt['wiki_main_page'] = 'Main Page';
 $txt['wiki_edit_section'] = 'edit';
 $txt['wiki_categories'] = 'Categories';
 
+$txt['wiki_pages_in_category'] = 'Pages in category &quot;%s&quot;';
+
 // Edit
 $txt['edit_page'] = 'Edit page %s';
 $txt['edit_summary'] = 'Edit Summary';
