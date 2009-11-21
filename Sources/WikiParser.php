@@ -469,10 +469,10 @@ class WikiPage
 						
 					$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
 		
-					if (isset($item['params'][0]))
-						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][0]);
+					if (isset($item['params'][1]))
+						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][1]);
 					else
-						$currentHtml .= read_urlname($this->__parse_part($this->fakeStatus, $item['firstParam']));
+						$currentHtml .= read_urlname($parsedPage);
 						
 					$currentHtml .= '</a>';
 				}				

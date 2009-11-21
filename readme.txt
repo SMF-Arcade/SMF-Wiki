@@ -10,7 +10,8 @@ There maybe bugs that may cause data loss.
 You should report all bugs to our Issue Tracker, feature request are also welcome.
 
 [color=blue][b][size=12pt]Introduction[/size][/b][/color]
-Wiki for SMF 2.0 RC2. Includes "standalone mode" to let Wiki run outside SMF via SSI (SEO-urls for example)
+Wiki for SMF 2.0 RC2. Includes "standalone mode" to let Wiki run outside SMF via SSI (SEO-urls for example).
+You can use BBC syntax with added some wikicode such as wikilinks.
 
 [color=blue][b][size=12pt]Support[/size][/b][/color]
 [url=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=801590]You can support this mod by donating[/url]
