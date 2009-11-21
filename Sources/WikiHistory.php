@@ -50,8 +50,8 @@ function WikiRecentChanges()
 	while ($row = $smcFunc['db_fetch_assoc']($request))
 	{
 		$context['recent_changes'][] = array(
-			'title' => read_urlname($row['title']),
-			'link' => '<a href="' . wiki_get_url(array('page' => wiki_urlname($row['title'], $row['namespace']))) . '">' . read_urlname($row['title']) . '</a>',
+			'title' => read_urlname($row['title'], $row['namespace']),
+			'link' => '<a href="' . wiki_get_url(array('page' => wiki_urlname($row['title'], $row['namespace']))) . '">' . read_urlname($row['title'], false) . '</a>',
 			'revision' => $row['id_revision'],
 			'date' => timeformat($row['timestamp']),
 			'author' => array(

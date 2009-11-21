@@ -97,14 +97,14 @@ function wiki_get_url($params)
 }
 
 // Makes Readable name form urlname
-function read_urlname($url, $include_namespace = false)
+function read_urlname($page, $namespace = '')
 {
 	global $smcFunc;
 	
-	if (!$include_namespace)
-		list (, $url) = __url_page_parse($url);
+	if ($namespace === true || $namespace === false)
+		list ($namespace, $page) = __url_page_parse($page);	
 
-	return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($url))));
+	return (!empty($namespace) ? $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace)))) . ':' : '') . $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
 }
 
 // Gets Namespace and Page from url style (Namespace:Page_Title)
@@ -311,7 +311,7 @@ function loadWikiPage()
 		{
 			$context['category_members'][] = array(
 				'page' => wiki_urlname($row['title'], $row['namespace']),
-				'title' => read_urlname($row['title']),
+				'title' => read_urlname($row['title'], $row['namespace']),
 			);
 		}
 		$smcFunc['db_free_result']($request);
@@ -340,7 +340,7 @@ function wiki_get_page_info($page, $namespace)
 		return array(
 			'data' => array(
 				'id' => null,
-				'title' => read_urlname($page, true),
+				'title' => read_urlname($page, $namespace['id']),
 				'name' => wiki_urlname($page, $namespace['id']),
 				'is_current' => true,
 				'is_locked' => false,
@@ -356,7 +356,7 @@ function wiki_get_page_info($page, $namespace)
 	return array(
 		'data' => array(
 			'id' => $row['id_page'],
-			'title' => read_urlname($row['title']),
+			'title' => read_urlname($row['title'], $namespace['id']),
 			'name' => wiki_urlname($row['title'], $namespace['id']),
 			'topic' => $row['id_topic'],
 			'is_locked' => !empty($row['is_locked']),

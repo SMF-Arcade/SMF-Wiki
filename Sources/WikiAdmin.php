@@ -23,14 +23,18 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
-function WikiAdmin()
+function WikiAdmin($prefix = '')
 {
-	global $context, $smcFunc, $sourcedir, $user_info, $txt;
+	global $context, $smcFunc, $sourcedir, $user_info, $txt, $db_prefix;
 
 	require_once($sourcedir . '/Wiki.php');
 	require_once($sourcedir . '/ManageServer.php');
 
 	isAllowedTo('wiki_admin');
+
+	// Set up wiki_prefix (for running multiple wikis)
+	$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
+	
 	loadWiki('admin');
 
 	$context[$context['admin_menu_name']]['tab_data']['title'] = $txt['wiki_admin_title'];

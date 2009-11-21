@@ -105,8 +105,32 @@ function template_view_page()
 		echo '
 		</ul>';
 	}
-
-
+	
+	if (!empty($context['wiki_page']->categories))
+	{
+		echo '
+		<div class="windowbg2">
+			<span class="topslice"><span></span></span>
+			', $txt['wiki_categories'], ': ';
+		
+		$first = true;
+		
+		foreach ($context['wiki_page']->categories as $category)
+		{
+			// Make sure delimeter is only after first
+			if (!$first)
+				echo ' | ';
+			else
+				$first = false;
+				
+			echo '
+			<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['name'], '</a>';
+		}
+		
+		echo '
+			<span class="botslice"><span></span></span>
+		</div>';
+	}
 }
 
 function template_wiki_content($wikiPage)
@@ -157,29 +181,6 @@ function template_wiki_content($wikiPage)
 			print_r($context['current_file']);
 
 		echo $section['html'];
-	}
-	
-	if (!empty($wikiPage->categories))
-	{
-		echo '
-		<div class="tborder">', $txt['wiki_categories'], ': ';
-		
-		$first = true;
-		
-		foreach ($wikiPage->categories as $category)
-		{
-			// Make sure delimeter is only after first
-			if (!$first)
-				echo ' | ';
-			else
-				$first = false;
-				
-			echo '
-			<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['name'], '</a>';
-		}
-		
-		echo '
-		</div>';
 	}
 }
 
