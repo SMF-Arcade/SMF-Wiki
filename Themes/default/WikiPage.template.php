@@ -68,7 +68,7 @@ function template_view_page()
 			if (trim($action[1]) == '')
 				$action[1] = '&nbsp;';
 			else
-				$action[1] = htmlspecialchars($action[1]);
+				$action[1] = $action[1];
 
 			if (empty($action[0]))
 				$style = '';
@@ -188,20 +188,25 @@ function template_talk_page()
 {
 	global $context, $modSettings, $txt;
 
-	echo '
-	<div style="width: 90%; text-align; center; margin: auto;">';
-
-	foreach ($context['comments'] as $news)
+	if (!empty($context['comments']))
 	{
 		echo '
-		<div class="comment wikibg2">
-			', $news['body'], '
-		</div>
-		<div class="commentinfo smalltext">', $news['time'], ' ', $txt['by'], ' ', $news['poster']['link'], '</div>';
-	}
+	<div style="width: 90%; text-align; center; margin: auto;">';
 
+		foreach ($context['comments'] as $comment)
+		{
+			echo '
+		<div class="comment wikibg2">
+			', $comment['body'], '
+		</div>
+		<div class="commentinfo smalltext">', $comment['time'], ' ', $txt['by'], ' ', $comment['poster']['link'], '</div>';
+		}
+
+		echo '
+	</div>';
+	}
+	
 	echo '
-	</div>
 	<form action="', $context['form_url'], '" method="post">';
 
 	if (!empty($context['talk_errors']))

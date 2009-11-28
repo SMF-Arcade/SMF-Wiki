@@ -41,8 +41,10 @@ function EditPage()
 	));
 
 	$context['edit_section'] = 0;
-
-	if (empty($_REQUEST['section']))
+	
+	if (!isset($context['wiki_page']) || !$context['wiki_page'] instanceof WikiPage)
+		$body = '';
+	elseif (empty($_REQUEST['section']))
 		$body = $context['wiki_page']->raw_content;
 	else
 	{
@@ -158,7 +160,7 @@ function EditPage2()
 	}
 
 	// Handle sections
-	if (empty($_REQUEST['section']) || !isset($context['wiki_page']))
+	if (!isset($context['wiki_page']) || !$context['wiki_page'] instanceof WikiPage || empty($_REQUEST['section']))
 		$body = $_POST['wiki_content'];
 	else
 	{
@@ -225,8 +227,9 @@ function EditPage2()
 	// Categories
 	$rows = array();
 	
-	foreach ($context['wiki_page']->categories as $cat)
-		$rows[$cat['title']] = array($context['page_info']['id'], $cat['title']);
+	if (!empty($context['wiki_page']->categories))
+		foreach ($context['wiki_page']->categories as $cat)
+			$rows[$cat['title']] = array($context['page_info']['id'], $cat['title']);
 	
 	// Remove categories first
 	$smcFunc['db_query']('', '

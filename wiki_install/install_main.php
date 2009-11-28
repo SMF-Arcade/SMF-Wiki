@@ -40,12 +40,13 @@ updateAdminFeatures('wiki', !empty($modSettings['wikiEnabled']));
 // Step 3: Do Permissions
 doPermission($permissions);
 
+// Step 4: Install SMF Wiki Package server
 $request = $smcFunc['db_query']('', '
 	SELECT COUNT(*)
 	FROM {db_prefix}package_servers
 	WHERE name = {string:name}',
 	array(
-		'name' => 'SMF Arcade Package Server',
+		'name' => 'SMF Wiki Package Server',
 	)
 );
 
@@ -60,12 +61,13 @@ if ($count == 0)
 			'url' => 'string',
 		),
 		array(
-			'SMF Arcade Package Server',
-			'http://download.smfarcade.info',
+			'SMF Wiki Package Server',
+			'http://download.smfwiki.net',
 		),
 		array()
 	);
 
+// Step 5: Install default namespace
 $smcFunc['db_insert']('ignore',
 	'{db_prefix}wiki_namespace',
 	array(
@@ -91,6 +93,7 @@ $smcFunc['db_insert']('ignore',
 	array('namespace')
 );
 
+// Step 6: Install other namespaces
 $specialNamespaces = array(
 	1 => array('name' => 'Special', 'default_page' => 'List'),
 	2 => array('name' => 'File', 'default_page' => 'List'),
@@ -135,6 +138,7 @@ foreach ($specialNamespaces as $type => $data)
 	$smcFunc['db_free_result']($request);
 }
 
+// Step 7: Create and update default pages (incase they are not edited before)
 $defaultPages = array(
 	array(
 		'namespace' => '',

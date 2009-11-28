@@ -59,7 +59,7 @@ class WikiPage
 	private $parserErrors = array();
 	
 	// Little helper for parsing cerating parts like templatenames
-	public $fakeStatus = array('can_paragraph_open' => false);
+	public $fakeStatus = array('paragraphOpen' => false, 'can_paragraph_open' => false);
 	
 	// Inline Tags
 	public $inlineTags = array();
@@ -1107,7 +1107,7 @@ class WikiPage
 				
 				$i += $matchLen;
 				
-				if ($thisElement['lineStart'] && $text[$i + 1] == "\n" && (!isset($text[$i + 2]) || $text[$i + 2] != "\n"))
+				if ($thisElement['lineStart'] && (isset($text[$i + 1]) && $text[$i + 1] == "\n") && (!isset($text[$i + 2]) || $text[$i + 2] != "\n"))
 				{
 					$thisElement['lineEnd'] = true;
 					$i++;
