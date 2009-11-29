@@ -202,6 +202,13 @@ function EditPage2()
 
 	preparsecode($_POST['comment']);
 
+	// Parse Page for usage in 
+	$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
+	
+	$context['wiki_page']->parse_bbc = true;
+	$context['wiki_page']->raw_content = $body;
+	$context['wiki_page']->parse();
+	
 	$pageOptions = array();
 	$revisionOptions = array(
 		'file' => !empty($context['page_info']['id_file']) ? $context['page_info']['id_file'] : 0,
@@ -210,19 +217,14 @@ function EditPage2()
 	);
 	$posterOptions = array(
 		'id' => $user_info['id'],
+		'display_title' => $context['wiki_page']->title,
 	);
 
 	if ($context['can_lock_page'])
 		$pageOptions['lock'] = !empty($_REQUEST['lock_page']);
 
 	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
-	
-	// Update relations
-	$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
-	
-	$context['wiki_page']->parse_bbc = true;
-	$context['wiki_page']->raw_content = $body;
-	$context['wiki_page']->parse();
+
 	
 	// Categories
 	$rows = array();

@@ -117,6 +117,12 @@ $tables = array(
 				'default' => '',
 			),
 			array(
+				'name' => 'display_title',
+				'type' => 'varchar',
+				'size' => '255',
+				'default' => '',
+			),
+			array(
 				'name' => 'is_locked',
 				'type' => 'int',
 				'default' => 0,
@@ -186,6 +192,12 @@ $tables = array(
 				'type' => 'int',
 				'default' => 0,
 				'unsigned' => true,
+			),
+			array(
+				'name' => 'display_title',
+				'type' => 'varchar',
+				'size' => '255',
+				'default' => '',
 			),
 			array(
 				'name' => 'content',

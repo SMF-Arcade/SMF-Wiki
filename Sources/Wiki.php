@@ -202,15 +202,11 @@ function Wiki($standalone = false, $prefix = null)
 		if (isset($context['current_file']) && $context['current_file']['is_image'] && isset($_REQUEST['image']))
 			$subaction = 'download';
 
-		// Don't index pages with invalid subaction
-		if (!empty($_REQUEST['sa']) && $subaction != $_REQUEST['sa'])
-			$context['robot_no_index'] = true;
-
 		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
 		$context['can_lock_page'] = allowedTo('wiki_admin');
 
 		// Don't let anyone create page if it's not "normal" page (ie. file)
-		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
+		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
 			$context['can_edit_page'] = false;
 
 		// Setup tabs
@@ -246,9 +242,34 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'history',
 				)),
 				'selected' => in_array($subaction, array('history', 'diff')),
-				'show' => true,
+				'show' => $context['page_info']['id'] !== null,
 			),
 		);
+		
+		// Don't index pages with invalid subaction
+		if (!empty($_REQUEST['sa']) && $subaction != $_REQUEST['sa'])
+			$context['robot_no_index'] = true;
+		else
+		{
+			foreach ($context['wikimenu'] as $id => $menu_item)
+			{
+				if ($menu_item['selected'])
+				{
+					if (!$menu_item['show'])
+					{
+						$context['wikimenu'][$id]['selected'] = false;
+						
+						// Use view action then
+						$subaction = 'view';
+						$context['wikimenu'][$subaction]['selected'] = true;
+						
+						$context['robot_no_index'] = true;
+					}
+						
+					continue;
+				}
+			}
+		}
 
 		// Template
 		loadTemplate('WikiPage');

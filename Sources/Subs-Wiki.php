@@ -499,10 +499,12 @@ function createPage($title, $namespace)
 		'{wiki_prefix}pages',
 		array(
 			'title' => 'string-255',
+			'display_title' => 'string-255',
 			'namespace' => 'string-255',
 		),
 		array(
 			$title,
+			read_urlname($title),
 			$namespace['id'],
 		),
 		array('id_page')
@@ -539,6 +541,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 			'id_author' => 'int',
 			'id_file' => 'int',
 			'timestamp' => 'int',
+			'display_title' => 'string',
 			'content' => 'string',
 			'comment' => 'string-255',
 		),
@@ -547,6 +550,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 			$posterOptions['id'],
 			!empty($revisionOptions['file']) ? $revisionOptions['file'] : 0,
 			time(),
+			!empty($pageOptions['display_title']) ? $pageOptions['display_title'] : read_urlname($row['title']),
 			$revisionOptions['body'],
 			$revisionOptions['comment'],
 		),
@@ -558,12 +562,14 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 	$smcFunc['db_query']('' ,'
 		UPDATE {wiki_prefix}pages
 		SET
-			id_revision_current = {int:revision}' . (isset($pageOptions['lock']) ? ',
+			id_revision_current = {int:revision},
+			display_title = {string:display_title}' . (isset($pageOptions['lock']) ? ',
 			is_locked = {int:lock}' : '') . (!empty($revisionOptions['file']) ? ',
 			id_file = {int:file}' : '') . '
 		WHERE id_page = {int:page}',
 		array(
 			'page' => $id_page,
+			'display_title' => !empty($pageOptions['display_title']) ? $pageOptions['display_title'] : read_urlname($row['title']),
 			'file' => !empty($revisionOptions['file']) ? $revisionOptions['file'] : 0,
 			'lock' => !empty($pageOptions['lock']) ? 1 : 0,
 			'revision' => $id_revision,
