@@ -122,13 +122,13 @@ class WikiPage
 	}
 	
 	// Helper for parser function, done like this so settings can be edited before parsing
-	function parse()
+	function parse($is_template = false)
 	{
 		// Preparsing
 		$this->preParsedContent = $this->__preprocess($this->raw_content);
 		
 		// Do actual parsing
-		$this->__parse();
+		$this->__parse($is_template);
 		
 		// Make TOC
 		$this->tableOfContents = $this->__parseTableOfContent($this->sections);
@@ -148,7 +148,7 @@ class WikiPage
 		
 		$currentHtml = '';
 		
-		$this->__parse();
+		$this->__parse(true);
 		
 		foreach ($this->sections as $section)
 		{
@@ -218,7 +218,7 @@ class WikiPage
 	}
 
 	// Main parser function
-	private function __parse()
+	private function __parse($is_template = false)
 	{
 		global $context, $txt;
 		
@@ -256,7 +256,8 @@ class WikiPage
 					
 			foreach ($section['part'] as $part)
 			{
-				$this->status['can_paragraph_open'] = !empty($part['is_paragraph']);
+				if (!$is_template)
+					$this->status['can_paragraph_open'] = !empty($part['is_paragraph']);
 				
 				// Check if paragraph should be closed
 				$this->__paragraph_handler($this->status, $currentHtml, 'check');
@@ -297,7 +298,7 @@ class WikiPage
 				else
 				{
 					$this->__paragraph_handler($status, $currentHtml, 'open');
-					$currentHtml .= '__' . $item['switch'] . '__';
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . '__' . $item['switch'] . '__' . (!empty($item['lineEnd']) ? '<br />' : '');
 				}
 			}
 			elseif ($item['name'] == 'variable')
@@ -311,11 +312,13 @@ class WikiPage
 					$return = $context['wiki_parser_extensions']['variables'][$item['var_parsed']][0]($this, $item['var_parsed']);
 					
 				if ($return !== false && $return !== true)
-					$currentHtml .= $return . (!empty($item['lineEnd']) ? '<br />' : '');
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . $return . (!empty($item['lineEnd']) ? '<br />' : '');
 			}
 			// Parser functions like {{#if}}
 			elseif ($item['name'] == 'function')
-				$currentHtml .= $context['wiki_parser_extensions']['functions'][$item['var_parsed']][0]($this, $item);
+				$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') .
+					$context['wiki_parser_extensions']['functions'][$item['var_parsed']][0]($this, $item) .
+					(!empty($item['lineEnd']) ? '<br />' : '');
 			// Replace templates
 			elseif ($item['name'] == 'template')
 			{
@@ -339,13 +342,13 @@ class WikiPage
 					);
 					
 					$templatePage->status = $this->status;
-					$currentHtml .= $templatePage->getTemplateCode($item['params']);
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . $templatePage->getTemplateCode($item['params']) . (!empty($item['lineEnd']) ? '<br />' : '');
 					$this->status = $templatePage->status;
 				}
 				else
 				{
 					$this->__paragraph_handler($status, $currentHtml, 'open');
-					$currentHtml .= '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>';					
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . '<span style="color: red">' . sprintf($txt['template_not_found'], (!empty($namespace) ? $namespace . ':' . $page : $page)). '</span>' . (!empty($item['lineEnd']) ? '<br />' : '');					
 				}
 			}
 			// Replace parameters
@@ -355,13 +358,13 @@ class WikiPage
 				$param = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 			
 				if (isset($this->parameters[$param]))
-					$currentHtml .= $this->__parse_part($status, $this->parameters[$param]);
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . $this->__parse_part($status, $this->parameters[$param]) . (!empty($item['lineEnd']) ? '<br />' : '');
 				elseif (!$condition_test)
 				{					
 					$this->__paragraph_handler($status, $currentHtml, 'open');
-					$currentHtml .= str_repeat($item['opening_char'], $item['len']);
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . str_repeat($item['opening_char'], $item['len']);
 					$currentHtml .= $this->__parse_part($status, $item['firstParam']);
-					$currentHtml .= str_repeat($item['closing_char'], $item['len']);
+					$currentHtml .= str_repeat($item['closing_char'], $item['len']) . (!empty($item['lineEnd']) ? '<br />' : '');
 				}
 			}
 			elseif ($item['name'] == 'wikilink')
@@ -436,7 +439,7 @@ class WikiPage
 								$class[] = 'tborder';
 								$style[] = 'padding: 5px';
 							}
-							
+
 							$currentHtml = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>';
 						}
 						
@@ -446,7 +449,7 @@ class WikiPage
 							$currentHtml .= '</div>';
 					}
 					else
-						$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="" /></a>';
+						$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="" /></a>' . (!empty($item['lineEnd']) ? '<br />' : '');
 				}
 				elseif ($parsedPage[0] !== ':' && $linkNamespace == $context['namespace_category']['id'])
 				{
@@ -468,14 +471,14 @@ class WikiPage
 					if ($link_info['id'] === null)
 						$class[] = 'redlink';
 						
-					$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . '<a href="' . wiki_get_url($realLink) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>';
 		
 					if (isset($item['params'][1]))
 						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][1]);
 					else
 						$currentHtml .= read_urlname($parsedPage, false);
 						
-					$currentHtml .= '</a>';
+					$currentHtml .= '</a>' . (!empty($item['lineEnd']) ? '<br />' : '');
 				}				
 			}
 			elseif ($item['name'] == 'tag')
@@ -843,7 +846,7 @@ class WikiPage
 						continue;
 					}
 				}
-				elseif ($this->parse_bbc && $curChar == "\n" && $text[$i + 1] == "\n")
+				elseif ($this->parse_bbc && $this->status['can_paragraph_open'] && $curChar == "\n" && $text[$i + 1] == "\n")
 				{
 					$charType = 'new-paragraph';
 
@@ -1165,6 +1168,11 @@ class WikiPage
 			elseif ($charType == '' && empty($stack))
 			{
 				$stringTemp .= $curChar;
+				$i++;
+			}
+			elseif ($charType == '' && $curChar == "\n")
+			{
+				$stack[$stackIndex]['current_param'][] = '<br />';
 				$i++;
 			}
 			elseif ($charType == '')
