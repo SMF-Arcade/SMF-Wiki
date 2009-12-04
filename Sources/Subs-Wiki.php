@@ -97,14 +97,17 @@ function wiki_get_url($params)
 }
 
 // Makes Readable name form urlname
-function read_urlname($page, $namespace = '')
+function read_urlname($page, $namespace = '', $html = true)
 {
 	global $smcFunc;
 	
 	if ($namespace === true || $namespace === false)
 		list ($namespace, $page) = __url_page_parse($page);	
 
-	return (!empty($namespace) ? $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace)))) . ':' : '') . $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
+	if ($html)
+		return (!empty($namespace) ? $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace)))) . ':' : '') . $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
+	else
+		return (!empty($namespace) ? $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace))) . ':' : '') . $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page)));	
 }
 
 // Gets Namespace and Page from url style (Namespace:Page_Title)
@@ -139,6 +142,8 @@ function __url_page_parse($page, $clean = false)
 function wiki_urlname($page, $namespace = null, $clean = true)
 {
 	global $smcFunc;
+	
+	$page = un_htmlspecialchars($page);
 
 	if ($namespace == null)
 		list ($namespace, $page) = __url_page_parse($page);
@@ -246,6 +251,34 @@ function loadWikiPage()
 		'revision' => $revision,
 	);
 
+	// Load Pages in this category 
+	if ($context['namespace'] == $context['namespace_category'])
+	{
+		list (, $category) = __url_page_parse($context['wiki_page']->page);
+		
+		$request = $smcFunc['db_query']('', '
+			SELECT page.id_page, page.title, page.namespace
+			FROM {wiki_prefix}category AS cat
+				INNER JOIN {wiki_prefix}pages AS page ON (cat.id_page = page.id_page)
+			WHERE cat.category = {string:category}
+			ORDER BY page.title',
+			array(
+				'category' => $category,
+			)
+		);
+		
+		$context['category_members'] = array();
+		
+		while ($row = $smcFunc['db_fetch_assoc']($request))
+		{
+			$context['category_members'][] = array(
+				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'title' => read_urlname($row['title'], $row['namespace']),
+			);
+		}
+		$smcFunc['db_free_result']($request);
+	}
+	
 	if ($context['page_info']['id'] === null)
 		return;
 
@@ -288,33 +321,6 @@ function loadWikiPage()
 			'height' => $row['img_height'],
 			'is_image' => !empty($row['mime_type']),
 		);
-	}
-	
-	if ($context['namespace'] == $context['namespace_category'])
-	{
-		list (, $category) = __url_page_parse($context['wiki_page']->page);
-		
-		$request = $smcFunc['db_query']('', '
-			SELECT page.id_page, page.title, page.namespace
-			FROM {wiki_prefix}category AS cat
-				INNER JOIN {wiki_prefix}pages AS page ON (cat.id_page = page.id_page)
-			WHERE cat.category = {string:category}
-			ORDER BY page.title',
-			array(
-				'category' => $category,
-			)
-		);
-		
-		$context['category_members'] = array();
-		
-		while ($row = $smcFunc['db_fetch_assoc']($request))
-		{
-			$context['category_members'][] = array(
-				'page' => wiki_urlname($row['title'], $row['namespace']),
-				'title' => read_urlname($row['title'], $row['namespace']),
-			);
-		}
-		$smcFunc['db_free_result']($request);
 	}
 }
 
@@ -504,7 +510,7 @@ function createPage($title, $namespace)
 		),
 		array(
 			$title,
-			read_urlname($title),
+			read_urlname($title, $namespace['id']),
 			$namespace['id'],
 		),
 		array('id_page')

@@ -105,6 +105,16 @@ class WikiPage
 				3 => 'template_param',
 			),
 		),
+		'#' => array(
+			'close' => "\n",
+			'min' => 1,
+			'max' => 1,
+			'names' => array(
+				1 => 'hash_tag',
+			),
+			'no_param' => true,
+			'has_name' => true,
+		),
 	);
 	
 	function __construct($page_info, $namespace, $content, $include = false)
@@ -125,7 +135,7 @@ class WikiPage
 	function parse($is_template = false)
 	{
 		// Preparsing
-		$this->preParsedContent = $this->__preprocess($this->raw_content);
+		$this->preParsedContent = $this->__preprocess($this->raw_content, $is_template);
 		
 		// Do actual parsing
 		$this->__parse($is_template);
@@ -483,6 +493,10 @@ class WikiPage
 			}
 			elseif ($item['name'] == 'tag')
 				$currentHtml .= $context['wiki_parser_extensions']['tags'][$item['tag_name']][0]($this, $item['content'], $item['attributes']);
+			elseif ($item['name'] == 'hash_tag')
+			{
+				// TODO: Call hash tag
+			}
 			else
 				$this->__logError('Unable to parse item!', array($item));
 		} // END content of part
@@ -594,7 +608,7 @@ class WikiPage
 	}
 
 	// Preprocesses page
-	private function __preprocess($text)
+	private function __preprocess($text, $is_template = false)
 	{
 		global $context;
 		
@@ -605,29 +619,36 @@ class WikiPage
 
 		$text = str_replace(
 			array(
+				'&lt;includeonly&gt;', '&lt;/includeonly&gt;',
+				'&lt;noinclude&gt;', '&lt;/noinclude&gt;',
 				'&lt;nowiki&gt;', '&lt;/nowiki&gt;',
 				'[nobbc]', '[/nobbc]',
 				'[code' , '[/code]',
 				'[php]' , '[/php]',
 			),
 			array(
+				'<includeonly>', '</includeonly>',
+				'<noinclude>', '</noinclude>',
 				'<nowiki>[nobbc]', '[/nobbc]</nowiki>',
 				'<nowiki>[nobbc]', '[/nobbc]</nowiki>',
 				'<nowiki>[code', '[/code]</nowiki>',
 				'<nowiki>[php]', '[/php]</nowiki>',
 			),
 			$text
-		); 
+		);
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
 		
 		$text = str_replace(array("\r\n", "\r", '<br />', '<br>'), "\n", $text);
+		
+		if (substr($text, -1) != "\n")
+			$text .= "\n";
 
 		$stack = array();
 		$piece = null;
 
-		$searchBase = "<[{\n";
+		$searchBase = "<[{#\n";
 
 		$textLen = strlen($text);
 
@@ -652,7 +673,7 @@ class WikiPage
 			if (!empty($stack))
 			{
 				$piece = end($stack);
-				$search .= $piece['closing_char'] . '|'. ($piece['closing_char'] == '}' ? ':' : '');
+				$search .= $piece['closing_char'] . (empty($piece['no_param']) ? '|' : '') . ($piece['closing_char'] == '}' ? ':' : '');
 				$closeTag = $piece['closing_char'];
 				unset($piece);
 			}
@@ -693,7 +714,55 @@ class WikiPage
 					$i = $endPos + 9;
 				}
 			}
-			
+			// <includeonly>
+			elseif (!$is_template && substr($text, $i, 13) == '<includeonly>')
+			{
+				$i += 13;
+				
+				$endPos = strpos($text, '</includeonly>', $i);
+	
+				if ($endPos !== false)
+					$i = $endPos + 14;
+					
+				continue;
+			}
+			elseif ($is_template && substr($text, $i, 13) == '<includeonly>')
+			{
+				$i += 13;
+				
+				continue;
+			}
+			elseif ($is_template && substr($text, $i, 14) == '</includeonly>')
+			{
+				$i += 14;
+				
+				continue;
+			}
+			// <noinclude> reverse of 
+			elseif ($is_template && substr($text, $i, 11) == '<noinclude>')
+			{
+				$i += 11;
+				
+				$endPos = strpos($text, '</noinclude>', $i);
+	
+				if ($endPos !== false)
+					$i = $endPos + 12;
+					
+				continue;
+			}
+			elseif (!$is_template && substr($text, $i, 11) == '<noinclude>')
+			{
+				$i += 11;
+						    
+				continue;
+			}
+			elseif (!$is_template && substr($text, $i, 12) == '</noinclude>')
+			{
+				$i += 12;
+				
+				continue;
+			}
+				
 			if ($i >= $textLen)
 				break;
 			else
@@ -976,9 +1045,37 @@ class WikiPage
 						'children' => array(),
 						'lineStart' => ($i > 0 && $text[$i-1] == "\n"),
 						'lineEnd' => false,
+						'no_param' => !empty($rule['no_param']),
 					);
-
-					$stack[] = $piece;
+					
+					if ($rule['has_name'])
+					{
+						$nameLen = strcspn($text, ' ', $i);
+						
+						if (strpos($text, " ", $i) !== false && strpos($text, "\n", $i) !== false)
+						{
+							$piece['item_name'] = strtolower(substr($text, $i + 1, $nameLen - 1));
+							
+							if (!isset($context['wiki_parser_extensions']['tags'][$piece['item_name']]))
+							{
+								if (empty($stack))
+									$stringTemp .= str_repeat($curChar, $len);
+								else
+									$stack[$stackIndex]['current_param'][] = str_repeat($curChar, $len);							
+							}
+							else
+								$i += $nameLen;
+						}
+						else
+						{
+							if (empty($stack))
+								$stringTemp .= str_repeat($curChar, $len);
+							else
+								$stack[$stackIndex]['current_param'][] = str_repeat($curChar, $len);							
+						}
+					}
+					else
+						$stack[] = $piece;
 				}
 				else
 				{

@@ -3,6 +3,14 @@ Changelog started November 4, 2008.
 
 SMF Wiki 0.1                                                                   ?
 ================================================================================
+December 2009
+--------------------------------------------------------------------------------
+ ! html special chars in title caused problmes [Issue #313]
+ ! list of pages in category not shown when page had no content [Issue #323]
+ + Added <noinclude> and <includeonly> tags
+ + Added __NOTOC__ behaviour tag [Issue #331]
+ + Extended parser to support "hash tags" for example #REDIRECT
+ 
 May 2009
 --------------------------------------------------------------------------------
  ! Comparing pages didn't work

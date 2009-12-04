@@ -251,7 +251,7 @@ function EditPage2()
 			array('id_page', 'category')
 		);
 
-	redirectexit(wiki_get_url(wiki_urlname($_REQUEST['page'], $context['namespace']['id'])));
+	redirectexit($context['current_page_url']);
 }
 
 ?>

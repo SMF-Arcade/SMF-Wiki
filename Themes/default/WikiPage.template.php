@@ -168,19 +168,19 @@ function template_wiki_content($wikiPage)
 				<br class="clearright" />
 			</h6>';
 		}
+
+		if ($section['level'] == 1 && isset($context['current_file']))
+			print_r($context['current_file']);
+
+		echo $section['html'];
 		
-		if ($section['level'] == 1 && !empty($wikiPage->tableOfContents))
+		if ($section['level'] == 1 && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->tableOfContents))
 			echo '
 			<div class="wikitoc floatright">
 				<ul class="reset">',
 					output_toc($context['current_page_url'], '', $wikiPage->tableOfContents), '
 				</ul>
 			</div>';
-
-		if ($section['level'] == 1 && isset($context['current_file']))
-			print_r($context['current_file']);
-
-		echo $section['html'];
 	}
 }
 
