@@ -354,6 +354,8 @@ class WikiPage
 					$templatePage->status = $this->status;
 					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . $templatePage->getTemplateCode($item['params']) . (!empty($item['lineEnd']) ? '<br />' : '');
 					$this->status = $templatePage->status;
+					
+					$this->categories += $templatePage->categories;
 				}
 				else
 				{

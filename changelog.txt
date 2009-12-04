@@ -10,6 +10,7 @@ December 2009
  + Added <noinclude> and <includeonly> tags
  + Added __NOTOC__ behaviour tag [Issue #331]
  + Extended parser to support "hash tags" for example #REDIRECT
+ ! Include should include categories
  
 May 2009
 --------------------------------------------------------------------------------
