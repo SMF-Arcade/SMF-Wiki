@@ -254,7 +254,7 @@ function loadWikiPage()
 	// Load Pages in this category 
 	if ($context['namespace'] == $context['namespace_category'])
 	{
-		list (, $category) = __url_page_parse($context['wiki_page']->page);
+		list (, $category) = __url_page_parse($context['page_info']['name']);
 		
 		$request = $smcFunc['db_query']('', '
 			SELECT page.id_page, page.title, page.namespace
@@ -329,7 +329,7 @@ function wiki_get_page_info($page, $namespace)
 	global $smcFunc;
 
 	$request = $smcFunc['db_query']('', '
-		SELECT id_page, title, id_revision_current, id_topic, is_locked
+		SELECT id_page, display_title, title, id_revision_current, id_topic, is_locked
 		FROM {wiki_prefix}pages
 		WHERE title = {string:page}
 			AND namespace = {string:namespace}',
@@ -346,6 +346,7 @@ function wiki_get_page_info($page, $namespace)
 		return array(
 			'data' => array(
 				'id' => null,
+				'display_title' => read_urlname($page, $namespace['id']),
 				'title' => read_urlname($page, $namespace['id']),
 				'name' => wiki_urlname($page, $namespace['id']),
 				'is_current' => true,
@@ -362,6 +363,7 @@ function wiki_get_page_info($page, $namespace)
 	return array(
 		'data' => array(
 			'id' => $row['id_page'],
+			'display_title' => $row['display_title'],
 			'title' => read_urlname($row['title'], $namespace['id']),
 			'name' => wiki_urlname($row['title'], $namespace['id']),
 			'topic' => $row['id_topic'],
