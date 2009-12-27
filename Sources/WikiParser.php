@@ -498,6 +498,8 @@ class WikiPage
 			elseif ($item['name'] == 'hash_tag')
 			{
 				// TODO: Call hash tag
+				
+				print_r($item);
 			}
 			else
 				$this->__logError('Unable to parse item!', array($item));
@@ -740,7 +742,7 @@ class WikiPage
 				
 				continue;
 			}
-			// <noinclude> reverse of 
+			// <noinclude> reverse of <includeonly>
 			elseif ($is_template && substr($text, $i, 11) == '<noinclude>')
 			{
 				$i += 11;
@@ -1060,7 +1062,7 @@ class WikiPage
 						{
 							$piece['item_name'] = strtolower(substr($text, $i + 1, $nameLen - 1));
 							
-							if (!isset($context['wiki_parser_extensions']['tags'][$piece['item_name']]))
+							if (!isset($context['wiki_parser_extensions']['hash_tags'][$piece['item_name']]))
 							{
 								if (empty($stack))
 									$stringTemp .= str_repeat($curChar, $len);
@@ -1068,7 +1070,10 @@ class WikiPage
 									$stack[$stackIndex]['current_param'][] = str_repeat($curChar, $len);							
 							}
 							else
+							{
 								$i += $nameLen;
+								$stack[] = $piece;
+							}
 						}
 						else
 						{

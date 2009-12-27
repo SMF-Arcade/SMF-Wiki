@@ -81,8 +81,10 @@ function loadWiki($mode = '', $prefix = null)
 				'index' => create_function('&$wiki_parser', '$wiki_parser->pageSettings[\'no_index\'] = false;'),
 				'notoc' => create_function('&$wiki_parser', '$wiki_parser->pageSettings[\'hide_toc\'] = true;'),
 			),
+			// Hash Tags
+			// format 'tag' => array(function to call)
 			'hash_tags' => array(
-				'redirect' => array()
+				'redirect' => array(create_function('&$wiki_parser', '$wiki_parser->pageSettings[\'no_index\'] = true;'))
 			),
 			// XML Tags
 			// format 'tag' (lowercase only) => array(function to call)
