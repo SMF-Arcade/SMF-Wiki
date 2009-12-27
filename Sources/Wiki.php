@@ -23,7 +23,7 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
-function loadWiki($mode = '')
+function loadWiki($mode = '', $prefix = null)
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version, $wiki_prefix, $db_prefix;
 
@@ -92,6 +92,22 @@ function loadWiki($mode = '')
 				'test_tag' => array(create_function('&$wiki_parser, $content, $attributes', 'return $content;')),
 			),
 		);
+		
+		// Special Pages
+		$context['wiki_special_pages'] = array(
+			'RecentChanges' => array(
+				'file' => 'WikiHistory.php',
+				'function' => 'WikiRecentChanges',
+			),
+			'SpecialPages' => array(
+				'file' => 'WikiSpecialPages.php',
+				'function' => 'WikiListOfSpecialPages',		
+			),
+			'Upload' =>  array(
+				'file' => 'WikiFiles.php',
+				'function' => 'WikiFileUpload',
+			),	
+		);
 	}
 	// Admin Mode
 	elseif ($mode == 'admin')
@@ -127,27 +143,20 @@ function Wiki($standalone = false, $prefix = null)
 
 	// Subactions
 	$subActions = array(
-		'normal' => array(
-			// action => array(file, function, [requires existing page], [requires file])
-			'view' => array('WikiPage.php', 'ViewPage'),
-			'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
-			'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
-			'diff' => array('WikiPage.php', 'DiffPage', true),
-			'history' => array('WikiHistory.php', 'ViewPageHistory', true),
-			'edit' => array('WikiEditPage.php', 'EditPage'),
-			'edit2' => array('WikiEditPage.php', 'EditPage2'),
-			'download' => array('WikiFiles.php', 'WikiFileView', true, true),
-		),
-		// Special Pages
-		'special' => array(
-			'RecentChanges' => array('WikiHistory.php', 'WikiRecentChanges'),
-			'Upload' =>  array('WikiFiles.php', 'WikiFileUpload'),
-		)
+		// action => array(file, function, [requires existing page], [requires file])
+		'view' => array('WikiPage.php', 'ViewPage'),
+		'talk' => array('WikiTalkPage.php', 'ViewTalkPage', true),
+		'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
+		'diff' => array('WikiPage.php', 'DiffPage', true),
+		'history' => array('WikiHistory.php', 'ViewPageHistory', true),
+		'edit' => array('WikiEditPage.php', 'EditPage'),
+		'edit2' => array('WikiEditPage.php', 'EditPage2'),
+		'download' => array('WikiFiles.php', 'WikiFileView', true, true),
 	);
 	
 	// Don't allow talk actions if it's not enalbed
 	if (empty($modSettings['wikiTalkBoard']))
-		unset($subActions['normal']['talk'], $subActions['normal']['talk2']);
+		unset($subActions['talk'], $subActions['talk2']);
 
 	// show error page for invalid titles
 	if (!is_valid_pagename($_REQUEST['page'], $context['namespace']))
@@ -193,13 +202,13 @@ function Wiki($standalone = false, $prefix = null)
 			$context['robot_no_index'] = true;
 
 		$namespaceGroup = 'normal';
-		$subaction = isset($_REQUEST['sa']) && isset($subActions[$namespaceGroup][$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+		$subaction = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
 		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
-		if ($context['page_info']['id'] === null && !empty($subActions[$namespaceGroup][$subaction][2]))
+		if ($context['page_info']['id'] === null && !empty($subActions[$subaction][2]))
 			$subaction = 'view';
 		// Don't allow file actions on plain pages
-		elseif (!isset($context['current_file']) && !empty($subActions[$namespaceGroup][$subaction][3]))
+		elseif (!isset($context['current_file']) && !empty($subActions[$subaction][3]))
 			$subaction = 'view';
 
 		// Download image if asked to
@@ -349,19 +358,32 @@ function Wiki($standalone = false, $prefix = null)
 	$context['current_page_title'] = $context['page_info']['title'];
 
 	// Invalid special page?
-	if ($namespaceGroup == 'special' && !isset($subActions[$namespaceGroup][$subaction]))
+	if ($namespaceGroup == 'special')
 	{
-		$namespaceGroup = 'normal';
-		$subaction = 'view';
+		if (!isset($context['wiki_special_pages'][$subaction]))
+		{
+			$namespaceGroup = 'normal';
+			$subaction = 'view';
+	
+			// Template
+			loadTemplate('WikiPage');
+			$context['template_layers'][] = 'wikipage';
+			$context['sub_template'] = 'not_found';
+			
+			require_once($sourcedir . '/' . $subActions[$subaction][0]);
+			$subActions[$subaction][1]();
+			
+			return;
+		}
 		
-		// Template
-		loadTemplate('WikiPage');
-		$context['template_layers'][] = 'wikipage';
-		$context['sub_template'] = 'not_found';		
+		require_once($sourcedir . '/' . $context['wiki_special_pages'][$subaction]['file']);
+		$context['wiki_special_pages'][$subaction]['function']();
+		
+		return;
 	}
-		
-	require_once($sourcedir . '/' . $subActions[$namespaceGroup][$subaction][0]);
-	$subActions[$namespaceGroup][$subaction][1]();
+
+	require_once($sourcedir . '/' . $subActions[$subaction][0]);
+	$subActions[$subaction][1]();
 }
 
 ?>

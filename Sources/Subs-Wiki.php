@@ -324,9 +324,53 @@ function loadWikiPage()
 	}
 }
 
+function wiki_get_special_page_info($page)
+{
+	global $smcFunc, $context;
+	
+	if (strpos($page, '/'))
+		list ($page, $sub_page) = explode('/', $page, 2);
+	else
+		$sub_page = '';
+	
+	if (!isset($context['wiki_special_pages'][$page]))
+		return array(
+			'data' => array(
+				'id' => null,
+				'display_title' => read_urlname($page, $context['namespace_special']),
+				'title' => read_urlname($page, $context['namespace_special']),
+				'name' => wiki_urlname($page, $context['namespace_special']),
+				'is_current' => true,
+				'is_locked' => false,
+				'current_revision' => 0,
+			),
+			// Minimal cache time for non-existing pages
+			'expires' => time() + 60,
+			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+		);
+		
+	return array(
+		'data' => array(
+			'id' => $page,
+			'display_title' => read_urlname($page, $context['namespace_special']),
+			'title' => read_urlname($page, $context['namespace_special']),
+			'name' => wiki_urlname($page, $context['namespace_special']),
+			'is_current' => true,
+			'is_locked' => false,
+			'current_revision' => 0,
+		),
+		// Minimal cache time for non-existing pages
+		'expires' => time() + 60,
+		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+	);
+}
+
 function wiki_get_page_info($page, $namespace)
 {
-	global $smcFunc;
+	global $smcFunc, $context;
+	
+	if ($namespace == $context['namespace_special'])
+		return wiki_get_special_page_info($page);
 
 	$request = $smcFunc['db_query']('', '
 		SELECT id_page, display_title, title, id_revision_current, id_topic, is_locked

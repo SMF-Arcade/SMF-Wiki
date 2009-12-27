@@ -426,11 +426,11 @@ class WikiPage
 						}
 		
 						// Alt
-						if (!empty($options[3]))
+						if (!empty($item['params'][3]))
 							$alt = $this->__parse_part($this->fakeStatus, $item['params'][3]);
 		
 						// Caption
-						if (!empty($options[4]))
+						if (!empty($item['params'][4]))
 							$alt = $this->__parse_part($this->fakeStatus, $item['params'][4]);
 								
 						if (!empty($align) || !empty($caption))
@@ -446,19 +446,19 @@ class WikiPage
 								$style[] = 'clear: ' . $align;
 							}
 
-							if (!empty($caption))
-							{
-								$class[] = 'tborder';
-								$style[] = 'padding: 5px';
-							}
-
-							$currentHtml = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>';
+							$currentHtml = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>
+								<span class="topslice"><span></span></span>
+								<div style="padding: 5px">';
+								
 						}
 						
-						$currentHtml .= '<a href="' . wiki_get_url($realLinkl) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
+						$currentHtml .= '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
 		
 						if (!empty($align) || !empty($caption))
-							$currentHtml .= '</div>';
+							$currentHtml .= (!empty($caption) ? '<span style="text-align: center">' . $caption . '</span>' : '') . '
+								</div>
+								<span class="botslice"><span></span></span>
+							</div>';
 					}
 					else
 						$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . '<a href="' . wiki_get_url($realLink) . '"><img src="' . wiki_get_url(array('page' => $realLink, 'image')) . '" alt="" /></a>' . (!empty($item['lineEnd']) ? '<br />' : '');
@@ -935,6 +935,8 @@ class WikiPage
 						$tag = array(
 							'name' => 'behaviour_switch',
 							'switch' => substr($bSwitch, 0, -2),
+							'lineStart' => isset($text[$i - 1]) && $text[$i - 1] == "\n",
+							'lineEnd' => isset($text[$i + 2 + $bLen]) && $text[$i + 2 + $bLen] == "\n",
 						);
 						
 						if (empty($stack))

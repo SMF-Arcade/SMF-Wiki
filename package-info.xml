@@ -39,6 +39,7 @@
 		<require-file name="Sources/WikiHistory.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiPage.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiParser.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiSpecialPages.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiTalkPage.php" destination="$sourcedir" />
 
 		<!-- These files goest to Theme directory -->
@@ -74,8 +75,9 @@
 		<remove-file name="$sourcedir/WikiHistory.php" />
 		<remove-file name="$sourcedir/WikiPage.php" />
 		<remove-file name="$sourcedir/WikiParser.php" />
+		<remove-file name="$sourcedir/WikiSpecialPages.php" />
 		<remove-file name="$sourcedir/WikiTalkPage.php" />
-
+		
 		<!-- Templates -->
 		<remove-file name="$themedir/Wiki.template.php" />
 		<remove-file name="$themedir/WikiAdmin.template.php" />

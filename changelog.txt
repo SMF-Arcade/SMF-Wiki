@@ -11,6 +11,7 @@ December 2009
  + Added __NOTOC__ behaviour tag [Issue #331]
  + Extended parser to support "hash tags" for example #REDIRECT
  ! Include should include categories
+ ! Special pages were always shown as red links [Issue #324]
  
 May 2009
 --------------------------------------------------------------------------------

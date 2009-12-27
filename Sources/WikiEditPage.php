@@ -225,7 +225,6 @@ function EditPage2()
 
 	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
 
-	
 	// Categories
 	$rows = array();
 	
