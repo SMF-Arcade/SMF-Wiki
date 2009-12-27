@@ -95,7 +95,7 @@ function template_view_page()
 	if (!empty($context['category_members']))
 	{
 		echo '
-		<h2>', sprintf($txt['wiki_pages_in_category'], $context['wiki_page']->title), '</h2>
+		<h2>', sprintf($txt['wiki_pages_in_category'], $context['category_name']), '</h2>
 		<ul>';
 		
 		foreach ($context['category_members'] as $category)

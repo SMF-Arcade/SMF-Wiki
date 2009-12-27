@@ -12,6 +12,8 @@ December 2009
  + Extended parser to support "hash tags" for example #REDIRECT
  ! Include should include categories
  ! Special pages were always shown as red links [Issue #324]
+ + Added Redirect support [Issue #326]
+ ! Don't display Category namespace in Pages in this category header [Issue #308]
  
 May 2009
 --------------------------------------------------------------------------------

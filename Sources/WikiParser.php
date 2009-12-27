@@ -235,6 +235,7 @@ class WikiPage
 		$this->sections = array();
 		
 		$this->status['paragraphOpen'] = isset($this->status['paragraphOpen']) ? $this->status['paragraphOpen'] : false;
+		$this->status['can_paragraph_open'] = true;
 		
 		$htmlIds = array();
 		
@@ -498,6 +499,13 @@ class WikiPage
 			elseif ($item['name'] == 'hash_tag')
 			{
 				// TODO: Call hash tag
+				if (!$context['wiki_parser_extensions']['hash_tags'][$item['item_name']]($item['firstParam'], $item['params']))
+				{
+					$this->__paragraph_handler($status, $currentHtml, 'open');
+					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . str_repeat($item['opening_char'], $item['len']);
+					$currentHtml .= $this->__parse_part($status, $item['firstParam']);
+					$currentHtml .= str_repeat($item['closing_char'], $item['len']) . (!empty($item['lineEnd']) ? '<br />' : '');
+				}
 				
 				print_r($item);
 			}
@@ -1048,13 +1056,12 @@ class WikiPage
 						'contents' => '',
 						'params' => array(),
 						'num_index' => 1,
-						'children' => array(),
 						'lineStart' => ($i > 0 && $text[$i-1] == "\n"),
 						'lineEnd' => false,
 						'no_param' => !empty($rule['no_param']),
 					);
 					
-					if ($rule['has_name'])
+					if (!empty($rule['has_name']))
 					{
 						$nameLen = strcspn($text, ' ', $i);
 						
@@ -1229,7 +1236,7 @@ class WikiPage
 				{
 					$stackIndex = count($stack) - 1;
 					
-					if ($stack[$stackIndex]['current_param'] === null)
+					if (!isset($stack[$stackIndex]['current_param']) || $stack[$stackIndex]['current_param'] === null)
 						$stack[$stackIndex]['current_param'] = array($thisElement);
 					else
 					{				

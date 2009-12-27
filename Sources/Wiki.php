@@ -84,7 +84,10 @@ function loadWiki($mode = '', $prefix = null)
 			// Hash Tags
 			// format 'tag' => array(function to call)
 			'hash_tags' => array(
-				'redirect' => array(create_function('&$wiki_parser', '$wiki_parser->pageSettings[\'no_index\'] = true;'))
+				'redirect' => array(create_function('&$wiki_parser, $firstParam, $params', '
+					if ($firstParam[0][\'name\'] != \'wikilink\')
+						return false;
+					$wiki_parser->pageSettings[\'redirect_to\'] = $firstParam[0][\'firstParam\'];')),
 			),
 			// XML Tags
 			// format 'tag' (lowercase only) => array(function to call)
@@ -285,6 +288,9 @@ function Wiki($standalone = false, $prefix = null)
 				}
 			}
 		}
+		
+		if (isset($context['wiki_page']->pageSettings['redirect_to']) && !isset($_REQUEST['no_redirect']))
+			$context['redirect_page_name'] = wiki_urlname($context['wiki_page']->pageSettings['redirect_to']);
 
 		// Template
 		loadTemplate('WikiPage');
@@ -313,14 +319,17 @@ function Wiki($standalone = false, $prefix = null)
 	}
 
 	// Redirect to page if needed
-	if ($context['current_page_name'] != $context['page_info']['name'])
+	if (isset($context['redirect_page_name']) || $context['current_page_name'] != $context['page_info']['name'])
 	{
-		$newUrl = array('page' => $context['page_info']['name']);
+		$newUrl = array('page' => isset($context['redirect_page_name']) ? $context['redirect_page_name'] : $context['page_info']['name']);
 
 		if (isset($_GET['image']))
 			$newUrl[] = 'image';
 		if (isset($_GET['sa']))
 			$newUrl['sa'] = $_GET['sa'];
+		if (isset($context['redirect_page_name']))
+			$newUrl['redirect_from'] = $context['page_info']['name'];
+			
 		redirectexit(wiki_get_url($newUrl));
 	}
 

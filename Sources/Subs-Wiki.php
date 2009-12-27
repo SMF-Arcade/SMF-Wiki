@@ -256,6 +256,8 @@ function loadWikiPage()
 	{
 		list (, $category) = __url_page_parse($context['page_info']['name']);
 		
+		$context['category_name'] = $category;
+		
 		$request = $smcFunc['db_query']('', '
 			SELECT page.id_page, page.title, page.namespace
 			FROM {wiki_prefix}category AS cat
