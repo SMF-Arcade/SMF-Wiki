@@ -6,6 +6,7 @@ SMF Wiki 0.1                                                                   ?
 May 2010
 --------------------------------------------------------------------------------
  ! Wrong language string used in the ACP [Issue #388]
+ ! Added a general arrow from the LED Icon Set [Issue #361]
 
 December 2009
 --------------------------------------------------------------------------------
