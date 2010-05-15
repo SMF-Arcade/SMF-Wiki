@@ -6,7 +6,7 @@
 * =============================================================================== *
 * Software Version:           SMF Wiki 0.1                                        *
 * Software by:                Niko Pahajoki (http://www.madjoki.com)              *
-* Copyright 2008-2009 by:     Niko Pahajoki (http://www.madjoki.com)              *
+* Copyright 2008-2010 by:     Niko Pahajoki (http://www.madjoki.com)              *
 * Support, News, Updates at:  http://www.smfarcade.info                           *
 ***********************************************************************************
 * This program is free software; you may redistribute it and/or modify it under   *
@@ -498,16 +498,16 @@ class WikiPage
 				$currentHtml .= $context['wiki_parser_extensions']['tags'][$item['tag_name']][0]($this, $item['content'], $item['attributes']);
 			elseif ($item['name'] == 'hash_tag')
 			{
+				// DEBUG
+				$currentHtml .= print_r($item, true);
 				// TODO: Call hash tag
-				if (!$context['wiki_parser_extensions']['hash_tags'][$item['item_name']]($item['firstParam'], $item['params']))
+				/*if (!$context['wiki_parser_extensions']['hash_tags'][$item['item_name']]($item['firstParam'], $item['params']))
 				{
 					$this->__paragraph_handler($status, $currentHtml, 'open');
 					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . str_repeat($item['opening_char'], $item['len']);
 					$currentHtml .= $this->__parse_part($status, $item['firstParam']);
 					$currentHtml .= str_repeat($item['closing_char'], $item['len']) . (!empty($item['lineEnd']) ? '<br />' : '');
-				}
-				
-				print_r($item);
+				}*/
 			}
 			else
 				$this->__logError('Unable to parse item!', array($item));
