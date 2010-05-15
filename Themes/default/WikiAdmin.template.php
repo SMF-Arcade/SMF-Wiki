@@ -23,7 +23,7 @@ function template_wiki_admin_main()
 		<h3 class="catbg">
 			<span class="left"></span>
 			<span class="right"></span>
-			', $txt['arcade_status'], '
+			', $txt['wiki_version_info'], '
 		</h3>
 		<div class="windowbg2">
 			<span class="topslice"><span></span></span>
