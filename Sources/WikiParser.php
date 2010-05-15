@@ -775,11 +775,11 @@ class WikiPage
 				continue;
 			}
 				
-			if ($i >= $textLen)
+			if ($i >= $textLen && (empty($stack) || $closeTag != "\n"))
 				break;
 			else
 			{
-				$curChar = $text[$i];
+				$curChar = isset($text[$i]) ? $text[$i] : "\n";
 
 				// Close char?
 				if ($curChar == $closeTag)
