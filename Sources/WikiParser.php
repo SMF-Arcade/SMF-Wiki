@@ -498,16 +498,13 @@ class WikiPage
 				$currentHtml .= $context['wiki_parser_extensions']['tags'][$item['tag_name']][0]($this, $item['content'], $item['attributes']);
 			elseif ($item['name'] == 'hash_tag')
 			{
-				// DEBUG
-				$currentHtml .= print_r($item, true);
-				// TODO: Call hash tag
-				/*if (!$context['wiki_parser_extensions']['hash_tags'][$item['item_name']]($item['firstParam'], $item['params']))
+				if (!$context['wiki_parser_extensions']['hash_tags'][$item['item_name']]($this, $item['firstParam'], $item['params']))
 				{
 					$this->__paragraph_handler($status, $currentHtml, 'open');
 					$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . str_repeat($item['opening_char'], $item['len']);
 					$currentHtml .= $this->__parse_part($status, $item['firstParam']);
-					$currentHtml .= str_repeat($item['closing_char'], $item['len']) . (!empty($item['lineEnd']) ? '<br />' : '');
-				}*/
+					$currentHtml .= (!empty($item['lineEnd']) ? '<br />' : '');
+				}
 			}
 			else
 				$this->__logError('Unable to parse item!', array($item));

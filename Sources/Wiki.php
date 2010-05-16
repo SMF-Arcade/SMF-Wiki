@@ -84,10 +84,10 @@ function loadWiki($mode = '', $prefix = null)
 			// Hash Tags
 			// format 'tag' => array(function to call)
 			'hash_tags' => array(
-				'redirect' => array(create_function('&$wiki_parser, $firstParam, $params', '
+				'redirect' => create_function('&$wiki_parser, $firstParam, $params', '
 					if ($firstParam[0][\'name\'] != \'wikilink\')
 						return false;
-					$wiki_parser->pageSettings[\'redirect_to\'] = $firstParam[0][\'firstParam\'];')),
+					$wiki_parser->pageSettings[\'redirect_to\'] = $firstParam[0][\'firstParam\'];'),
 			),
 			// XML Tags
 			// format 'tag' (lowercase only) => array(function to call)
