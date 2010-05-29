@@ -330,6 +330,7 @@ $tables = array(
 				'columns' => array('id_file')
 			),
 			array(
+				'name' => 'id_page_is_current',
 				'type' => 'index',
 				'columns' => array('id_page', 'is_current')
 			),
