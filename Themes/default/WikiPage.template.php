@@ -6,29 +6,30 @@ function template_wikipage_above()
 	global $context, $modSettings, $txt;
 
 	echo '
-	<ul class="reset wikimenu">';
+	<div class="wikipage_top cat_bar">
+		<h3 class="catbg">
+			', $context['current_page_title'], '
+		</h3>
+	</div>
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<div class="wikimenu buttonlist">
+					<ul>';
 
 	foreach ($context['wikimenu'] as $id => $item)
 	{
 		if (empty($item['show']))
 			continue;
 
-		$classes = array(
-			$id,
-		);
-
-		if ($item['selected'])
-			$classes[] = 'selected';
-
 		echo '
-		<li class="',  implode(' ', $classes), '"><a href="', $item['url'], '">', $item['title'], '</a></li>';
+						<li class="firstlevel"><a', $item['selected'] ? ' class="active"' : '', ' href="', $item['url'], '"><span class="firstlevel">', $item['title'], '</span></a></li>';
 	}
 
 	echo '
-	</ul>
-	<div class="wikicontent">
-		<h2>', $context['current_page_title'], '</h2>
-		<div class="post" style="clear: right;"><div class="inner">';
+					</ul>
+				</div>';
 }
 
 function output_toc($baseurl, $blevel, $toc)
@@ -109,7 +110,7 @@ function template_view_page()
 	if (!empty($context['wiki_page']->categories))
 	{
 		echo '
-		<div class="windowbg2">
+		<div class="windowbg">
 			<span class="topslice"><span></span></span>
 			', $txt['wiki_categories'], ': ';
 		
@@ -357,7 +358,9 @@ function template_wikipage_below()
 	global $context, $txt;
 
 	echo '
-		</div></div>
+			</div></div>
+		</div>
+		<span class="botslice"><span></span></span>
 	</div>';
 }
 

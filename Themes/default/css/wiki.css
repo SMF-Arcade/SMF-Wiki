@@ -29,88 +29,27 @@
 
 .wikiright
 {
-	margin-left: 15%;
+	margin-left: 16%;
 }
 
 /* ************************************* */
 /* Styles from WikiPage.template         */
 /* ************************************* */
-ul.wikimenu
+div.wikipage_top
 {
-	margin: 0;
-	margin-right: 10px;
-	padding: 0;
+}
+div.wikimenu
+{
 	float: right;
-	border: 1px solid #AAAAAA;
-	border-top: 0;
-	border-bottom: 0;
-	margin-bottom: 2px;
-	clear: right;
+	margin-top: -1em;
 }
-ul.wikimenu li
+div.wikimenu ul
 {
-	border: 1px solid #AAAAAA;
-	border-left: 0;
-	border-right: 0;
-	float: left;
-	list-style: none;
-}
-.wikimenu li.selected
-{
-	border-color: #FABD23;
-}
-.wikimenu li a
-{
-	display: block;
-	padding: 4px 5px 4px 25px;
-	font-size: small;
-}
-.wikimenu li.selected a
-{
-	background-color: #F6F6F6;
-}
-.wikimenu li a:hover
-{
-	text-decoration: none;
-	background-color: #F6F6F6;
-}
-.wikimenu li.view a
-{
-	background-image: url(../images/wiki/view.png);
-	background-position: 5px center;
-	background-repeat: no-repeat;
-}
-.wikimenu li.talk a
-{
-	background-image: url(../images/wiki/talk.png);
-	background-position: 5px center;
-	background-repeat: no-repeat;
-}
-.wikimenu li.edit a
-{
-	background-image: url(../images/wiki/edit.png);
-	background-position: 5px center;
-	background-repeat: no-repeat;
-}
-.wikimenu li.history a
-{
-	background-image: url(../images/wiki/history.png);
-	background-position: 5px center;
-	background-repeat: no-repeat;
-}
-
-.wikicontent
-{
-	padding: 0 10px;
-}
-.wikicontent h2
-{
-	height: 1.4em;
-	margin-bottom: -1.8em;
+	padding: 0;
 }
 .wikicontent p
 {
-	margin: 8px 0 8px 0;
+	margin: 0 0 8px 0;
 }
 
 .clearright
@@ -118,35 +57,46 @@ ul.wikimenu li
 	clear: right;
 }
 
-.post h3, .post h4, .post h5, .post h6
+.wikicontent .post
+{
+	margin: 0;
+}
+.wikicontent .inner
+{
+	padding: 0;
+	margin: 0;
+	border: 0;
+}
+
+.wikicontent .post h3, .wikicontent .post h4, .wikicontent .post h5, .wikicontent .post h6
 {
 	clear: right;
 	margin-top: 9px;
 	margin-bottom: 9px;
 }
-.post h3
+.wikicontent .post h3
 {
 	font-size: 115%;
 	border-bottom: 1px solid #666666;
 }
-.post h4
+.wikicontent .post h4
 {
 	font-size: 105%;
 	border-bottom: 1px solid #666666;
 	font-weight: normal;
 }
-.post h5
+.wikicontent .post h5
 {
 	font-size: 100%;
 	font-weight: normal;
 }
-.post h6
+.wikicontent .post h6
 {
 	font-size: 90%;
 	font-weight: normal;
 }
 
-a.redlink
+.wikicontent a.redlink
 {
 	color: red;
 }
