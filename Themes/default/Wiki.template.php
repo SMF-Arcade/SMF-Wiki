@@ -26,7 +26,7 @@ function template_wiki_above()
 		</div>
 		<div class="windowbg2">
 			<span class="topslice"><span></span></span>
-			<ul class="reset windowbg2">';
+			<ul class="windowbg2">';
 
 		foreach ($group['items'] as $item)
 		{

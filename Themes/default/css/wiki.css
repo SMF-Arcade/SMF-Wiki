@@ -12,7 +12,10 @@
 }
 .wikileft ul
 {
+	list-style: none;
 	line-height: 1.3;
+	padding: 0;
+	margin: 0;
 	padding: 4px;
 	padding-bottom: 15px;
 }
@@ -46,6 +49,8 @@ div.wikimenu
 div.wikimenu ul
 {
 	padding: 0;
+	margin: 0;
+	list-style: none;
 }
 .wikicontent p
 {
