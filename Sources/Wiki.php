@@ -171,7 +171,7 @@ function Wiki($standalone = false, $prefix = null)
 
 		$context['page_info'] = array(
 			'id' => null,
-			'title' => read_urlname($_REQUEST['page'], true),
+			'title' => get_default_display_title($_REQUEST['page'], true),
 			'name' => $context['current_page_name'],
 			'namespace' => $context['namespace']['id'],
 			'is_locked' => false,
@@ -311,7 +311,7 @@ function Wiki($standalone = false, $prefix = null)
 
 		$context['page_info'] = array(
 			'id' => null,
-			'title' => read_urlname($_REQUEST['page'], $context['namespace']['id']),
+			'title' => get_default_display_title($_REQUEST['page'], $context['namespace']['id']),
 			'name' => $pageName,
 			'namespace' => $context['namespace']['id'],
 			'is_locked' => false,

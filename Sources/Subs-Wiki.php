@@ -96,8 +96,41 @@ function wiki_get_url($params)
 	}
 }
 
+// Function to get parent pages
+function get_page_parents($page, $namespace)
+{
+	if (strpos($page, '/') !== false)
+	{
+		$parts = explode('/', $page);
+		$new_title = array_pop($parts);
+		
+		$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
+			
+		if (!empty($link_info['page_tree']))
+			$page_tree = $link_info['page_tree'];
+		if ($link_info !== false)
+			$page_tree[] = array(
+				'display_title' => $link_info['display_title'],
+				'title' => $link_info['title'],
+				'name' => $link_info['name'],
+			);
+		else
+			$page_tree[] = array(
+				'title' => get_default_display_title(implode('/', $parts), $namespace['id']),
+				'name' => implode('/', $parts),
+			);
+		
+		if (empty($row['display_title']))
+			$row['display_title'] = get_default_display_title($new_title);
+			
+		return $page_tree;
+	}
+	
+	return array();
+}
+
 // Makes Readable name form urlname
-function read_urlname($page, $namespace = '', $html = true)
+function get_default_display_title($page, $namespace = '', $html = true)
 {
 	global $smcFunc;
 	
@@ -111,9 +144,9 @@ function read_urlname($page, $namespace = '', $html = true)
 		$new_title = array_pop($parts);
 		
 		if ($html)
-			return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
+			return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($new_title))));
 		else
-			return $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page)));			
+			return $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($new_title)));			
 	}
 	
 	if ($html)
@@ -351,8 +384,8 @@ function wiki_get_special_page_info($page)
 		return array(
 			'data' => array(
 				'id' => null,
-				'display_title' => read_urlname($page, $context['namespace_special']),
-				'title' => read_urlname($page, $context['namespace_special']),
+				'display_title' => get_default_display_title($page, $context['namespace_special']),
+				'title' => get_default_display_title($page, $context['namespace_special']),
 				'name' => wiki_urlname($page, $context['namespace_special']),
 				'is_current' => true,
 				'is_locked' => false,
@@ -366,8 +399,8 @@ function wiki_get_special_page_info($page)
 	return array(
 		'data' => array(
 			'id' => $page,
-			'display_title' => read_urlname($page, $context['namespace_special']),
-			'title' => read_urlname($page, $context['namespace_special']),
+			'display_title' => get_default_display_title($page, $context['namespace_special']),
+			'title' => get_default_display_title($page, $context['namespace_special']),
 			'name' => wiki_urlname($page, $context['namespace_special']),
 			'is_current' => true,
 			'is_locked' => false,
@@ -404,12 +437,13 @@ function wiki_get_page_info($page, $namespace)
 		return array(
 			'data' => array(
 				'id' => null,
-				'display_title' => read_urlname($page, $namespace['id']),
-				'title' => read_urlname($page, $namespace['id']),
+				'display_title' => get_default_display_title($page, $namespace['id']),
+				'title' => get_default_display_title($page, $namespace['id']),
 				'name' => wiki_urlname($page, $namespace['id']),
 				'is_current' => true,
 				'is_locked' => false,
 				'current_revision' => 0,
+				'page_tree' => get_page_parents($page, $namespace['id']),
 			),
 			// Minimal cache time for non-existing pages
 			'expires' => time() + 60,
@@ -423,37 +457,32 @@ function wiki_get_page_info($page, $namespace)
 	// Get page tree from parent
 	if (strpos($page, '/') !== false)
 	{
-		$current_base = array();
-	
 		$parts = explode('/', $page);
 		$new_title = array_pop($parts);
 		
-		if (!empty($parts))
-		{
-			$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
-				
-			if (!empty($link_info['page_tree']))
-				$page_tree = $link_info['page_tree'];
-			if ($link_info !== false)
-				$page_tree[] = array(
-					'display_title' => $link_info['display_title'],
-					'title' => $link_info['title'],
-					'name' => $link_info['name'],
-				);
-			else
-				$page_tree[] = array(
-					'title' => read_urlname(implode('/', $parts), $namespace['id']),
-					'name' => implode('/', $parts),
-				);			
+		$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
 			
-			if (empty($row['display_title']))
-				$row['display_title'] = read_urlname($new_title);
-		}
+		if (!empty($link_info['page_tree']))
+			$page_tree = $link_info['page_tree'];
+		if ($link_info !== false)
+			$page_tree[] = array(
+				'display_title' => $link_info['display_title'],
+				'title' => $link_info['title'],
+				'name' => $link_info['name'],
+			);
+		else
+			$page_tree[] = array(
+				'title' => get_default_display_title(implode('/', $parts), $namespace['id']),
+				'name' => implode('/', $parts),
+			);
+		
+		if (empty($row['display_title']))
+			$row['display_title'] = get_default_display_title($new_title);
 	}
 	
 	/*$page_tree[] = array(
 		'display_title' => $row['display_title'],
-		'title' => read_urlname($row['title'], $namespace['id']),
+		'title' => get_default_display_title($row['title'], $namespace['id']),
 		'name' => wiki_urlname($row['title'], $namespace['id']),
 	);*/
 
@@ -461,7 +490,7 @@ function wiki_get_page_info($page, $namespace)
 		'data' => array(
 			'id' => $row['id_page'],
 			'display_title' => $row['display_title'],
-			'title' => !empty($row['display_title']) ? $row['display_title'] : read_urlname($row['title'], $namespace['id']),
+			'title' => !empty($row['display_title']) ? $row['display_title'] : get_default_display_title($row['title'], $namespace['id']),
 			'name' => wiki_urlname($row['title'], $namespace['id']),
 			'topic' => $row['id_topic'],
 			'is_locked' => !empty($row['is_locked']),
@@ -610,7 +639,7 @@ function createPage($title, $namespace)
 		),
 		array(
 			$title,
-			read_urlname($title, $namespace['id']),
+			get_default_display_title($title, $namespace['id']),
 			$namespace['id'],
 		),
 		array('id_page')
@@ -656,7 +685,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 			$posterOptions['id'],
 			!empty($revisionOptions['file']) ? $revisionOptions['file'] : 0,
 			time(),
-			!empty($pageOptions['display_title']) ? $pageOptions['display_title'] : read_urlname($row['title']),
+			!empty($pageOptions['display_title']) ? $pageOptions['display_title'] : get_default_display_title($row['title']),
 			$revisionOptions['body'],
 			$revisionOptions['comment'],
 		),
@@ -675,7 +704,7 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 		WHERE id_page = {int:page}',
 		array(
 			'page' => $id_page,
-			'display_title' => !empty($pageOptions['display_title']) ? $pageOptions['display_title'] : read_urlname($row['title']),
+			'display_title' => !empty($pageOptions['display_title']) ? $pageOptions['display_title'] : get_default_display_title($row['title']),
 			'file' => !empty($revisionOptions['file']) ? $revisionOptions['file'] : 0,
 			'lock' => !empty($pageOptions['lock']) ? 1 : 0,
 			'revision' => $id_revision,

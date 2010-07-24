@@ -479,7 +479,7 @@ class WikiPage
 						'link' => wiki_get_url($realLink),
 						'namespace' => $linkNamespace,
 						'title' => $linkPage,
-						'name' => read_urlname($linkPage, false),
+						'name' => get_default_display_title($linkPage, false),
 						'exists' => $link_info['id'] !== null,
 					);
 				}
@@ -497,7 +497,7 @@ class WikiPage
 					if (isset($item['params'][1]))
 						$currentHtml .= $this->__parse_part($this->fakeStatus, $item['params'][1]);
 					else
-						$currentHtml .= read_urlname($parsedPage, false);
+						$currentHtml .= get_default_display_title($parsedPage, false);
 						
 					$currentHtml .= '</a>' . (!empty($item['lineEnd']) ? '<br />' : '');
 				}				

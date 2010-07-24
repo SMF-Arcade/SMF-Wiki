@@ -205,6 +205,7 @@ function EditPage2()
 	// Parse Page for usage in 
 	$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
 	
+	$context['wiki_page']->title = null;
 	$context['wiki_page']->parse_bbc = true;
 	$context['wiki_page']->raw_content = $body;
 	$context['wiki_page']->parse();
@@ -217,7 +218,7 @@ function EditPage2()
 	);
 	$posterOptions = array(
 		'id' => $user_info['id'],
-		'display_title' => $context['wiki_page']->title,
+		'display_title' => !empty($context['wiki_page']->title) ? $context['wiki_page']->title : get_default_display_title($_REQUEST['page'], $context['namespace']),
 	);
 
 	if ($context['can_lock_page'])
