@@ -102,8 +102,20 @@ function read_urlname($page, $namespace = '', $html = true)
 	global $smcFunc;
 	
 	if ($namespace === true || $namespace === false)
-		list ($namespace, $page) = __url_page_parse($page);	
-
+		list ($namespace, $page) = __url_page_parse($page);
+		
+	// Sub-page?
+	if (strpos($page, '/') !== false)
+	{
+		$parts = explode('/', $page);
+		$new_title = array_pop($parts);
+		
+		if ($html)
+			return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
+		else
+			return $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page)));			
+	}
+	
 	if ($html)
 		return (!empty($namespace) ? $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace)))) . ':' : '') . $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
 	else
@@ -384,7 +396,7 @@ function wiki_get_page_info($page, $namespace)
 			'namespace' => $namespace['id'],
 		)
 	);
-
+	
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 	{
 		$smcFunc['db_free_result']($request);
@@ -423,16 +435,19 @@ function wiki_get_page_info($page, $namespace)
 			if (!empty($link_info['page_tree']))
 				$page_tree = $link_info['page_tree'];
 			if ($link_info !== false)
-			{
 				$page_tree[] = array(
 					'display_title' => $link_info['display_title'],
 					'title' => $link_info['title'],
 					'name' => $link_info['name'],
 				);
-				
-				if (empty($row['display_title']))
-					$row['display_title'] = read_urlname($new_title);
-			}
+			else
+				$page_tree[] = array(
+					'title' => read_urlname(implode('/', $parts), $namespace['id']),
+					'name' => implode('/', $parts),
+				);			
+			
+			if (empty($row['display_title']))
+				$row['display_title'] = read_urlname($new_title);
 		}
 	}
 	
