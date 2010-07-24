@@ -495,7 +495,7 @@ function wiki_get_page_info($page, $namespace)
 			'name' => wiki_urlname($row['title'], $namespace['id']),
 			'topic' => $row['id_topic'],
 			'is_locked' => !empty($row['is_locked']),
-			'is_locked' => !empty($row['is_deleted']),
+			'is_deleted' => !empty($row['is_deleted']),
 			'current_revision' => $row['id_revision_current'],
 			'page_tree' => $page_tree,
 		),
@@ -812,6 +812,18 @@ function deleteWikiPage($page, $soft_delete = true)
 		);		
 	}
 
+	$request = $smcFunc['db_query']('', '
+		SELECT title, namespace
+		FROM {wiki_prefix}pages
+		WHERE id_page IN({array_int:page})',
+		array(
+			'page' => $page,
+		)
+	);
+	while ($row = $smcFunc['db_fetch_row']($request))
+		cache_put_data('wiki-pageinfo-' . wiki_cache_escape($row['namespace'], $row['title']), null, 360);
+	$smcFunc['db_free_result']($request);
+	
 	return true;
 }
 

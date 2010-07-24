@@ -356,12 +356,12 @@ function template_delete_page()
 
 	if ($context['can_delete_permanent'])
 		echo '
-				<input type="checkbox" name="delete_permanent" value="1" /> ', $txt['lock_page'];
+				<input type="checkbox" name="delete_permanent" value="1" /> ', $txt['delete_page_permanent'];
 
 	echo '
 			</div>
 			<div style="text-align: center">
-				<input class="submit" type="submit" name="delete" value="', $txt['delete_page_button'], '" />
+				<input class="button_submit" type="submit" name="delete" value="', $txt['delete_page_button'], '" />
 			</div>
 		</div>
 
@@ -387,10 +387,6 @@ function template_page_deleted()
 
 	echo '
 		<p>', $txt['wiki_page_deleted'], '</p>';
-			
-	if (!empty($context['create_message']))
-		echo '
-		<p>', $context['create_message'], '</p>';
 }
 
 
