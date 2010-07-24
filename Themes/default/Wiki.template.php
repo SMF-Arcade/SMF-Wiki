@@ -11,17 +11,19 @@ function template_wiki_above()
 	foreach ($context['wiki_navigation'] as $group)
 	{
 		echo '
-		<h3 class="catbg', $group['selected'] ? ' selected' : '', '"><span class="left"></span>';
+		<div class="catbar">
+			<h3 class="catbg', $group['selected'] ? ' selected' : '', '">';
 
 		if (!empty($group['url']))
 			echo '
-			<a href="', $group['url'], '">', $group['title'], '</a>';
+				<a href="', $group['url'], '">', $group['title'], '</a>';
 		else
 			echo '
-			', $group['title'];
+				', $group['title'];
 
 		echo '
-		</h3>
+			</h3>
+		<div>
 		<div class="windowbg2">
 			<span class="topslice"><span></span></span>
 			<ul class="reset windowbg2">';
