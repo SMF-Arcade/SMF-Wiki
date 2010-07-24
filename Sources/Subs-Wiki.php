@@ -247,7 +247,7 @@ function loadNamespace()
 		elseif ($ns['type'] == 5 && !isset($context['namespace_category']))
 			$context['namespace_category'] = &$context['namespaces'][$id];
 		elseif ($ns['type'] != 0)
-			fatal_lang_error('wiki_namespace_broken', false, array(read_urlname($id)));
+			fatal_lang_error('wiki_namespace_broken', false, array(get_default_display_title($id)));
 	}
 	
 	if (!isset($context['namespace_special']) || !isset($context['namespace_files']) || !isset($context['namespace_images']) || !isset($context['namespace_internal']) || !isset($context['namespace_category']))
@@ -320,7 +320,7 @@ function loadWikiPage()
 		{
 			$context['category_members'][] = array(
 				'page' => wiki_urlname($row['title'], $row['namespace']),
-				'title' => read_urlname($row['title'], $row['namespace']),
+				'title' => get_default_display_title($row['title'], $row['namespace']),
 			);
 		}
 		$smcFunc['db_free_result']($request);
