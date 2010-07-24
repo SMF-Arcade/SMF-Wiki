@@ -102,7 +102,7 @@ function EditPage()
 	$context['post_box_name'] = 'wiki_content';
 
 	// Template
-	loadTemplate('WikiPage', array('article'));
+	loadTemplate('WikiPage');
 	$context['page_title'] = sprintf($txt['edit_page'], $context['current_page_title']);
 	$context['current_page_title'] = sprintf($txt['edit_page'], $context['current_page_title']);
 	$context['sub_template'] = 'edit_page';
@@ -251,6 +251,37 @@ function EditPage2()
 			array('id_page', 'category')
 		);
 
+	redirectexit($context['current_page_url']);
+}
+
+function DeletePage()
+{
+	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
+
+	isAllowedTo('wiki_admin');
+	
+	$context['form_url'] = wiki_get_url(array(
+		'page' => $context['current_page_name'],
+		'sa' => 'delete2',
+	));
+	
+	// Template
+	loadTemplate('WikiPage');
+	$context['page_title'] = sprintf($txt['delete_page'], $context['current_page_title']);
+	$context['current_page_title'] = sprintf($txt['delete_page'], $context['current_page_title']);
+	$context['sub_template'] = 'delete_page';	
+}
+
+function DeletePage2()
+{
+	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
+
+	isAllowedTo('wiki_admin');
+	
+	checkSession('post');
+	
+	deleteWikiPage($context['page_info']['id'], !empty($context['can_delete_permanent']) && empty($_REQUEST['permanent_delete']));
+	
 	redirectexit($context['current_page_url']);
 }
 

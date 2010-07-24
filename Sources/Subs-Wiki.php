@@ -420,7 +420,7 @@ function wiki_get_page_info($page, $namespace)
 		return wiki_get_special_page_info($page);
 
 	$request = $smcFunc['db_query']('', '
-		SELECT id_page, display_title, title, id_revision_current, id_topic, is_locked
+		SELECT id_page, display_title, title, id_revision_current, id_topic, is_locked, is_deleted
 		FROM {wiki_prefix}pages
 		WHERE title = {string:page}
 			AND namespace = {string:namespace}',
@@ -442,6 +442,7 @@ function wiki_get_page_info($page, $namespace)
 				'name' => wiki_urlname($page, $namespace['id']),
 				'is_current' => true,
 				'is_locked' => false,
+				'is_deleted' => false,
 				'current_revision' => 0,
 				'page_tree' => get_page_parents($page, $namespace['id']),
 			),
@@ -494,6 +495,7 @@ function wiki_get_page_info($page, $namespace)
 			'name' => wiki_urlname($row['title'], $namespace['id']),
 			'topic' => $row['id_topic'],
 			'is_locked' => !empty($row['is_locked']),
+			'is_locked' => !empty($row['is_deleted']),
 			'current_revision' => $row['id_revision_current'],
 			'page_tree' => $page_tree,
 		),
@@ -774,27 +776,41 @@ function removeWikiRevisions($page, $revisions)
 	return true;
 }
 
-function removeWikiPages($page)
+function deleteWikiPage($page, $soft_delete = true)
 {
 	global $smcFunc;
 
 	if (!is_array($page))
 		$page = array((int) $page);
 
-	$smcFunc['db_query']('', '
-		DELETE FROM {wiki_prefix}pages
-		WHERE id_page IN({array_int:page})',
-		array(
-			'page' => $page,
-		)
-	);
-	$smcFunc['db_query']('', '
-		DELETE FROM {wiki_prefix}content
-		WHERE id_page IN({array_int:page})',
-		array(
-			'page' => $page,
-		)
-	);
+	if (!$soft_delete)
+	{
+		$smcFunc['db_query']('', '
+			DELETE FROM {wiki_prefix}pages
+			WHERE id_page IN({array_int:page})',
+			array(
+				'page' => $page,
+			)
+		);
+		$smcFunc['db_query']('', '
+			DELETE FROM {wiki_prefix}content
+			WHERE id_page IN({array_int:page})',
+			array(
+				'page' => $page,
+			)
+		);
+	}
+	else
+	{
+		$smcFunc['db_query']('', '
+			UPDATE {wiki_prefix}pages
+			SET is_deleted = 1
+			WHERE id_page IN({array_int:page})',
+			array(
+				'page' => $page,
+			)
+		);		
+	}
 
 	return true;
 }

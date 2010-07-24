@@ -302,11 +302,11 @@ function template_edit_page()
 		{
 			var textFields = ["comment", "', $context['post_box_name'], '"];
 			for (i in textFields)
-				if (document.forms.editarticle.elements[textFields[i]])
-					document.forms.editarticle[textFields[i]].value = document.forms.editarticle[textFields[i]].value.replace(/&#/g, "&#38;#");
-			for (var i = document.forms.editarticle.elements.length - 1; i >= 0; i--)
-				if (document.forms.editarticle.elements[i].name.indexOf("options") == 0)
-					document.forms.editarticle.elements[i].value = document.forms.editarticle.elements[i].value.replace(/&#/g, "&#38;#");
+				if (document.forms.editpage.elements[textFields[i]])
+					document.forms.editpage[textFields[i]].value = document.forms.editpage[textFields[i]].value.replace(/&#/g, "&#38;#");
+			for (var i = document.forms.editpage.elements.length - 1; i >= 0; i--)
+				if (document.forms.editpage.elements[i].name.indexOf("options") == 0)
+					document.forms.editpage.elements[i].value = document.forms.editpage.elements[i].value.replace(/&#/g, "&#38;#");
 		}
 	// ]]></script>';
 
@@ -319,7 +319,7 @@ function template_edit_page()
 	}
 
 	echo '
-	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editarticle" id="editarticle" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
+	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editpage" id="editpage" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
 		<div style="width: 95%; margin: auto">
 			<div id="bbcBox_message"></div>
 			<div id="smileyBox_message"></div>
@@ -345,13 +345,54 @@ function template_edit_page()
 	</form>';
 }
 
+function template_delete_page()
+{
+	global $context, $modSettings, $txt, $user_info;
+
+	echo '
+	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="deletepage" id="deletepage">
+		<div style="width: 95%; margin: auto">
+			<div>';
+
+	if ($context['can_delete_permanent'])
+		echo '
+				<input type="checkbox" name="delete_permanent" value="1" /> ', $txt['lock_page'];
+
+	echo '
+			</div>
+			<div style="text-align: center">
+				<input class="submit" type="submit" name="delete" value="', $txt['delete_page_button'], '" />
+			</div>
+		</div>
+
+		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+	</form>';	
+}
+
 function template_not_found()
 {
 	global $context, $txt;
 
 	echo '
-			', $txt['wiki_page_not_found'], '';
+		<p>', $txt['wiki_page_not_found'], '</p>';
+			
+	if (!empty($context['create_message']))
+		echo '
+		<p>', $context['create_message'], '</p>';
 }
+
+function template_page_deleted()
+{
+	global $context, $txt;
+
+	echo '
+		<p>', $txt['wiki_page_deleted'], '</p>';
+			
+	if (!empty($context['create_message']))
+		echo '
+		<p>', $context['create_message'], '</p>';
+}
+
 
 function template_wikipage_below()
 {

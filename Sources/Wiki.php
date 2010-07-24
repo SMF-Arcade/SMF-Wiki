@@ -156,6 +156,8 @@ function Wiki($standalone = false, $prefix = null)
 		'history' => array('WikiHistory.php', 'ViewPageHistory', true),
 		'edit' => array('WikiEditPage.php', 'EditPage'),
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
+		'delete' => array('WikiEditPage.php', 'DeletePage'),
+		'delete2' => array('WikiEditPage.php', 'DeletePage2'),
 		'download' => array('WikiFiles.php', 'WikiFileView', true, true),
 	);
 	
@@ -222,6 +224,8 @@ function Wiki($standalone = false, $prefix = null)
 
 		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
 		$context['can_lock_page'] = allowedTo('wiki_admin');
+		$context['can_delete_page'] = allowedTo('wiki_admin');
+		$context['can_delete_permanent'] = allowedTo('wiki_admin');
 
 		// Don't let anyone create page if it's not "normal" page (ie. file)
 		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
@@ -242,7 +246,7 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'talk',
 				)),
 				'selected' => in_array($subaction, array('talk')),
-				'show' => !empty($modSettings['wikiTalkBoard']),
+				'show' => !empty($modSettings['wikiTalkBoard']) && empty($context['page_info']['is_deleted']),
 			),
 			'edit' => array(
 				'title' => $txt['wiki_edit'],
@@ -253,6 +257,15 @@ function Wiki($standalone = false, $prefix = null)
 				'selected' => in_array($subaction, array('edit', 'edit2')),
 				'show' => $context['can_edit_page'],
 			),
+			'delete' => array(
+				'title' => $txt['wiki_edit'],
+				'url' => wiki_get_url(array(
+					'page' => $context['current_page_name'],
+					'sa' => 'delete',
+				)),
+				'selected' => in_array($subaction, array('delete', 'delete2')),
+				'show' => $context['can_delete_page'],				
+			),
 			'history' => array(
 				'title' => $txt['wiki_history'],
 				'url' => wiki_get_url(array(
@@ -260,7 +273,7 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'history',
 				)),
 				'selected' => in_array($subaction, array('history', 'diff')),
-				'show' => $context['page_info']['id'] !== null,
+				'show' => $context['page_info']['id'] !== null && empty($context['page_info']['is_deleted']),
 			),
 		);
 		

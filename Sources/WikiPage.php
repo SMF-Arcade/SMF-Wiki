@@ -32,6 +32,14 @@ function ViewPage()
 	{
 		$context['robot_no_index'] = true;
 		$context['sub_template'] = 'not_found';
+		
+		if (isset($context['wikimenu']['edit']['url']))
+			$context['create_message'] = sprintf($txt['wiki_create_page'], '<a href="' . $context['wikimenu']['edit']['url'] . '">', '</a>');
+	}
+	elseif (!empty($context['page_info']['is_deleted']))
+	{
+		$context['robot_no_index'] = true;
+		$context['sub_template'] = 'page_deleted';
 	}
 	else
 	{

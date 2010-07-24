@@ -129,6 +129,12 @@ $tables = array(
 				'unsigned' => true,
 			),
 			array(
+				'name' => 'is_deleted',
+				'type' => 'int',
+				'default' => 0,
+				'unsigned' => true,
+			),
+			array(
 				'name' => 'id_revision_current',
 				'type' => 'int',
 				'default' => 0,
@@ -350,10 +356,10 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 		FROM {db_prefix}wiki_pages AS info
 			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = info.id_revision_current
 				AND con.id_page = info.id_page)
-		WHERE info.title = {string:article}
+		WHERE info.title = {string:page}
 			AND info.namespace = {string:namespace}',
 		array(
-			'article' => $name,
+			'page' => $name,
 			'namespace' => $namespace,
 			'revision' => !empty($revision) ? $revision : 'info.id_revision_current',
 		)
@@ -387,7 +393,7 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 			array('id_page')
 		);
 
-		$id_page = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_article');
+		$id_page = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_page');
 	}
 
 	$smcFunc['db_insert']('insert',

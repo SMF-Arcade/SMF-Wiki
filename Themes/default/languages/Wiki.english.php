@@ -5,6 +5,7 @@ $txt['wiki'] = 'Wiki';
 $txt['wiki_view'] = 'view';
 $txt['wiki_talk'] = 'talk';
 $txt['wiki_edit'] = 'edit';
+$txt['wiki_delete'] = 'delete';
 $txt['wiki_history'] = 'history';
 $txt['wiki_save'] = 'Save';
 $txt['wiki_edit_page'] = 'Editing Page';
@@ -16,13 +17,19 @@ $txt['wiki_main_page'] = 'Main Page';
 // View Page
 $txt['wiki_edit_section'] = 'edit';
 $txt['wiki_categories'] = 'Categories';
-
 $txt['wiki_pages_in_category'] = 'Pages in category &quot;%s&quot;';
+
+$txt['wiki_create_page'] = 'You can %1$screate this page%2$s.';
 
 // Edit
 $txt['edit_page'] = 'Edit page %s';
 $txt['edit_summary'] = 'Edit Summary';
 $txt['lock_page'] = 'Lock Page';
+
+// Delete PAge
+$txt['delete_page'] = 'Delete page %s';
+$txt['delete_page_permanent'] = 'Remove page permanently, if you check this page CANNOT be restored.';
+$txt['delete_page_button'] = 'Delete';
 
 // Talk
 $txt['talk_page'] = 'Comments for page %s';
@@ -48,7 +55,7 @@ $txt['wiki_admin_desc'] = 'Here you can edit settings of Wiki';
 
 // Admin Information
 $txt['wiki_latest_news'] = 'Latest News';
-$txt['wiki_news_unable_to_connect'] = 'Unable to connect to <a href="http://www.smfarcade.info">SMFArcade.info</a> for latest news...';
+$txt['wiki_news_unable_to_connect'] = 'Unable to connect to <a href="http://smfwiki.net">SMF Wiki.net</a> for latest news...';
 $txt['wiki_version_info'] = 'Version Information';
 $txt['wiki_installed_version'] = 'Installed version';
 $txt['wiki_latest_version'] = 'Latest version';
@@ -71,6 +78,7 @@ $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 $txt['template_not_found'] = 'Error: Template &quot;%s&quot; not found!';
 $txt['invalid_function'] = 'Error: Function &quot;%s&quot; is unknown!';
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
+$txt['wiki_page_deleted'] = 'This page has been deleted.';
 $txt['wiki_file_not_found'] = 'File was not found.';
 $txt['wiki_namespace_not_found'] = 'There is no namespace &quot;%s&quot; in this wiki .';
 $txt['wiki_namespace_broken'] = 'Unable to load namespace &quot;%s&quot;, it\'s either unkown type or duplicate of special type.';

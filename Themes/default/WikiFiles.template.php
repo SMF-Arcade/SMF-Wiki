@@ -12,10 +12,10 @@ function template_wiki_file_upload()
 			var textFields = ["', $context['post_box_name'], '"];
 			for (i in textFields)
 				if (document.forms.uploadfile.elements[textFields[i]])
-					document.forms.uploadfile[textFields[i]].value = document.forms.editarticle[textFields[i]].value.replace(/&#/g, "&#38;#");
+					document.forms.uploadfile[textFields[i]].value = document.forms.uploadfile[textFields[i]].value.replace(/&#/g, "&#38;#");
 			for (var i = document.forms.uploadfile.elements.length - 1; i >= 0; i--)
 				if (document.forms.uploadfile.elements[i].name.indexOf("options") == 0)
-					document.forms.uploadfile.elements[i].value = document.forms.editarticle.elements[i].value.replace(/&#/g, "&#38;#");
+					document.forms.uploadfile.elements[i].value = document.forms.uploadfile.elements[i].value.replace(/&#/g, "&#38;#");
 		}
 	// ]]></script>
 	<form action="', $context['current_page_url'], '" method="post" accept-charset="', $context['character_set'], '" name="uploadfile" id="uploadfile" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
