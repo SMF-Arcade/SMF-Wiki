@@ -355,6 +355,15 @@ function Wiki($standalone = false, $prefix = null)
 				$context['wiki_navigation'][$id]['items'][$subid]['selected'] = true;
 		}
 	}
+	
+	if (!empty($context['page_info']['page_tree']))
+		foreach ($context['page_info']['page_tree'] as $page)
+		{
+			$context['linktree'][] = array(
+				'url' => wiki_get_url($page['name']),
+				'name' => !empty($page['display_title']) ? $page['display_title'] : $page['title'],
+			);		
+		}
 
 	// Add Page to Link tree
 	$context['linktree'][] = array(

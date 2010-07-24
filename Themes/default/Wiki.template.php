@@ -11,7 +11,7 @@ function template_wiki_above()
 	foreach ($context['wiki_navigation'] as $group)
 	{
 		echo '
-		<div class="catbar">
+		<div class="cat_bar">
 			<h3 class="catbg', $group['selected'] ? ' selected' : '', '">';
 
 		if (!empty($group['url']))
@@ -23,7 +23,7 @@ function template_wiki_above()
 
 		echo '
 			</h3>
-		<div>
+		</div>
 		<div class="windowbg2">
 			<span class="topslice"><span></span></span>
 			<ul class="reset windowbg2">';

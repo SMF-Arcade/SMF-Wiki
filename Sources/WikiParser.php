@@ -47,7 +47,7 @@ class WikiPage
 	public $sections;
 	public $pageVariables;
 	public $pageSettings;
-	
+
 	// Categories this page is assigned to
 	public $categories;
 	
@@ -123,6 +123,8 @@ class WikiPage
 		$this->title = $page_info['title'];
 		$this->namespace = $namespace;
 		$this->raw_content = $content;
+		
+		$this->page_tree = array();
 		
 		// Mode
 		$this->mode = $include ? 'include' : 'normal';
@@ -574,7 +576,7 @@ class WikiPage
 	{
 		global $smcFunc;
 		
-		$name = str_replace(array('%3A', '+', '%'), array(':', '_', '.'), urlencode($name));
+		$name = str_replace(array('%3A', '+', '%'), array(':', '_', '.'), urlencode(un_htmlspecialchars($name)));
 		
 		while($name[0] == '.')
 			$name = substr($name, 1);

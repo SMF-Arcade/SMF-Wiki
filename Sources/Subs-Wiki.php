@@ -405,16 +405,53 @@ function wiki_get_page_info($page, $namespace)
 		);
 	}
 	$smcFunc['db_free_result']($request);
+	
+	$page_tree = array();
+	
+	// Get page tree from parent
+	if (strpos($page, '/') !== false)
+	{
+		$current_base = array();
+	
+		$parts = explode('/', $page);
+		$new_title = array_pop($parts);
+		
+		if (!empty($parts))
+		{
+			$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
+				
+			if (!empty($link_info['page_tree']))
+				$page_tree = $link_info['page_tree'];
+			if ($link_info !== false)
+			{
+				$page_tree[] = array(
+					'display_title' => $link_info['display_title'],
+					'title' => $link_info['title'],
+					'name' => $link_info['name'],
+				);
+				
+				if (empty($row['display_title']))
+					$row['display_title'] = read_urlname($new_title);
+			}
+		}
+	}
+	
+	/*$page_tree[] = array(
+		'display_title' => $row['display_title'],
+		'title' => read_urlname($row['title'], $namespace['id']),
+		'name' => wiki_urlname($row['title'], $namespace['id']),
+	);*/
 
 	return array(
 		'data' => array(
 			'id' => $row['id_page'],
 			'display_title' => $row['display_title'],
-			'title' => read_urlname($row['title'], $namespace['id']),
+			'title' => !empty($row['display_title']) ? $row['display_title'] : read_urlname($row['title'], $namespace['id']),
 			'name' => wiki_urlname($row['title'], $namespace['id']),
 			'topic' => $row['id_topic'],
 			'is_locked' => !empty($row['is_locked']),
 			'current_revision' => $row['id_revision_current'],
+			'page_tree' => $page_tree,
 		),
 		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
