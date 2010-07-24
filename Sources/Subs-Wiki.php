@@ -23,7 +23,9 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
-// Function to make all links
+/**
+ * ...
+ */
 function wiki_get_url($params)
 {
 	global $scripturl, $modSettings;
@@ -96,7 +98,9 @@ function wiki_get_url($params)
 	}
 }
 
-// Function to get parent pages
+/**
+ * Gets tree of parent pages for a page
+ */
 function get_page_parents($page, $namespace)
 {
 	if (strpos($page, '/') !== false)
@@ -104,7 +108,7 @@ function get_page_parents($page, $namespace)
 		$parts = explode('/', $page);
 		$new_title = array_pop($parts);
 		
-		$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
+		$link_info = cache_quick_get('wiki-pageinfo-' . wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
 			
 		if (!empty($link_info['page_tree']))
 			$page_tree = $link_info['page_tree'];
@@ -129,7 +133,9 @@ function get_page_parents($page, $namespace)
 	return array();
 }
 
-// Makes Readable name form urlname
+/**
+ * Returns default display title for page
+ */
 function get_default_display_title($page, $namespace = '', $html = true)
 {
 	global $smcFunc;
@@ -155,7 +161,9 @@ function get_default_display_title($page, $namespace = '', $html = true)
 		return (!empty($namespace) ? $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace))) . ':' : '') . $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page)));	
 }
 
-// Gets Namespace and Page from url style (Namespace:Page_Title)
+/**
+ * Gets Namespace and Page from url style (Namespace:Page_Title)
+ */
 function __url_page_parse($page, $clean = false)
 {
 	global $context;
@@ -183,7 +191,9 @@ function __url_page_parse($page, $clean = false)
 	return array($namespace, $page);
 }
 
-// Makes link from page title and namespace
+/**
+ * Makes link from page title and namespace
+ */
 function wiki_urlname($page, $namespace = null, $clean = true)
 {
 	global $smcFunc;
@@ -202,6 +212,9 @@ function wiki_urlname($page, $namespace = null, $clean = true)
 	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
 
+/**
+ * Checks if pagename is valid
+ */
 function is_valid_pagename($page, $namespace)
 {
 	if ($namespace['id'] != '' && empty($page))
@@ -210,7 +223,9 @@ function is_valid_pagename($page, $namespace)
 	return str_replace(array('[', ']', '{', '}', '|'), '', $page) == $page;
 }
 
-// Cleans illegal characters from pagename
+/**
+ * Cleans illegal characters from pagename
+ */
 function clean_pagename($string, $namespace = false)
 {
 	global $smcFunc;
@@ -221,7 +236,9 @@ function clean_pagename($string, $namespace = false)
 	return str_replace(array(' ', '[', ']', '{', '}', '|'), '_', $string);
 }
 
-// Makes namespace pagename + page name safe for use in cachefile name
+/**
+ * Makes namespace pagename + page name safe for use in cachefile name
+ */
 function wiki_cache_escape($namespace, $page)
 {
 	return sha1($namespace) . '-' . sha1($page);
@@ -447,7 +464,7 @@ function wiki_get_page_info($page, $namespace)
 				'page_tree' => get_page_parents($page, $namespace['id']),
 			),
 			// Minimal cache time for non-existing pages
-			'expires' => time() + 60,
+			'expires' => time() + 3600,
 			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 		);
 	}
@@ -481,12 +498,6 @@ function wiki_get_page_info($page, $namespace)
 			$row['display_title'] = get_default_display_title($new_title);
 	}
 	
-	/*$page_tree[] = array(
-		'display_title' => $row['display_title'],
-		'title' => get_default_display_title($row['title'], $namespace['id']),
-		'name' => wiki_urlname($row['title'], $namespace['id']),
-	);*/
-
 	return array(
 		'data' => array(
 			'id' => $row['id_page'],
@@ -535,7 +546,9 @@ function wiki_get_page_content($page_info, $namespace, $revision, $include = fal
 	);
 }
 
-// LoadWikiMenu
+/**
+ * Setups wiki navigation menu
+ */
 function loadWikiMenu()
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
@@ -627,7 +640,9 @@ function loadWikiMenu()
 	);
 }
 
-// Creates new page without any revision
+/**
+ * Creates new page without any revision
+ */
 function createPage($title, $namespace)
 {
 	global $smcFunc;
@@ -650,7 +665,9 @@ function createPage($title, $namespace)
 	return $smcFunc['db_insert_id']('{wiki_prefix}pages', 'id_page');
 }
 
-// Creates new revision for page
+/**
+ * Creates new revision for page
+ */
 function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions)
 {
 	global $context, $smcFunc;
@@ -717,12 +734,14 @@ function createRevision($id_page, $pageOptions, $revisionOptions, $posterOptions
 	if ($row['namespace'] == $context['namespace_internal']['id'] && $row['title'] == 'Sidebar')
 		cache_put_data('wiki-navigation', null, 360);
 
-	cache_put_data('wiki-pageinfo-' . wiki_cache_escape($row['namespace'], $row['title']), null, 360);
+	cache_put_data('wiki-pageinfo-' . wiki_cache_escape($row['namespace'], $row['title']), null, 3600);
 
 	return true;
 }
 
-// Remove an array of revisions. (permissions are NOT checked in this function!)
+/**
+ * Remove an array of revisions. (permissions are NOT checked in this function!)
+ */
 function removeWikiRevisions($page, $revisions)
 {
 	global $smcFunc;
@@ -776,6 +795,48 @@ function removeWikiRevisions($page, $revisions)
 	return true;
 }
 
+/**
+ * Restores softdelete page(s)
+ */
+function restoreWikiPage($page)
+{
+	global $smcFunc;
+
+	if (!is_array($page))
+		$page = array((int) $page);
+		
+	$pages = array();
+
+	$request = $smcFunc['db_query']('', '
+		SELECT title, namespace
+		FROM {wiki_prefix}pages
+		WHERE id_page IN({array_int:page})',
+		array(
+			'page' => $page,
+		)
+	);
+	while ($row = $smcFunc['db_fetch_row']($request))
+		$pages[] = $row;
+	$smcFunc['db_free_result']($request);
+	
+	$smcFunc['db_query']('', '
+		UPDATE {wiki_prefix}pages
+		SET is_deleted = 0
+		WHERE id_page IN({array_int:page})',
+		array(
+			'page' => $page,
+		)
+	);
+		
+	foreach ($pages as $page)
+		cache_put_data('wiki-pageinfo-' . wiki_cache_escape($page['namespace'], $page['title']), null, 3600);
+	
+	return true;	
+}
+
+/**
+ * Deletes page(s)
+ */
 function deleteWikiPage($page, $soft_delete = true)
 {
 	global $smcFunc;
@@ -783,6 +844,20 @@ function deleteWikiPage($page, $soft_delete = true)
 	if (!is_array($page))
 		$page = array((int) $page);
 
+	$pages = array();
+
+	$request = $smcFunc['db_query']('', '
+		SELECT title, namespace
+		FROM {wiki_prefix}pages
+		WHERE id_page IN({array_int:page})',
+		array(
+			'page' => $page,
+		)
+	);
+	while ($row = $smcFunc['db_fetch_row']($request))
+		$pages[] = $row;
+	$smcFunc['db_free_result']($request);
+	
 	if (!$soft_delete)
 	{
 		$smcFunc['db_query']('', '
@@ -812,17 +887,8 @@ function deleteWikiPage($page, $soft_delete = true)
 		);		
 	}
 
-	$request = $smcFunc['db_query']('', '
-		SELECT title, namespace
-		FROM {wiki_prefix}pages
-		WHERE id_page IN({array_int:page})',
-		array(
-			'page' => $page,
-		)
-	);
-	while ($row = $smcFunc['db_fetch_row']($request))
-		cache_put_data('wiki-pageinfo-' . wiki_cache_escape($row['namespace'], $row['title']), null, 360);
-	$smcFunc['db_free_result']($request);
+	foreach ($pages as $page)
+		cache_put_data('wiki-pageinfo-' . wiki_cache_escape($page['namespace'], $page['title']), null, 3600);
 	
 	return true;
 }

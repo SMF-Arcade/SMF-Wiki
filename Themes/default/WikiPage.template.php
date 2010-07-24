@@ -356,12 +356,28 @@ function template_delete_page()
 
 	if ($context['can_delete_permanent'])
 		echo '
-				<input type="checkbox" name="delete_permanent" value="1" /> ', $txt['delete_page_permanent'];
-
+				<input type="checkbox" name="permanent_delete" value="1" /> ', $txt['delete_page_permanent'], '<br />';
+		
 	echo '
 			</div>
 			<div style="text-align: center">
 				<input class="button_submit" type="submit" name="delete" value="', $txt['delete_page_button'], '" />
+			</div>
+		</div>
+
+		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+	</form>';	
+}
+
+function template_restore_page()
+{
+	global $context, $modSettings, $txt, $user_info;
+
+	echo '
+	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="restorepage" id="restorepage">
+		<div style="width: 95%; margin: auto">
+			<div style="text-align: center">
+				<input class="button_submit" type="submit" name="delete" value="', $txt['restore_page_button'], '" />
 			</div>
 		</div>
 

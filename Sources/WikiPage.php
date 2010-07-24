@@ -131,4 +131,11 @@ function DiffPage()
 	$context['sub_template'] = 'view_page';
 }
 
+function CleanCache()
+{
+	global $context;
+	
+	redirectexit($context['current_page_url']);
+}
+
 ?>

@@ -158,7 +158,10 @@ function Wiki($standalone = false, $prefix = null)
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
 		'delete' => array('WikiEditPage.php', 'DeletePage'),
 		'delete2' => array('WikiEditPage.php', 'DeletePage2'),
+		'restore' => array('WikiEditPage.php', 'DeletePage'),
+		'restore2' => array('WikiEditPage.php', 'DeletePage2'),
 		'download' => array('WikiFiles.php', 'WikiFileView', true, true),
+		'purge' => array('WikiPage.php', 'CleanCache'),
 	);
 	
 	// Don't allow talk actions if it's not enalbed
@@ -226,6 +229,7 @@ function Wiki($standalone = false, $prefix = null)
 		$context['can_lock_page'] = allowedTo('wiki_admin');
 		$context['can_delete_page'] = allowedTo('wiki_admin');
 		$context['can_delete_permanent'] = allowedTo('wiki_admin');
+		$context['can_restore_page'] = allowedTo('wiki_admin');
 
 		// Don't let anyone create page if it's not "normal" page (ie. file)
 		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
@@ -255,7 +259,7 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'edit',
 				)),
 				'selected' => in_array($subaction, array('edit', 'edit2')),
-				'show' => $context['can_edit_page'],
+				'show' => $context['can_edit_page'] && empty($context['page_info']['is_deleted']),
 			),
 			'delete' => array(
 				'title' => $txt['wiki_delete'],
@@ -264,7 +268,16 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'delete',
 				)),
 				'selected' => in_array($subaction, array('delete', 'delete2')),
-				'show' => $context['can_delete_page'] && !$context['page_info']['is_deleted'],				
+				'show' => $context['can_delete_page'],				
+			),
+			'restore' => array(
+				'title' => $txt['wiki_restore'],
+				'url' => wiki_get_url(array(
+					'page' => $context['current_page_name'],
+					'sa' => 'restore',
+				)),
+				'selected' => in_array($subaction, array('restore', 'restore2')),
+				'show' => $context['can_restore_page'] && $context['page_info']['is_deleted'],				
 			),
 			'history' => array(
 				'title' => $txt['wiki_history'],

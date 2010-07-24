@@ -6,12 +6,12 @@ $txt['wiki_view'] = 'view';
 $txt['wiki_talk'] = 'talk';
 $txt['wiki_edit'] = 'edit';
 $txt['wiki_delete'] = 'delete';
+$txt['wiki_restore'] = 'restore';
 $txt['wiki_history'] = 'history';
 $txt['wiki_save'] = 'Save';
-$txt['wiki_edit_page'] = 'Editing Page';
 
 // Navigation Menu
-$txt['wiki_navigation'] = 'navigation';
+$txt['wiki_navigation'] = 'Navigation';
 $txt['wiki_main_page'] = 'Main Page';
 
 // View Page
@@ -26,10 +26,14 @@ $txt['edit_page'] = 'Edit page %s';
 $txt['edit_summary'] = 'Edit Summary';
 $txt['lock_page'] = 'Lock Page';
 
-// Delete PAge
+// Delete Page
 $txt['delete_page'] = 'Delete page %s';
 $txt['delete_page_permanent'] = 'Remove page permanently, if you check this page CANNOT be restored.';
 $txt['delete_page_button'] = 'Delete';
+
+// Restore Page
+$txt['restore_page'] = 'Restore page %s';
+$txt['restore_page_button'] = 'Restore';
 
 // Talk
 $txt['talk_page'] = 'Comments for page %s';

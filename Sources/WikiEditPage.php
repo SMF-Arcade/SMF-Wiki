@@ -280,7 +280,40 @@ function DeletePage2()
 	
 	checkSession('post');
 	
-	deleteWikiPage($context['page_info']['id'], !empty($context['can_delete_permanent']) && empty($_REQUEST['permanent_delete']));
+	$delete_permanently = !empty($context['can_delete_permanent']) && !empty($_REQUEST['permanent_delete']);
+	
+	deleteWikiPage($context['page_info']['id'], !$delete_permanently);
+	
+	redirectexit($context['current_page_url']);
+}
+
+function RestorePage()
+{
+	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
+
+	isAllowedTo('wiki_admin');
+	
+	$context['form_url'] = wiki_get_url(array(
+		'page' => $context['current_page_name'],
+		'sa' => 'restore2',
+	));
+	
+	// Template
+	loadTemplate('WikiPage');
+	$context['page_title'] = sprintf($txt['restore_page'], $context['current_page_title']);
+	$context['current_page_title'] = sprintf($txt['restore_page'], $context['current_page_title']);
+	$context['sub_template'] = 'restore_page';	
+}
+
+function RestorePage2()
+{
+	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
+
+	isAllowedTo('wiki_admin');
+	
+	checkSession('post');
+	
+	restoreWikiPage($context['page_info']['id'], !$delete_permanently);
 	
 	redirectexit($context['current_page_url']);
 }
