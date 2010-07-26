@@ -43,12 +43,6 @@ function loadWiki($mode = '', $prefix = null)
 	// Normal mode
 	if ($mode == '')
 	{
-		// Linktree
-		$context['linktree'][] = array(
-			'url' => wiki_get_url('Main_Page'),
-			'name' => $txt['wiki'],
-		);
-		
 		// Template
 		$context['template_layers'][] = 'wiki';
 		
@@ -126,10 +120,16 @@ function Wiki($standalone = false, $prefix = null)
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 	
 	loadWiki('', $prefix);
+	
+	// Linktree
+	$context['linktree'][] = array(
+		'url' => $context['namespaces']['']['url'],
+		'name' => $txt['wiki'],
+	);
 
 	// Go to default page if not defined
 	if (!isset($_REQUEST['page']) || empty($_REQUEST['page']))
-		redirectexit(wiki_get_url('Main_Page'));
+		redirectexit($context['namespaces']['']['url']);
 	
 	// Parse namespace from page
 	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
@@ -230,6 +230,9 @@ function Wiki($standalone = false, $prefix = null)
 		$context['can_delete_page'] = allowedTo('wiki_admin');
 		$context['can_delete_permanent'] = allowedTo('wiki_admin');
 		$context['can_restore_page'] = allowedTo('wiki_admin');
+		
+		$context['can_create_page'] = allowedTo('wiki_edit');
+		$context['can_edit_page'] &= !$context['can_create_page'] && empty($context['page_info']['is_deleted']);
 
 		// Don't let anyone create page if it's not "normal" page (ie. file)
 		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
@@ -253,13 +256,13 @@ function Wiki($standalone = false, $prefix = null)
 				'show' => !empty($modSettings['wikiTalkBoard']) && empty($context['page_info']['is_deleted']),
 			),
 			'edit' => array(
-				'title' => $txt['wiki_edit'],
+				'title' => !$context['can_create_page'] ? $txt['wiki_edit'] : $txt['wiki_create'],
 				'url' => wiki_get_url(array(
 					'page' => $context['current_page_name'],
 					'sa' => 'edit',
 				)),
 				'selected' => in_array($subaction, array('edit', 'edit2')),
-				'show' => $context['can_edit_page'] && empty($context['page_info']['is_deleted']),
+				'show' => $context['can_create_page'] || $context['can_edit_page'],
 			),
 			'delete' => array(
 				'title' => $txt['wiki_delete'],
@@ -297,18 +300,18 @@ function Wiki($standalone = false, $prefix = null)
 		{
 			foreach ($context['wikimenu'] as $id => $menu_item)
 			{
-				if ($menu_item['selected'])
+				if (!$menu_item['show'])
 				{
-					if (!$menu_item['show'])
+					if ($menu_item['selected'])
 					{
 						$context['wikimenu'][$id]['selected'] = false;
 						
 						// Use view action then
 						$subaction = 'view';
 						$context['wikimenu'][$subaction]['selected'] = true;
-						
-						$context['robot_no_index'] = true;
 					}
+					
+					unset($context['wikimenu'][$id]);
 						
 					continue;
 				}
@@ -369,6 +372,23 @@ function Wiki($standalone = false, $prefix = null)
 	// Load Navigation
 	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
 
+	// Add toolbox to navigation menu
+	$context['wiki_navigation'][] = array(
+		'title' => $txt['wiki_toolbox'],
+		'items' => array(
+			array(
+				'title' => $txt['wiki_recent_changes'],
+				'page' => wiki_urlname('RecentChanges', $context['namespace_special']['id']),
+				'url' => wiki_get_url(wiki_urlname('RecentChanges', $context['namespace_special']['id'])),
+			),
+			array(
+				'title' => $txt['wiki_upload_file'],
+				'page' => wiki_urlname('Upload', $context['namespace_special']['id']),
+				'url' => wiki_get_url(wiki_urlname('Upload', $context['namespace_special']['id'])),
+			)
+		),
+	);
+	
 	// Highlight current section
 	foreach ($context['wiki_navigation'] as $id => $grp)
 	{
@@ -391,29 +411,22 @@ function Wiki($standalone = false, $prefix = null)
 			);		
 		}
 
-	// Add Page to Link tree
-	$context['linktree'][] = array(
-		'url' => $context['current_page_url'],
-		'name' => $context['page_info']['title'],
-	);
-
-	// Page Title
-	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['page_info']['title']);
-	
 	// Have display name of page in variable
 	$context['current_page_title'] = $context['page_info']['title'];
 
-	// Invalid special page?
+	// Special page?
 	if ($namespaceGroup == 'special')
 	{
+		// Template
+		loadTemplate('WikiPage');
+		$context['template_layers'][] = 'wikipage';
+			
+		// Invalid special page?
 		if (!isset($context['wiki_special_pages'][$subaction]))
 		{
 			$namespaceGroup = 'normal';
 			$subaction = 'view';
-	
-			// Template
-			loadTemplate('WikiPage');
-			$context['template_layers'][] = 'wikipage';
+			
 			$context['sub_template'] = 'not_found';
 			
 			require_once($sourcedir . '/' . $subActions[$subaction][0]);
@@ -427,6 +440,15 @@ function Wiki($standalone = false, $prefix = null)
 		
 		return;
 	}
+	
+	// Add Page to Link tree
+	$context['linktree'][] = array(
+		'url' => $context['current_page_url'],
+		'name' => $context['current_page_title'],
+	);
+
+	// Page Title
+	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['current_page_title']);
 
 	require_once($sourcedir . '/' . $subActions[$subaction][0]);
 	$subActions[$subaction][1]();

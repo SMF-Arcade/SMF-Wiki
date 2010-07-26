@@ -23,25 +23,35 @@ function template_wiki_above()
 
 		echo '
 			</h3>
-		</div>
+		</div>';
+		
+		if (!empty($group['items']))
+		{
+			echo '
 		<div class="windowbg2">
 			<span class="topslice"><span></span></span>
 			<ul class="windowbg2">';
 
-		foreach ($group['items'] as $item)
-		{
-			if (!empty($item['url']))
-				echo '
+			foreach ($group['items'] as $item)
+			{
+				if (!empty($item['url']))
+					echo '
 				<li', $item['selected'] ? ' class="selected"' : '', '><a href="', $item['url'], '">', $item['title'], '</a></li>';
-			else
-				echo '
+				else
+					echo '
 				<li>', $item['title'], '</li>';
-		}
+			}
 
-		echo '
+			echo '
 			</ul>
 			<span class="botslice"><span></span></span>
 		</div>';
+		}
+		elseif (!empty($group['template']))
+		{
+			$template = 'template_' . $group['template'];
+			$template();
+		}
 	}
 
 	echo '

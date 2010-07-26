@@ -31,6 +31,9 @@ function WikiRecentChanges()
 		'page' => $context['current_page_name'],
 	));
 
+	// Set page title
+	$context['current_page_title'] = $txt['wiki_recent_changes'];
+
 	$request = $smcFunc['db_query']('', '
 		SELECT
 			con.id_revision, con.id_page, con.timestamp, con.comment, mem.id_member, mem.real_name, MAX(prev.id_revision) AS id_prev_revision,
@@ -39,6 +42,8 @@ function WikiRecentChanges()
 			INNER JOIN {wiki_prefix}pages AS page ON (page.id_page = con.id_page)
 			LEFT JOIN {wiki_prefix}content AS prev ON (prev.id_revision < con.id_revision AND prev.id_page = con.id_page)
 			LEFT JOIN {db_prefix}members AS mem ON (mem.id_member = con.id_author)
+		WHERE
+			page.is_deleted = 0
 		GROUP BY con.id_revision
 		ORDER BY con.id_revision DESC',
 		array(

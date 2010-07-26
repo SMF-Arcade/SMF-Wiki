@@ -122,6 +122,8 @@ class WikiParser
 		
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
+			
+		$target = &$main_target;
 		
 		$text = str_replace(array("\r\n", "\r", '<br />', '<br>', '<br/>'), "\n", $text);
 
@@ -138,6 +140,8 @@ class WikiParser
 		$paragraph = array();
 		$can_open_paragraph = true;
 		$is_paragraph = true;
+		
+		
 		
 		while ($i <= $textLen)
 		{

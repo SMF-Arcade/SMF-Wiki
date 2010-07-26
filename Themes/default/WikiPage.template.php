@@ -19,13 +19,8 @@ function template_wikipage_above()
 					<ul>';
 
 	foreach ($context['wikimenu'] as $id => $item)
-	{
-		if (empty($item['show']))
-			continue;
-
 		echo '
 						<li class="firstlevel"><a', $item['selected'] ? ' class="active"' : '', ' href="', $item['url'], '"><span class="firstlevel">', $item['title'], '</span></a></li>';
-	}
 
 	echo '
 					</ul>

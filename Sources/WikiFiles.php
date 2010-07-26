@@ -127,6 +127,9 @@ function WikiFileUpload()
 		fatal_lang_error('wiki_file_not_found', false);
 
 	isAllowedTo('wiki_upload');
+	
+	// Set page title
+	$context['current_page_title'] = $txt['wiki_upload_file'];
 
 	// Submit?
 	if (isset($_POST[$context['session_var']]))

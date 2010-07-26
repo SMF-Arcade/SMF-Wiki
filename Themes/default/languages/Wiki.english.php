@@ -5,6 +5,7 @@ $txt['wiki'] = 'Wiki';
 $txt['wiki_view'] = 'view';
 $txt['wiki_talk'] = 'talk';
 $txt['wiki_edit'] = 'edit';
+$txt['wiki_create'] = 'create';
 $txt['wiki_delete'] = 'delete';
 $txt['wiki_restore'] = 'restore';
 $txt['wiki_history'] = 'history';
@@ -13,6 +14,7 @@ $txt['wiki_save'] = 'Save';
 // Navigation Menu
 $txt['wiki_navigation'] = 'Navigation';
 $txt['wiki_main_page'] = 'Main Page';
+$txt['wiki_toolbox'] = 'Toolbox';
 
 // View Page
 $txt['wiki_edit_section'] = 'edit';
@@ -76,6 +78,7 @@ $txt['wikiTalkBoard'] = 'Talk Board';
 $txt['wikiAttachmentsDir'] = 'File Upload Directory';
 
 // Recent Changes
+$txt['wiki_recent_changes'] = 'Recent Changes';
 $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 
 // Error
