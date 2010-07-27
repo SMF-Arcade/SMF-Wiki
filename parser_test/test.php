@@ -12,6 +12,8 @@ level 2 content line 1.<br />
 level 2 content line 2.<br /><br />baat<br /><br /><br />aa
 level 2 content line 3.<br />
 level 2 content line 4.<br />
+=== Level 3 ===<br />
+[[WikiLink]].<br />
 level 2 content line 5.<br />
 <nowiki>line 6</nowiki></nowiki>
 <nowiki>broken no wiki tag this should parse normally<br /><br />
@@ -27,7 +29,7 @@ foreach ($tests as $test)
 
 	echo '
 	<pre>', $test, '</pre>
-	<pre>', var_dump($parser->__parse(str_replace("\r\n", '', $test))), '</pre>';
+	<pre>', var_dump($parser->parse(str_replace("\r\n", '', $test))), '</pre>';
 ;
 }
 
