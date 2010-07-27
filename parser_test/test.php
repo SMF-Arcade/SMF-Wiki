@@ -15,6 +15,7 @@ level 2 content line 4.<br />
 level 2 content line 5.<br />
 <nowiki>line 6</nowiki></nowiki>
 <nowiki>broken no wiki tag this should parse normally<br /><br />
+{mr.brackets}
 
 second paragraph<br /><br/>third<br />line 2 of third<br />
 ===broken header==="
