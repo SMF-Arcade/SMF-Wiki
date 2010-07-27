@@ -261,7 +261,7 @@ class WikiParser
 			$search = $searchBase;
 			$closeTag = '';
 
-			if ($target instanceof WikiElement)
+			if ($target instanceof WikiElement_Parser)
 			{
 				$search .= $target->rule['close'] . (empty($target->rule['no_param']) ? '|' : '') . ($target->rule['close'] == '}' ? ':' : '');
 				$closeTag = $target->rule['close'];
@@ -391,7 +391,7 @@ class WikiParser
 						// Nested tag?
 						if ($open >= $element->rule['min'])
 						{
-							$target = new WikiElement($curChar, $open);
+							$target = new WikiElement_Parser($curChar, $open);
 							$target->throwContent(WikiParser::ELEMENT_OPEN, str_repeat($element->char, $open));
 						}
 						// or just unnecassary character?
@@ -416,9 +416,9 @@ class WikiParser
 					$i += $matchLen;
 				}
 				// Start character for WikiElement
-				elseif ($this->parse_bbc && isset(WikiElement::$rules[$curChar]))
+				elseif ($this->parse_bbc && isset(WikiElement_Parser::$rules[$curChar]))
 				{
-					$rule = WikiElement::$rules[$curChar];
+					$rule = WikiElement_Parser::$rules[$curChar];
 					
 					$len = strspn($text, $curChar, $i);
 
@@ -442,7 +442,7 @@ class WikiParser
 								{
 									$stack[] = $target;
 									
-									$target = new WikiElement($curChar, $len);
+									$target = new WikiElement_Parser($curChar, $len);
 									$target->throwContent(WikiParser::ELEMENT_NAME, $item_name);
 
 									$i += $nameLen;
@@ -456,7 +456,7 @@ class WikiParser
 						else
 						{
 							$stack[] = $target;
-							$target = new WikiElement($curChar, $len);
+							$target = new WikiElement_Parser($curChar, $len);
 						}
 					}
 					else
@@ -706,15 +706,20 @@ class WikiParser
 	}
 }
 
-class WikiElement
+class WikiElement_Parser
 {
+	const WIKILINK = 1;
+	const TEMPLATE = 2;
+	const TEMPLATE_PARAM = 3;
+	const HASHTAG = 3;
+	
 	static public $rules = array(
 		'[' => array(
 			'close' => ']',
 			'min' => 2,
 			'max' => 2,
 			'names' => array(
-				2 => 'wikilink',
+				2 => WIKILINK,
 			),
 		),
 		'{' => array(
@@ -722,8 +727,8 @@ class WikiElement
 			'min' => 2,
 			'max' => 3,
 			'names' => array(
-				2 => 'template',
-				3 => 'template_param',
+				2 => TEMPLATE,
+				3 => TEMPLATE_PARAM,
 			),
 		),
 		'#' => array(
@@ -731,7 +736,7 @@ class WikiElement
 			'min' => 1,
 			'max' => 1,
 			'names' => array(
-				1 => 'hash_tag',
+				1 => HASHTAG,
 			),
 			'no_param' => true,
 			'has_name' => true,
@@ -742,13 +747,14 @@ class WikiElement
 	public $len;
 	public $rule;
 	
+	public $type;
 	
 	private $content;
 	private $is_complete;
 	
 	public function __construct($char, $len)
 	{
-		$this->rule = WikiElement::$rules[$char];
+		$this->rule = WikiElement_Parser::$rules[$char];
 		$this->char = $char;
 		$this->len = $len;
 		$this->is_complete = false;
@@ -837,10 +843,51 @@ class WikiElement
 	
 	/**
 	 * Function to finalize content so it can be added to page (or another element)
-	 * @todo Refactor commented code into 
 	 */
 	public function finalize()
+	{		
+		if ($this->char == '{')
+			$this->finalize_curly();
+		elseif ($this->char == '[')
+			$this->finalize_square();
+		elseif ($this->char == '#')
+			$this->finalize_hashtag();
+	}
+	
+	/**
+	 * Function to finalize content so it can be added to page (or another element)
+	 * @todo Refactor commented code into 
+	 */
+	public function finalize_curly()
 	{
+		$param = 0;
+		$params = array();
+		
+		foreach ($this->content as $c)
+		{
+			switch ($c['type'])
+			{
+				case WikiParser::ELEMENT_OPEN:
+				case WikiParser::ELEMENT_CLOSE:
+					break;
+				
+				case WikiParser::ELEMENT_NEW_PARAM:
+					$param++;
+					break;
+				
+				default:
+					$params[$param][] = $c;
+					break;
+			}
+		}
+		
+		$this->type = $this->rule['names'][$this->len];
+		
+		if ($this->type == WikiElement_Parser::WIKILINK)
+		{
+			
+		}
+	}
 		/*if ($piece['current_param'] !== null)
 					{
 						if (!isset($piece['firstParam']))
@@ -947,7 +994,6 @@ class WikiElement
 	
 					if (empty($stack))
 						$paragraph[] = $thisElement;*/
-	}
 }
 
 ?>
