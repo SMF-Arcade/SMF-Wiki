@@ -20,7 +20,8 @@ level 2 content line 5.<br />
 {mr.brackets}
 
 second paragraph<br /><br/>third<br />line 2 of third<br />
-===broken header==="
+===broken header===
+This tag is not closed: [[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa"
 );
 
 foreach ($tests as $test)
@@ -28,8 +29,12 @@ foreach ($tests as $test)
 	$parser = new WikiParser(array());
 
 	echo '
+	<h2>Org</h2>
 	<pre>', $test, '</pre>
-	<pre>', var_dump($parser->parse(str_replace("\r\n", '', $test))), '</pre>';
+	<h2>Parsed</h2>
+	<pre>', var_dump($parser->parse(str_replace("\r\n", '', $test))), '</pre>
+	<h2>TOC</h2>
+	<pre>', var_dump($parser->tableOfContents), '</pre>';
 ;
 }
 
