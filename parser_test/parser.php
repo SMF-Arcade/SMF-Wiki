@@ -1,8 +1,17 @@
 <?php
 
 /**
+ * Wiki Page class
+ * Basic Usage: $page = new WikiPage($page_info);
+ */
+class WikiPage
+{
+	
+}
+
+/**
  * Class that parsers wiki page
- * Basic Usage: $parser = new Wiki_Parser($page_info); $parser->parse($my_content);
+ * Basic Usage: $parser = new WikiParser($page); $parser->parse($my_content);
  */
 class WikiParser
 {
@@ -104,9 +113,9 @@ class WikiParser
 	private $errors;
 	private $_maxSeverity;
 		
-	function __construct($page_info, $parse_bbc = true)
+	function __construct(WikiPage $page, $parse_bbc = true)
 	{
-		$this->page_info = $page_info;
+		$this->page = $page;
 		$this->parse_bbc = $parse_bbc;
 	}
 	
@@ -847,11 +856,11 @@ class WikiElement_Parser
 	public function finalize()
 	{		
 		if ($this->char == '{')
-			$this->finalize_curly();
+			return $this->finalize_curly();
 		elseif ($this->char == '[')
-			$this->finalize_square();
+			return $this->finalize_square();
 		elseif ($this->char == '#')
-			$this->finalize_hashtag();
+			return $this->finalize_hashtag();
 	}
 	
 	/**
@@ -884,9 +893,7 @@ class WikiElement_Parser
 		$this->type = $this->rule['names'][$this->len];
 		
 		if ($this->type == WikiElement_Parser::WIKILINK)
-		{
-			
-		}
+			return new WikiLink($params);
 	}
 		/*if ($piece['current_param'] !== null)
 					{
@@ -996,12 +1003,15 @@ class WikiElement_Parser
 						$paragraph[] = $thisElement;*/
 }
 
-interface WikiElement
-{}
-
-class WikiLink implements WikiElement_Base
+class WikiLink
 {
+	public $link_target = '';
+	public $link_text = '';
 	
+	function __construct($params)
+	{
+		
+	}
 }
 
 ?>
