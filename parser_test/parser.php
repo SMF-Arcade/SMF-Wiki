@@ -996,4 +996,12 @@ class WikiElement_Parser
 						$paragraph[] = $thisElement;*/
 }
 
+interface WikiElement
+{}
+
+class WikiLink implements WikiElement_Base
+{
+	
+}
+
 ?>
