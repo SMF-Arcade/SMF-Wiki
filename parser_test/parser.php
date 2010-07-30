@@ -593,7 +593,7 @@ class WikiParser
 					}
 				}
 				// Start or end of tag
-				elseif (false && $this->parse_bbc && substr($text, $i, 4) == '&lt;')
+				elseif ($this->parse_bbc && substr($text, $i, 4) == '&lt;')
 				{
 					$endPos = strpos($text, '&gt;', $i + 4);
 					
@@ -662,11 +662,16 @@ class WikiParser
 							$endPos = $endTagPos + strlen($endTag);
 						}
 						
-						$target->throwContent(WikiParser::TAG, $tagContent, substr($text, $i, $endPos - $i), array('name' => $tagName, 'attributes' => $attributes));
+						$target->throwContent(WikiParser::TAG, new WikiTag($tagName, $attributes, $tagContent), substr($text, $i, $endPos - $i));
 							
 						$i = $endPos;
 						
 						continue;
+					}
+					else
+					{
+						$target->throwContent(WikiParser::TEXT, '&lt;');
+						$i += 4;
 					}
 				}
 				// Behaviour switch
@@ -735,6 +740,9 @@ class WikiParser
 	}
 }
 
+/**
+ * Parser for Square brackets, curly bracets and hash tags
+ */
 class WikiElement_Parser
 {
 	const WIKILINK = 1;
@@ -1023,7 +1031,18 @@ class WikiElement_Parser
 						$paragraph[] = $thisElement;*/
 }
 
-class WikiLink
+/**
+ * WikiElement base class
+ */
+class WikiElement
+{
+	
+}
+
+/**
+ * Wikilink class
+ */
+class WikiLink extends WikiElement
 {
 	public $link_target = '';
 	public $link_text = '';
@@ -1031,6 +1050,23 @@ class WikiLink
 	function __construct($params)
 	{
 		
+	}
+}
+
+/**
+ *
+ */
+class WikiTag extends WikiElement
+{
+	public $tag;
+	public $attributes;
+	public $content;
+	
+	function __construct($tag, $attributes, $content)
+	{
+		$this->tag = $tag;
+		$this->attributes = $attributes;
+		$this->content = $content;
 	}
 }
 
