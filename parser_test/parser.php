@@ -15,6 +15,7 @@ class WikiPage
  */
 class WikiParser
 {
+	// General
 	const TEXT = 1;
 	const NEW_LINE = 2;
 	const NEW_PARAGRAPH = 3;
@@ -34,7 +35,11 @@ class WikiParser
 	const ELEMENT_NEW_PARAM = 43;
 	const ELEMENT_CLOSE = 49;
 	
+	// Behaviour Switch
 	const BEHAVIOUR_SWITCH = 50;
+	
+	// XML style tag
+	const TAG = 51;
 	
 	// Parser Warnings
 	const SEV_NOTICE = 1;
@@ -64,7 +69,17 @@ class WikiParser
 		'</table>' => true,
 	);
 	
+	/**
+	 *
+	 */
 	static public $hashTags = array(
+		'test' => array(),
+	);
+	
+	/**
+	 *
+	 */
+	static public $xmlTags = array(
 		'test' => array(),
 	);
 	
@@ -82,8 +97,10 @@ class WikiParser
 		return $name;
 	}
 		
-	// Page info
-	private $page_info;
+	/**
+	 * Page variable containing WikiPage class.
+	 */
+	private $page;
 	
 	// Settings
 	private $parse_bbc;
@@ -112,13 +129,19 @@ class WikiParser
 	// Errors
 	private $errors;
 	private $_maxSeverity;
-		
+	
+	/**
+	 *
+	 */
 	function __construct(WikiPage $page, $parse_bbc = true)
 	{
 		$this->page = $page;
 		$this->parse_bbc = $parse_bbc;
 	}
 	
+	/**
+	 * Parser page and returns results
+	 */
 	public function parse($text)
 	{
 		$this->content = array();
@@ -128,7 +151,9 @@ class WikiParser
 		return $this->content;
 	}
 	
-	// Adds content to this page
+	/**
+	 * Adds content to this page
+	 */
 	public function throwContent($type, $content, $unparsed = '', $additonal = array())
 	{
 		$i = count($this->content);
@@ -213,6 +238,9 @@ class WikiParser
 		);
 	}
 	
+	/**
+	 *
+	 */
 	public function throwWarning($severity = SEV_NOTICE, $type)
 	{
 		$this->errors[] = array(
@@ -222,6 +250,9 @@ class WikiParser
 		);
 	}
 	
+	/**
+	 * Main parser function
+	 */
 	private function __parse(WikiParser $target, $text, $is_template = false)
 	{
 		global $context;
@@ -539,7 +570,7 @@ class WikiParser
 							
 							$target->throwContent(WikiParser::BLOCK_LEVEL_OPEN, substr($text, $i, $tagLen));
 						}
-						elseif (!$can_paragraph)
+						elseif (!$can_open_paragraph)
 						{
 							$blockLevelNesting--;
 							
@@ -547,6 +578,9 @@ class WikiParser
 							
 							$target->throwContent(WikiParser::BLOCK_LEVEL_CLOSE, substr($text, $i, $tagLen));
 						}
+						else
+							$target->throwContent(WikiParser::TEXT, substr($text, $i, $tagLen));
+
 						
 						$i += $tagLen;
 						
@@ -568,19 +602,15 @@ class WikiParser
 					$tagName = strtolower(substr($tagCode, 0, $tagLen));
 					
 					// TODO: Fix this
-					if (isset($context['wiki_parser_extensions']['tags'][$tagName]))
+					if (isset(WikiParser::$xmlTags[$tagName]))
 					{
 						// Last > tag
 						$endPos += 4;
 						
-						$tag = array(
-							'name' => 'tag',
-							'tag_name' => $tagName,
-							'content' => '',
-							'attributes' => array(),
-						);
+						$attributes = array();
 						
 						$tagCode = un_htmlspecialchars(trim(substr($tagCode, $tagLen)));
+						$tagContent = '';
 											
 						while (!empty($tagCode))
 						{
@@ -600,7 +630,7 @@ class WikiParser
 								$valueEnd = strpos($tagCode, '"', $valueStart + 1);
 								$valueLen = $valueEnd - $valueStart - 1;
 								
-								$tag['attributes'][$atrib] = substr($tagCode, $valueStart + 1, $valueLen);
+								$attributes[$atrib] = substr($tagCode, $valueStart + 1, $valueLen);
 												
 								$tagCode = trim(substr($tagCode, $valueEnd + 1));						
 							}
@@ -616,7 +646,7 @@ class WikiParser
 								
 								$valueLen = $valueEnd - $valueStart - 1;
 								
-								$tag['attributes'][$atrib] = trim(substr($tagCode, $valueStart + 1, $valueLen));
+								$attributes[$atrib] = trim(substr($tagCode, $valueStart + 1, $valueLen));
 												
 								$tagCode = trim(substr($tagCode, $valueEnd + 1));	
 							}
@@ -627,22 +657,12 @@ class WikiParser
 						
 						if ($endTagPos !== false)
 						{
-							$tag['content'] = substr($text, $i + 2 + strlen($tagName));
+							$tagContent = substr($text, $i + 2 + strlen($tagName));
 							
 							$endPos = $endTagPos + strlen($endTag);
 						}
 						
-						if (empty($stack))
-						{	
-							$this->__paragraphClean($stringTemp);
-							if (!empty($stringTemp))
-								$paragraph[] =  $stringTemp;
-							$stringTemp = '';
-							
-							$paragraph[] = $tag;
-						}
-						else
-							$stack[$stackIndex]['current_param'][] = $tag;
+						$target->throwContent(WikiParser::TAG, $tagContent, substr($text, $i, $endPos - $i), array('name' => $tagName, 'attributes' => $attributes));
 							
 						$i = $endPos;
 						

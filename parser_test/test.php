@@ -26,7 +26,8 @@ This tag is not closed: [[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[
 
 foreach ($tests as $test)
 {
-	$parser = new WikiParser(array());
+	$page = new WikiPage();
+	$parser = new WikiParser($page);
 
 	echo '
 	<h2>Org</h2>
