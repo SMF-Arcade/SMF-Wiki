@@ -601,7 +601,6 @@ class WikiParser
 					$tagLen = strcspn($tagCode, ' ');
 					$tagName = strtolower(substr($tagCode, 0, $tagLen));
 					
-					// TODO: Fix this
 					if (isset(WikiParser::$xmlTags[$tagName]))
 					{
 						// Last > tag
