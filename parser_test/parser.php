@@ -46,7 +46,10 @@ class WikiParser
 	const SEV_WARNING = 2;
 	const SEV_ERROR = 3;
 	
-	// Block level tags
+	/**
+	 * Defines Block level tags.
+	 * This is used for managing paragraphs
+	 */
 	static public $blockTags = array(
 		// DIV
 		'<div>' => false,
@@ -102,25 +105,22 @@ class WikiParser
 	 */
 	private $page;
 	
-	// Settings
+	/**
+	 *
+	 */
 	private $parse_bbc;
 	
-	// Page content
+	/**
+	 *
+	 */
 	private $content;
 	
-	// Table of contents
-	public $tableOfContents;
+	/**
+	 *
+	 */
+	private $tableOfContents;
 	
 	private $_htmlIDs = array();
-	
-	private $_tocStack = array(
-		array(
-			'level' => 1,
-			'title' => '',
-			'subtoc' => array(),
-		)
-	);
-	
 	
 	// Lines
 	private $lineStart = null;
@@ -183,37 +183,7 @@ class WikiParser
 		
 		if ($type == WikiParser::SECTION_HEADER)
 		{
-			$toc = array_pop($this->_tocStack);
-			
-			$html_id = WikiParser::html_id($content);
-			
-			$i = 1;
-			
-			// Make sure html_id is unique in page context
-			while (in_array($html_id, $this->_htmlIDs))
-				$html_id = WikiParser::html_id($content . '_'. $i++);
-			$this->_htmlIDs[] = $html_id;
-			
-			if ($toc['level'] < $additonal['level'])
-			{
-				$this->_tocStack[] = $toc;
-			}
-			elseif ($toc['level'] == $additonal['level'])
-			{
-				$toc2 = array_pop($this->_tocStack);
-				$toc2['subtoc'][] = $toc;
-				$this->_tocStack[] = $toc2;
-			}
-			else
-			{
-				$toc2 = array_pop($this->_tocStack);
-				$toc2['subtoc'][] = $toc;
-				$toc3 = array_pop($this->_tocStack);
-				$toc3['subtoc'][] = $toc2;
-				$this->_tocStack[] = $toc3;
-			}
-			
-			$this->_tocStack[] = array(
+			$this->tableOfContents[] = array(
 				'id' => $html_id,
 				'level' => $additonal['level'],
 				'title' => $content,
@@ -277,6 +247,7 @@ class WikiParser
 			$text
 		);
 		
+		//
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
 			
@@ -288,7 +259,6 @@ class WikiParser
 
 		$blockLevelNesting = 0;
 
-		$paragraph = array();
 		$can_open_paragraph = true;
 		$is_paragraph = true;
 		
@@ -882,20 +852,6 @@ class WikiElement_Parser
 	 */
 	public function finalize()
 	{		
-		if ($this->char == '{')
-			return $this->finalize_curly();
-		elseif ($this->char == '[')
-			return $this->finalize_square();
-		elseif ($this->char == '#')
-			return $this->finalize_hashtag();
-	}
-	
-	/**
-	 * Function to finalize content so it can be added to page (or another element)
-	 * @todo Refactor commented code into 
-	 */
-	public function finalize_curly()
-	{
 		$param = 0;
 		$params = array();
 		
@@ -921,7 +877,11 @@ class WikiElement_Parser
 		
 		if ($this->type == WikiElement_Parser::WIKILINK)
 			return new WikiLink($params);
+		else
+			die(var_dump($this));
 	}
+	
+	
 		/*if ($piece['current_param'] !== null)
 					{
 						if (!isset($piece['firstParam']))
@@ -972,62 +932,7 @@ class WikiElement_Parser
 							unset($piece['var']);
 							unset($piece['var_parsed']);
 						}
-					}
-	
-					$thisElement = $piece;
-					$thisElement['name'] = $name;
-					
-					$i += $matchLen;
-					
-					if ($thisElement['lineStart'] && (isset($text[$i + 1]) && $text[$i + 1] == "\n") && (!isset($text[$i + 2]) || $text[$i + 2] != "\n"))
-					{
-						$thisElement['lineEnd'] = true;
-						$i++;
-					}
-	
-					// Remove last item from stack
-					array_pop($stack);
-	
-					if (!empty($stack))
-					{
-						$stackIndex = count($stack) - 1;
-						
-						if (!isset($stack[$stackIndex]['current_param']) || $stack[$stackIndex]['current_param'] === null)
-							$stack[$stackIndex]['current_param'] = array($thisElement);
-						else
-						{				
-							if (substr($stack[$stackIndex]['current_param'], -1) == '=')
-							{
-								$stack[$stackIndex]['current_param_name'] = substr($stack[$stackIndex]['current_param'], 0, -1);
-								$stack[$stackIndex]['current_param'] = array($thisElement);
-							}
-							else
-								$stack[$stackIndex]['current_param'][] = $thisElement;
-						}
-					};
-	
-					if ($matchLen < $piece['len'])
-					{
-						$skips = 0;
-						$piece['len'] -= $matchLen;
-	
-						while ($piece['len'] > 0)
-						{
-							if (isset($rule['names'][$piece['len']]))
-							{
-								$piece['current_param'][] = str_repeat($piece['opening_char'], $skips);
-	
-								$stack[] = $piece;
-								break;
-							}
-	
-							$piece['len']--;
-							$skips++;
-						}
-					}
-	
-					if (empty($stack))
-						$paragraph[] = $thisElement;*/
+					}*/
 }
 
 /**
