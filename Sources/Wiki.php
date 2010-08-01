@@ -232,7 +232,7 @@ function Wiki($standalone = false, $prefix = null)
 		$context['can_restore_page'] = allowedTo('wiki_admin');
 		
 		$context['can_create_page'] = allowedTo('wiki_edit');
-		$context['can_edit_page'] &= !$context['can_create_page'] && empty($context['page_info']['is_deleted']);
+		$context['can_edit_page'] = $context['can_edit_page'] && empty($context['page_info']['is_deleted']);
 
 		// Don't let anyone create page if it's not "normal" page (ie. file)
 		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)

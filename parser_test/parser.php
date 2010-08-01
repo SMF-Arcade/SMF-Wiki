@@ -415,10 +415,12 @@ class WikiParser
 						$target = array_pop($stack);
 					
 					// Tell elment that it's really complete and let it finalize.
-					$element->finalize();				
+					$elm = $element->finalize();
+					
+					var_dump($elm);die();
 					
 					// Add element to page
-					$target->throwContent(WikiParser::ELEMENT, $element, $element->getUnparsed());
+					$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
 					
 					// Not sure if necassary but let's do it anyway.
 					unset($element);
