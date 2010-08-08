@@ -356,315 +356,313 @@ class WikiParser
 				
 				continue;
 			}
-				
+			
 			if ($i >= $textLen)
 				break;
-			else
+
+			$curChar = isset($text[$i]) ? $text[$i] : "\n";
+
+			// Close char?
+			if ($curChar == $closeTag)
 			{
-				$curChar = isset($text[$i]) ? $text[$i] : "\n";
+				$maxLen = $target->len;
+				$len = strspn($text, $curChar, $i, $maxLen);
+					
+				$rule = $target->rule;
 
-				// Close char?
-				if ($curChar == $closeTag)
+				if ($len > $rule['max'])
+					$matchLen = $rule['max'];
+				else
 				{
-					$maxLen = $target->len;
-					$len = strspn($text, $curChar, $i, $maxLen);
-						
-					$rule = $target->rule;
-	
-					if ($len > $rule['max'])
-						$matchLen = $rule['max'];
-					else
-					{
-						$matchLen = $len;
-	
-						while ($matchLen > 0 && !isset($target->rule['names'][$matchLen]))
-							$matchLen--;
-					}
-	
-					if ($matchLen <= 0)
-					{
-						$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));
-						$i += $len;
-						continue;
-					}
-					
-					// Tell element that it was closed
-					$target->throwContent(WikiParser::ELEMENT_CLOSE, '', str_repeat($curChar, $len));
-					$element = $target;
-					
-					// There's still opening tags left to search end for
-					if ($matchLen < $element->len)
-					{
-						$open = $element->len - $matchLen;
-						$element->modifyLen($matchLen);
-						
-						// Nested tag?
-						if ($open >= $element->rule['min'])
-						{
-							$target = new WikiElement_Parser($curChar, $open);
-							$target->throwContent(WikiParser::ELEMENT_OPEN, str_repeat($element->char, $open));
-						}
-						// or just unnecassary character?
-						else
-						{
-							$target = array_pop($stack);
-							$target->throwContent(WikiParser::TEXT, str_repeat($element->char, $open));
-						}
-					}
-					else
-						$target = array_pop($stack);
-					
-					// Tell elment that it's really complete and let it finalize.
-					$elm = $element->finalize();
-					
-					var_dump($elm);die();
-					
-					// Add element to page
-					$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
-					
-					// Not sure if necassary but let's do it anyway.
-					unset($element);
-					
-					$i += $matchLen;
+					$matchLen = $len;
+
+					while ($matchLen > 0 && !isset($target->rule['names'][$matchLen]))
+						$matchLen--;
 				}
-				// Start character for WikiElement
-				elseif ($this->parse_bbc && isset(WikiElement_Parser::$rules[$curChar]))
+
+				if ($matchLen <= 0)
 				{
-					$rule = WikiElement_Parser::$rules[$curChar];
-					
-					$len = strspn($text, $curChar, $i);
-
-					if ($len >= $rule['min'])
-					{
-						// Hash tag is special case
-						if (!empty($target->rule['has_name']))
-						{
-							$nameLen = strcspn($text, ' ', $i);
-							
-							if (strpos($text, " ", $i) !== false && strpos($text, "\n", $i) !== false)
-							{
-								$item_name = strtolower(substr($text, $i + 1, $nameLen - 1));
-								
-								// If no such has tag exists 
-								if (!isset(WikiParser::$hashTags[$item_name]))
-								{
-									$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));							
-								}
-								else
-								{
-									$stack[] = $target;
-									
-									$target = new WikiElement_Parser($curChar, $len);
-									$target->throwContent(WikiParser::ELEMENT_NAME, $item_name);
-
-									$i += $nameLen;
-								}
-							}
-							else
-							{
-								$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));						
-							}
-						}
-						else
-						{
-							$stack[] = $target;
-							$target = new WikiElement_Parser($curChar, $len);
-						}
-					}
-					else
-					{
-						$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));
-					}
-	
+					$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));
 					$i += $len;
+					continue;
 				}
-				// Parameter delimiter
-				elseif ($curChar == '|')
-					$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '', '|');
-				// Function delimiter / variable value delimeter
-				elseif ($curChar == ':')
-					$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '', ':');
-				// New Section 
-				elseif (($i == 0 || $text[$i - 1] == "\n") && $curChar == '=')
-				{
-					$len = strcspn($text, "\n", $i);
 				
-					if ($len !== false)
-						$header = substr($text, $i, $len);
-					else
-						$header = substr($text, $i);
-	
-					$c = strspn($header, '=');
-					$c2 = strspn(strrev($header), '=');
-	
-					if ($c == $c2)
-					{
-						$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => strlen($c)));
-						$i += $len;
-					}
-					else
-					{
-						$target->throwContent(WikiParser::TEXT, '=');
-						$i += 1;
-					}
-					
-					continue;
-				}
-				// New paragraph (2 * new line)
-				elseif ($this->parse_bbc && $can_open_paragraph && $curChar == "\n" && $text[$i + 1] == "\n")
+				// Tell element that it was closed
+				$target->throwContent(WikiParser::ELEMENT_CLOSE, '', str_repeat($curChar, $len));
+				$element = $target;
+				
+				// There's still opening tags left to search end for
+				if ($matchLen < $element->len)
 				{
-					$target->throwContent(WikiParser::NEW_PARAGRAPH, "\n\n");
+					$open = $element->len - $matchLen;
+					$element->modifyLen($matchLen);
+					
+					// Nested tag?
+					if ($open >= $element->rule['min'])
+					{
+						$target = new WikiElement_Parser($curChar, $open);
+						$target->throwContent(WikiParser::ELEMENT_OPEN, str_repeat($element->char, $open));
+					}
+					// or just unnecassary character?
+					else
+					{
+						$target = array_pop($stack);
+						$target->throwContent(WikiParser::TEXT, str_repeat($element->char, $open));
+					}
+				}
+				else
+					$target = array_pop($stack);
+				
+				// Tell elment that it's really complete and let it finalize.
+				$elm = $element->finalize();
+				
+				var_dump($elm);die();
+				
+				// Add element to page
+				$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
+				
+				// Not sure if necassary but let's do it anyway.
+				unset($element);
+				
+				$i += $matchLen;
+			}
+			// Start character for WikiElement
+			elseif ($this->parse_bbc && isset(WikiElement_Parser::$rules[$curChar]))
+			{
+				$rule = WikiElement_Parser::$rules[$curChar];
+				
+				$len = strspn($text, $curChar, $i);
 
-					$i += 2;
-					
-					continue;
-				}
-				elseif ($curChar == "\n")
+				if ($len >= $rule['min'])
 				{
-					$target->throwContent(WikiParser::NEW_LINE, "\n");
-					$i++;
-					
-					continue;
-				}
-				// Start or end of tag 
-				elseif ($this->parse_bbc && $curChar == '<')
-				{
-					$tagnameLen = strcspn($text, ' >', $i + 1) + 1;
-					$tagLen = strcspn($text, ' >', $i + 1);
-					$tag = '<' . substr($text, $i + 1, $tagnameLen) . '>';
-					
-					if (isset(WikiParser::$blockTags[$tag]))
+					// Hash tag is special case
+					if (!empty($target->rule['has_name']))
 					{
-						if (WikiParser::$blockTags[$tag] === false)
+						$nameLen = strcspn($text, ' ', $i);
+						
+						if (strpos($text, " ", $i) !== false && strpos($text, "\n", $i) !== false)
 						{
-							$can_open_paragraph = false;
-							$blockLevelNesting++;
+							$item_name = strtolower(substr($text, $i + 1, $nameLen - 1));
 							
-							$target->throwContent(WikiParser::BLOCK_LEVEL_OPEN, substr($text, $i, $tagLen));
-						}
-						elseif (!$can_open_paragraph)
-						{
-							$blockLevelNesting--;
-							
-							$can_open_paragraph = $blockLevelNesting == 0;
-							
-							$target->throwContent(WikiParser::BLOCK_LEVEL_CLOSE, substr($text, $i, $tagLen));
-						}
-						else
-							$target->throwContent(WikiParser::TEXT, substr($text, $i, $tagLen));
-
-						
-						$i += $tagLen;
-						
-						continue;
-					}
-					else
-					{
-						$target->throwContent(WikiParser::TEXT, htmlspecialchars($curChar));
-						$i++;
-					}
-				}
-				// Start or end of tag
-				elseif ($this->parse_bbc && substr($text, $i, 4) == '&lt;')
-				{
-					$endPos = strpos($text, '&gt;', $i + 4);
-					
-					$tagCode = substr($text, $i + 4, $endPos - $i - 4);
-					$tagLen = strcspn($tagCode, ' ');
-					$tagName = strtolower(substr($tagCode, 0, $tagLen));
-					
-					if (isset(WikiParser::$xmlTags[$tagName]))
-					{
-						// Last > tag
-						$endPos += 4;
-						
-						$attributes = array();
-						
-						$tagCode = un_htmlspecialchars(trim(substr($tagCode, $tagLen)));
-						$tagContent = '';
-											
-						while (!empty($tagCode))
-						{
-							$atribLen = strcspn($tagCode, '=');
-							
-							$atrib = substr($tagCode, 0, $atribLen);
-							
-							// Find positions for euals and quotes
-							$eqPos = strpos($tagCode, '=', $atribLen);
-							$eqPos2 = strpos($tagCode, '=', $eqPos + 1);
-							$quotePos = strpos($tagCode, '"', $atribLen);
-							$quote2Pos = strpos($tagCode, '"', $quotePos + 1);
-							
-							if (strpos($tagCode, '"') !== false && $eqPos < $quotePos && ($eqPos2 < $quotePos && $quote2Pos < $eqPos2))
+							// If no such has tag exists 
+							if (!isset(WikiParser::$hashTags[$item_name]))
 							{
-								$valueStart = strpos($tagCode, '"');								
-								$valueEnd = strpos($tagCode, '"', $valueStart + 1);
-								$valueLen = $valueEnd - $valueStart - 1;
-								
-								$attributes[$atrib] = substr($tagCode, $valueStart + 1, $valueLen);
-												
-								$tagCode = trim(substr($tagCode, $valueEnd + 1));						
+								$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));							
 							}
-							// Non quoted value
-							// TODO: Add parser warning
 							else
 							{
-								$valueStart = strpos($tagCode, '=');								
-								$valueEnd = strpos($tagCode, ' ', $valueStart + 1);
+								$stack[] = $target;
 								
-								if ($valueEnd === false)
-									$valueEnd = strlen($tagCode);
-								
-								$valueLen = $valueEnd - $valueStart - 1;
-								
-								$attributes[$atrib] = trim(substr($tagCode, $valueStart + 1, $valueLen));
-												
-								$tagCode = trim(substr($tagCode, $valueEnd + 1));	
+								$target = new WikiElement_Parser($curChar, $len);
+								$target->throwContent(WikiParser::ELEMENT_NAME, $item_name);
+
+								$i += $nameLen;
 							}
 						}
-						
-						$endTag = '&lt;/' . $tagName . '&gt;';
-						$endTagPos = strpos($text, $endTag, $i);
-						
-						if ($endTagPos !== false)
+						else
 						{
-							$tagContent = substr($text, $i + 2 + strlen($tagName));
-							
-							$endPos = $endTagPos + strlen($endTag);
+							$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));						
 						}
-						
-						$target->throwContent(WikiParser::TAG, new WikiTag($tagName, $attributes, $tagContent), substr($text, $i, $endPos - $i));
-							
-						$i = $endPos;
-						
-						continue;
 					}
 					else
 					{
-						$target->throwContent(WikiParser::TEXT, '&lt;');
-						$i += 4;
-					}
-				}
-				// Behaviour switch
-				elseif ($this->parse_bbc && $curChar == '_' && $text[$i + 1] == '_')
-				{
-					// Find next space
-					$bLen = strcspn($text, " \n", $i + 2);
-					$bSwitch = substr($text, $i + 2, $bLen);
-					
-					if (substr($bSwitch, -2) == '__')
-					{
-						$target->throwContent(WikiParser::BEHAVIOUR_SWITCH, substr($bSwitch, 0, -2), substr($text, $i, $bLen + 2));
-						$i += $bLen + 2;
-						
-						continue;
+						$stack[] = $target;
+						$target = new WikiElement_Parser($curChar, $len);
 					}
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, $curChar);
+					$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));
+				}
+
+				$i += $len;
+			}
+			// Parameter delimiter
+			elseif ($curChar == '|')
+				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '', '|');
+			// Function delimiter / variable value delimeter
+			elseif ($curChar == ':')
+				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '', ':');
+			// New Section 
+			elseif (($i == 0 || $text[$i - 1] == "\n") && $curChar == '=')
+			{
+				$len = strcspn($text, "\n", $i);
+			
+				if ($len !== false)
+					$header = substr($text, $i, $len);
+				else
+					$header = substr($text, $i);
+
+				$c = strspn($header, '=');
+				$c2 = strspn(strrev($header), '=');
+
+				if ($c == $c2)
+				{
+					$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => strlen($c)));
+					$i += $len;
+				}
+				else
+				{
+					$target->throwContent(WikiParser::TEXT, '=');
+					$i += 1;
+				}
+				
+				continue;
+			}
+			// New paragraph (2 * new line)
+			elseif ($this->parse_bbc && $can_open_paragraph && $curChar == "\n" && $text[$i + 1] == "\n")
+			{
+				$target->throwContent(WikiParser::NEW_PARAGRAPH, "\n\n");
+
+				$i += 2;
+				
+				continue;
+			}
+			elseif ($curChar == "\n")
+			{
+				$target->throwContent(WikiParser::NEW_LINE, "\n");
+				$i++;
+				
+				continue;
+			}
+			// Start or end of tag 
+			elseif ($this->parse_bbc && $curChar == '<')
+			{
+				$tagnameLen = strcspn($text, ' >', $i + 1) + 1;
+				$tagLen = strcspn($text, ' >', $i + 1);
+				$tag = '<' . substr($text, $i + 1, $tagnameLen) . '>';
+				
+				if (isset(WikiParser::$blockTags[$tag]))
+				{
+					if (WikiParser::$blockTags[$tag] === false)
+					{
+						$can_open_paragraph = false;
+						$blockLevelNesting++;
+						
+						$target->throwContent(WikiParser::BLOCK_LEVEL_OPEN, substr($text, $i, $tagLen));
+					}
+					elseif (!$can_open_paragraph)
+					{
+						$blockLevelNesting--;
+						
+						$can_open_paragraph = $blockLevelNesting == 0;
+						
+						$target->throwContent(WikiParser::BLOCK_LEVEL_CLOSE, substr($text, $i, $tagLen));
+					}
+					else
+						$target->throwContent(WikiParser::TEXT, substr($text, $i, $tagLen));
+
+					
+					$i += $tagLen;
+					
+					continue;
+				}
+				else
+				{
+					$target->throwContent(WikiParser::TEXT, htmlspecialchars($curChar));
 					$i++;
 				}
+			}
+			// Start or end of tag
+			elseif ($this->parse_bbc && substr($text, $i, 4) == '&lt;')
+			{
+				$endPos = strpos($text, '&gt;', $i + 4);
+				
+				$tagCode = substr($text, $i + 4, $endPos - $i - 4);
+				$tagLen = strcspn($tagCode, ' ');
+				$tagName = strtolower(substr($tagCode, 0, $tagLen));
+				
+				if (isset(WikiParser::$xmlTags[$tagName]))
+				{
+					// Last > tag
+					$endPos += 4;
+					
+					$attributes = array();
+					
+					$tagCode = un_htmlspecialchars(trim(substr($tagCode, $tagLen)));
+					$tagContent = '';
+										
+					while (!empty($tagCode))
+					{
+						$atribLen = strcspn($tagCode, '=');
+						
+						$atrib = substr($tagCode, 0, $atribLen);
+						
+						// Find positions for euals and quotes
+						$eqPos = strpos($tagCode, '=', $atribLen);
+						$eqPos2 = strpos($tagCode, '=', $eqPos + 1);
+						$quotePos = strpos($tagCode, '"', $atribLen);
+						$quote2Pos = strpos($tagCode, '"', $quotePos + 1);
+						
+						if (strpos($tagCode, '"') !== false && $eqPos < $quotePos && ($eqPos2 < $quotePos && $quote2Pos < $eqPos2))
+						{
+							$valueStart = strpos($tagCode, '"');								
+							$valueEnd = strpos($tagCode, '"', $valueStart + 1);
+							$valueLen = $valueEnd - $valueStart - 1;
+							
+							$attributes[$atrib] = substr($tagCode, $valueStart + 1, $valueLen);
+											
+							$tagCode = trim(substr($tagCode, $valueEnd + 1));						
+						}
+						// Non quoted value
+						// TODO: Add parser warning
+						else
+						{
+							$valueStart = strpos($tagCode, '=');								
+							$valueEnd = strpos($tagCode, ' ', $valueStart + 1);
+							
+							if ($valueEnd === false)
+								$valueEnd = strlen($tagCode);
+							
+							$valueLen = $valueEnd - $valueStart - 1;
+							
+							$attributes[$atrib] = trim(substr($tagCode, $valueStart + 1, $valueLen));
+											
+							$tagCode = trim(substr($tagCode, $valueEnd + 1));	
+						}
+					}
+					
+					$endTag = '&lt;/' . $tagName . '&gt;';
+					$endTagPos = strpos($text, $endTag, $i);
+					
+					if ($endTagPos !== false)
+					{
+						$tagContent = substr($text, $i + 2 + strlen($tagName));
+						
+						$endPos = $endTagPos + strlen($endTag);
+					}
+					
+					$target->throwContent(WikiParser::TAG, new WikiTag($tagName, $attributes, $tagContent), substr($text, $i, $endPos - $i));
+						
+					$i = $endPos;
+					
+					continue;
+				}
+				else
+				{
+					$target->throwContent(WikiParser::TEXT, '&lt;');
+					$i += 4;
+				}
+			}
+			// Behaviour switch
+			elseif ($this->parse_bbc && $curChar == '_' && $text[$i + 1] == '_')
+			{
+				// Find next space
+				$bLen = strcspn($text, " \n", $i + 2);
+				$bSwitch = substr($text, $i + 2, $bLen);
+				
+				if (substr($bSwitch, -2) == '__')
+				{
+					$target->throwContent(WikiParser::BEHAVIOUR_SWITCH, substr($bSwitch, 0, -2), substr($text, $i, $bLen + 2));
+					$i += $bLen + 2;
+					
+					continue;
+				}
+			}
+			else
+			{
+				$target->throwContent(WikiParser::TEXT, $curChar);
+				$i++;
 			}
 		}
 		
