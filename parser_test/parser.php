@@ -247,7 +247,7 @@ class WikiParser
 			$text
 		);
 		
-		//
+		// Parse bbc if asked to
 		if ($this->parse_bbc)
 			$text = parse_bbc($text);
 			
@@ -678,7 +678,7 @@ class WikiParser
 			unset($element);
 		}
 		
-		while (!empty($this->_tocStack))
+		/*while (!empty($this->_tocStack))
 		{
 			$toc = array_pop($this->_tocStack);
 			$toc2 = array_pop($this->_tocStack);
@@ -705,7 +705,38 @@ class WikiParser
 			{
 				die('TOC2>TOC');
 			}
+		}*/
+	}
+	
+	/**
+	 * Parser content into text for use in parameters etc.
+	 */
+	public function toText($content, $single_line = true)
+	{
+		$return = '';
+		foreach ($content as $c)
+		{
+			switch ($c['type'])
+			{
+				case WikiParser::TEXT:
+					$return .= $c['content'];
+					break;
+				case WikiParser::NEW_LINE:
+					$return .= $single_line ? ' ' : '<br />';
+					break;
+				case WikiParser::NEW_PARAGRAPH:
+					$return .= $single_line ? ' ' : '<br /><br />';
+					break;
+				case WikiParser::ELEMENT:
+					$return .= $c['content']->toText();
+					break;
+				default:
+					die('Unknown part type ' . $c['type']);
+					break;
+			}
 		}
+		
+		return $return;
 	}
 }
 
@@ -951,9 +982,11 @@ class WikiLink extends WikiElement
 	public $link_target = '';
 	public $link_text = '';
 	
-	function __construct($params)
+	function __construct(Wikiparser $wikiparser, $params)
 	{
-		
+		list ($linkNamespace, $linkPage) = __url_page_parse($wikiparser->toText($params[0]), true);
+		$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
+
 	}
 }
 
