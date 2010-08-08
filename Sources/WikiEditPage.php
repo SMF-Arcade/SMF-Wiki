@@ -89,6 +89,7 @@ function EditPage()
 		$context['comment'] = $_POST['comment'];
 
 	$editorOptions = array(
+		'form' => 'editpage',
 		'id' => 'wiki_content',
 		'value' => rtrim($context['form_content']),
 		'labels' => array(
