@@ -400,7 +400,7 @@ class WikiParser
 					// Nested tag?
 					if ($open >= $element->rule['min'])
 					{
-						$target = new WikiElement_Parser($curChar, $open);
+						$target = new WikiElement_Parser($this, $curChar, $open);
 						$target->throwContent(WikiParser::ELEMENT_OPEN, str_repeat($element->char, $open));
 					}
 					// or just unnecassary character?
@@ -453,7 +453,7 @@ class WikiParser
 							{
 								$stack[] = $target;
 								
-								$target = new WikiElement_Parser($curChar, $len);
+								$target = new WikiElement_Parser($this, $curChar, $len);
 								$target->throwContent(WikiParser::ELEMENT_NAME, $item_name);
 
 								$i += $nameLen;
@@ -467,7 +467,7 @@ class WikiParser
 					else
 					{
 						$stack[] = $target;
-						$target = new WikiElement_Parser($curChar, $len);
+						$target = new WikiElement_Parser($this, $curChar, $len);
 					}
 				}
 				else
@@ -756,7 +756,7 @@ class WikiElement_Parser
 			'min' => 2,
 			'max' => 2,
 			'names' => array(
-				2 => WIKILINK,
+				2 => WikiElement_Parser::WIKILINK,
 			),
 		),
 		'{' => array(
@@ -764,8 +764,8 @@ class WikiElement_Parser
 			'min' => 2,
 			'max' => 3,
 			'names' => array(
-				2 => TEMPLATE,
-				3 => TEMPLATE_PARAM,
+				2 => WikiElement_Parser::TEMPLATE,
+				3 => WikiElement_Parser::TEMPLATE_PARAM,
 			),
 		),
 		'#' => array(
@@ -789,12 +789,15 @@ class WikiElement_Parser
 	private $content;
 	private $is_complete;
 	
-	public function __construct($char, $len)
+	private $page;
+	
+	public function __construct(WikiParser $wikipage, $char, $len)
 	{
 		$this->rule = WikiElement_Parser::$rules[$char];
 		$this->char = $char;
 		$this->len = $len;
 		$this->is_complete = false;
+		$this->page = $wikipage;
 		
 		$this->throwContent(WikiParser::ELEMENT_OPEN, '', str_repeat($char, $len));
 	}
@@ -907,7 +910,7 @@ class WikiElement_Parser
 		$this->type = $this->rule['names'][$this->len];
 		
 		if ($this->type == WikiElement_Parser::WIKILINK)
-			return new WikiLink($params);
+			return new WikiLink($this->page, $params);
 		else
 			die(var_dump($this));
 	}
@@ -979,14 +982,16 @@ class WikiElement
  */
 class WikiLink extends WikiElement
 {
+	private $link_info;
 	public $link_target = '';
 	public $link_text = '';
 	
 	function __construct(Wikiparser $wikiparser, $params)
 	{
 		list ($linkNamespace, $linkPage) = __url_page_parse($wikiparser->toText($params[0]), true);
-		$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
+		$this->link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
 
+		die(print_r($this->link_info));
 	}
 }
 

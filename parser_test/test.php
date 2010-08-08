@@ -2,6 +2,7 @@
 
 $db_show_debug=true;
 require_once('../SSI.php');
+require_once('../Sources/Subs-Wiki.php');
 require_once('parser.php');
 
 $tests = array(
