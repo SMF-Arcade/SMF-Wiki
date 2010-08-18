@@ -35,7 +35,7 @@ function loadWiki($mode = '', $prefix = null)
 	loadClassFile('WikiParser.php');
 	
 	// Wiki Version
-	$wiki_version = '0.1';
+	$wiki_version = '0.2';
 
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
