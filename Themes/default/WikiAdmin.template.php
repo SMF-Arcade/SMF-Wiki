@@ -1,5 +1,5 @@
 <?php
-// Version: 0.1; WikiAdmin
+// Version: 0.2; WikiAdmin
 
 function template_wiki_admin_main()
 {

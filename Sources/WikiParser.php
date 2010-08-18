@@ -4,7 +4,7 @@
 ***********************************************************************************
 * SMF Wiki                                                                        *
 * =============================================================================== *
-* Software Version:           SMF Wiki 0.1                                        *
+* Software Version:           SMF Wiki 0.2                                        *
 * Software by:                Niko Pahajoki (http://www.madjoki.com)              *
 * Copyright 2008-2010 by:     Niko Pahajoki (http://www.madjoki.com)              *
 * Support, News, Updates at:  http://www.smfarcade.info                           *

@@ -1,5 +1,5 @@
 <?php
-// Version: 0.1; WikiPage
+// Version: 0.2; WikiPage
 
 function template_wikipage_above()
 {

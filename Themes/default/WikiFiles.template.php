@@ -1,5 +1,5 @@
 <?php
-// Version: 0.1; WikiFiles
+// Version: 0.2; WikiFiles
 
 function template_wiki_file_upload()
 {
