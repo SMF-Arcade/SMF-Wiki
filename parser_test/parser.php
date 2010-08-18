@@ -99,6 +99,37 @@ class WikiParser
 			$name = substr($name, 1);
 		return $name;
 	}
+	
+	/**
+	 * Parser content into text for use in parameters etc.
+	 */
+	static function toText($content, $single_line = true)
+	{
+		$return = '';
+		foreach ($content as $c)
+		{
+			switch ($c['type'])
+			{
+				case WikiParser::TEXT:
+					$return .= $c['content'];
+					break;
+				case WikiParser::NEW_LINE:
+					$return .= $single_line ? ' ' : '<br />';
+					break;
+				case WikiParser::NEW_PARAGRAPH:
+					$return .= $single_line ? ' ' : '<br /><br />';
+					break;
+				case WikiParser::ELEMENT:
+					$return .= $c['content']->toText();
+					break;
+				default:
+					die('Unknown part type ' . $c['type']);
+					break;
+			}
+		}
+		
+		return $return;
+	}
 		
 	/**
 	 * Page variable containing WikiPage class.
@@ -707,37 +738,6 @@ class WikiParser
 			}
 		}*/
 	}
-	
-	/**
-	 * Parser content into text for use in parameters etc.
-	 */
-	public function toText($content, $single_line = true)
-	{
-		$return = '';
-		foreach ($content as $c)
-		{
-			switch ($c['type'])
-			{
-				case WikiParser::TEXT:
-					$return .= $c['content'];
-					break;
-				case WikiParser::NEW_LINE:
-					$return .= $single_line ? ' ' : '<br />';
-					break;
-				case WikiParser::NEW_PARAGRAPH:
-					$return .= $single_line ? ' ' : '<br /><br />';
-					break;
-				case WikiParser::ELEMENT:
-					$return .= $c['content']->toText();
-					break;
-				default:
-					die('Unknown part type ' . $c['type']);
-					break;
-			}
-		}
-		
-		return $return;
-	}
 }
 
 /**
@@ -983,15 +983,154 @@ class WikiElement
 class WikiLink extends WikiElement
 {
 	private $link_info;
-	public $link_target = '';
-	public $link_text = '';
+	private $linkNamespace;
+	
+	private $link;
+	private $linkPage;
+	private $linkText;
+	
+	private $params;
+	
+	private $html = '';
+	private $is_block_level = false;
 	
 	function __construct(Wikiparser $wikiparser, $params)
 	{
-		list ($linkNamespace, $linkPage) = __url_page_parse($wikiparser->toText($params[0]), true);
-		$this->link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
+		global $context;
+		
+		$parsedPage = WikiParser::toText(array_shift($params));
+		
+		list ($this->linkNamespace, $this->linkPage) = __url_page_parse($parsedPage, true);
+		
+		$this->link = wiki_urlname($this->linkNamespace, $this->linkPage);
+		
+		$this->link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($this->linkNamespace, $this->linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($this->linkPage, $context['namespaces'][$this->linkNamespace]));
+		
+		if (!empty($params))
+			$this->linkText = WikiParser::toText(array_shift($params));
+		else
+			$this->linkText = $this->link_info['display_title'];
+			
+		$this->params = $params;
+		
+		/*
 
-		die(print_r($this->link_info));
+		$this->link_info Array
+		(
+			[id] => ()
+			[display_title] => WikiLink
+			[title] => WikiLink
+			[name] => WikiLink
+			[is_current] => 1
+			[is_locked] => 
+			[current_revision] => 0
+		)
+		 
+		*/
+		
+		if ($this->linkNamespace == $context['namespace_images']['id'] && $this->link_info['id'] !== null)
+		{
+			if (!empty($this->params))
+			{
+				$align = '';
+				$size = '';
+				$caption = '';
+				$alt = '';
+
+				// Size
+				if (!empty($this->params[0]))
+				{
+					$size = WikiParser::toText($this->params[0]);
+					
+					if ($size == 'thumb')
+						$size = ' width="180"';
+					elseif (is_numeric($size))
+						$size = ' width="' . $size . '"';
+					elseif (strpos($size, 'x') !== false)
+					{
+						list ($width, $height) = explode('x', $size, 2);
+
+						if (is_numeric($width) && is_numeric($height))
+							$size = ' width="' . $width . '" height="' . $height. '"';
+					}
+					else
+						$size = '';
+				}
+
+				// Align
+				if (!empty($this->params[1]))
+				{
+					$align = trim(WikiParser::toText($this->params[1]));
+					$align = ($align == 'left' || $align == 'right') ? $align : '';
+				}
+
+				// Alt
+				if (!empty($this->params[2]))
+					$alt = WikiParser::toText($this->params[2]);
+
+				// Caption
+				if (!empty($this->params[3]))
+					$alt = WikiParser::toText($this->params[3]);
+						
+				if (!empty($align) || !empty($caption))
+				{
+					$this->__paragraph_handler($status, $currentHtml, 'close');
+					
+					$style = array();
+					$class = array();
+						
+					if (!empty($align))
+					{
+						$style[] = 'float: ' . $align;
+						$style[] = 'clear: ' . $align;
+					}
+					
+					$this->is_block_level = true;
+
+					$this->html = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>
+						<span class="topslice"><span></span></span>
+						<div style="padding: 5px">';
+						
+				}
+				
+				$this->html .= '<a href="' . wiki_get_url($this->link) . '"><img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
+
+				if (!empty($align) || !empty($caption))
+					$this->html .= (!empty($caption) ? '<span style="text-align: center">' . $caption . '</span>' : '') . '
+						</div>
+						<span class="botslice"><span></span></span>
+					</div>';
+			}
+			else
+				$this->html .= '<a href="' . wiki_get_url($this->link) . '"><img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="" /></a>';
+		}
+		elseif ($parsedPage[0] !== ':' && $this->linkNamespace == $context['namespace_category']['id'])
+		{
+			// TODO: Add category to page
+			/*
+			$this->categories[$realLink] = array(
+				'id' => $link_info['id'],
+				'link' => wiki_get_url($realLink),
+				'namespace' => $linkNamespace,
+				'title' => $linkPage,
+				'name' => get_default_display_title($linkPage, false),
+				'exists' => $link_info['id'] !== null,
+			);*/
+		}
+		else
+		{
+			$class = array();
+		
+			if ($this->link_info['id'] === null)
+				$class[] = 'redlink';
+						
+			$this->html .= '<a href="' . wiki_get_url($this->link) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $this->linkText . '</a>';
+		}
+	}
+	
+	function __toString()
+	{
+		return $this->html;
 	}
 }
 
