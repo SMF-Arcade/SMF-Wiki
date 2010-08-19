@@ -1,13 +1,12 @@
 <?php
-
 /**
- * Wiki Page class
- * Basic Usage: $page = new WikiPage($page_info);
+ * Contains classes related to parsing of wiki page
+ *
+ * @package parser
+ * @version 0.2
+ * @license http://download.smfwiki.net/license.php SMF Wiki license
+ * @since 0.2
  */
-class WikiPage
-{
-	
-}
 
 /**
  * Class that parsers wiki page
