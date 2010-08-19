@@ -49,7 +49,7 @@ class WikiPage
 	public $pageSettings;
 
 	// Categories this page is assigned to
-	public $categories;
+	public $categories = array();
 	
 	// Some settings
 	private $mode = 'normal'; 
