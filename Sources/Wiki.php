@@ -20,7 +20,8 @@ function loadWiki($mode = '', $prefix = null)
 	
 	require_once($sourcedir . '/Subs-Wiki.php');
 	
-	loadClassFile('WikiParser.php');
+	loadClassFile('Class-WikiPage.php');
+	loadClassFile('Class-WikiParser.php');
 	
 	// Wiki Version
 	$wiki_version = '0.2';

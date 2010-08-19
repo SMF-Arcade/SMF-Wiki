@@ -1,9 +1,10 @@
 <?php
 
 $db_show_debug=true;
-require_once('../SSI.php');
-require_once('../Sources/Subs-Wiki.php');
-require_once('parser.php');
+require_once('./SSI.php');
+require_once($sourcedir . '/Subs-Wiki.php');
+loadClassFile('Class-WikiPage.php');
+loadClassFile('Class-WikiParser.php');
 
 $tests = array(
 "11o1oob<br />

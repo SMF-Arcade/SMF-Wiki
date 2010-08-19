@@ -31,6 +31,8 @@
 		<database>wiki_install/install_main.php</database>
 
 		<!-- These files goes to Sources directory -->
+		<require-file name="Sources/Class-WikiPage.php" destination="$sourcedir" />
+		<require-file name="Sources/Class-WikiParser.php" destination="$sourcedir" />
 		<require-file name="Sources/Subs-Wiki.php" destination="$sourcedir" />
 		<require-file name="Sources/Wiki.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiAdmin.php" destination="$sourcedir" />
@@ -38,7 +40,6 @@
 		<require-file name="Sources/WikiFiles.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiHistory.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiPage.php" destination="$sourcedir" />
-		<require-file name="Sources/WikiParser.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiSpecialPages.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiTalkPage.php" destination="$sourcedir" />
 
