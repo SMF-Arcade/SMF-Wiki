@@ -12,7 +12,8 @@ if (!defined('SMF'))
 	die('Hacking attempt...');
 
 /**
- * ...
+ * Creates url based on parameters
+ * @param mixed url name of page or array of paramers
  */
 function wiki_get_url($params)
 {
@@ -88,72 +89,65 @@ function wiki_get_url($params)
 
 /**
  * Gets tree of parent pages for a page
+ * @return array Array of parents.
  */
 function get_page_parents($page, $namespace)
 {
-	if (strpos($page, '/') !== false)
-	{
-		$parts = explode('/', $page);
-		$new_title = array_pop($parts);
+	if (strpos($page, '/') === false)
+		return array();
 		
-		$link_info = cache_quick_get('wiki-pageinfo-' . wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
-			
-		if (!empty($link_info['page_tree']))
-			$page_tree = $link_info['page_tree'];
-		if ($link_info !== false)
-			$page_tree[] = array(
-				'display_title' => $link_info['display_title'],
-				'title' => $link_info['title'],
-				'name' => $link_info['name'],
-			);
-		else
-			$page_tree[] = array(
-				'title' => get_default_display_title(implode('/', $parts), $namespace['id']),
-				'name' => implode('/', $parts),
-			);
-		
-		if (empty($row['display_title']))
-			$row['display_title'] = get_default_display_title($new_title);
-			
-		return $page_tree;
-	}
+	$parts = explode('/', $page);
+	$new_title = array_pop($parts);
 	
-	return array();
+	$link_info = cache_quick_get('wiki-pageinfo-' . wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
+		
+	if (!empty($link_info['page_tree']))
+		$page_tree = $link_info['page_tree'];
+	if ($link_info !== false)
+		$page_tree[] = array(
+			'display_title' => $link_info['display_title'],
+			'title' => $link_info['title'],
+			'name' => $link_info['name'],
+		);
+	else
+		$page_tree[] = array(
+			'title' => get_default_display_title(implode('/', $parts), $namespace['id']),
+			'name' => implode('/', $parts),
+		);
+	
+	if (empty($row['display_title']))
+		$row['display_title'] = get_default_display_title($new_title);
+		
+	return $page_tree;
 }
 
 /**
- * Returns default display title for page
+ * Makes url name from page name and namespace
+ * @return string url name for requested page
  */
-function get_default_display_title($page, $namespace = '', $html = true)
+function wiki_get_url_name($page, $namespace = null, $clean = true)
 {
 	global $smcFunc;
 	
-	if ($namespace === true || $namespace === false)
-		list ($namespace, $page) = __url_page_parse($page);
-		
-	// Sub-page?
-	if (strpos($page, '/') !== false)
+	$page = un_htmlspecialchars($page);
+
+	if ($namespace == null)
+		list ($namespace, $page) = wiki_parse_url_name($page);
+
+	if ($clean)
 	{
-		$parts = explode('/', $page);
-		$new_title = array_pop($parts);
-		
-		if ($html)
-			return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($new_title))));
-		else
-			return $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($new_title)));			
+		$namespace = clean_pagename($namespace, true);
+		$page = clean_pagename($page);
 	}
-	
-	if ($html)
-		return (!empty($namespace) ? $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace)))) . ':' : '') . $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
-	else
-		return (!empty($namespace) ? $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace))) . ':' : '') . $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page)));	
+
+	return !empty($namespace) ? $namespace . ':' . $page : $page;
 }
 
 /**
- * Gets Namespace and Page from url style (Namespace:Page_Title)
- * @todo Rename this function
+ * Parses url name into namespace and page name
+ * @return array array with namespace and page name
  */
-function __url_page_parse($page, $clean = false)
+function wiki_parse_url_name($page, $clean = false)
 {
 	global $context;
 	
@@ -181,26 +175,33 @@ function __url_page_parse($page, $clean = false)
 }
 
 /**
- * Makes link from page title and namespace
- * @todo Rename this function
+ * Returns default display title for page
  */
-function wiki_urlname($page, $namespace = null, $clean = true)
+function get_default_display_title($page, $namespace = '', $html = true)
 {
 	global $smcFunc;
 	
-	$page = un_htmlspecialchars($page);
-
-	if ($namespace == null)
-		list ($namespace, $page) = __url_page_parse($page);
-
-	if ($clean)
+	if ($namespace === true || $namespace === false)
+		list ($namespace, $page) = wiki_parse_url_name($page);
+		
+	// Sub-page?
+	if (strpos($page, '/') !== false)
 	{
-		$namespace = clean_pagename($namespace, true);
-		$page = clean_pagename($page);
+		$parts = explode('/', $page);
+		$new_title = array_pop($parts);
+		
+		if ($html)
+			return $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($new_title))));
+		else
+			return $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($new_title)));			
 	}
-
-	return !empty($namespace) ? $namespace . ':' . $page : $page;
+	
+	if ($html)
+		return (!empty($namespace) ? $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace)))) . ':' : '') . $smcFunc['htmlspecialchars']($smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page))));
+	else
+		return (!empty($namespace) ? $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($namespace))) . ':' : '') . $smcFunc['ucwords'](str_replace(array('_', '%20'), ' ', un_htmlspecialchars($page)));	
 }
+
 
 /**
  * Checks if pagename is valid
@@ -284,7 +285,7 @@ function wiki_get_namespaces()
 		$namespaces[$row['namespace']] = array(
 			'id' => $row['namespace'],
 			'prefix' => $row['ns_prefix'],
-			'url' => wiki_get_url(wiki_urlname($row['default_page'], $row['namespace'])),
+			'url' => wiki_get_url(wiki_get_url_name($row['default_page'], $row['namespace'])),
 			'type' => $row['namespace_type'],
 		);
 	$smcFunc['db_free_result']($request);
@@ -315,7 +316,7 @@ function loadWikiPage()
 	// Load Pages in this category 
 	if ($context['namespace'] == $context['namespace_category'])
 	{
-		list (, $category) = __url_page_parse($context['page_info']['name']);
+		list (, $category) = wiki_parse_url_name($context['page_info']['name']);
 		
 		$context['category_name'] = $category;
 		
@@ -335,7 +336,7 @@ function loadWikiPage()
 		while ($row = $smcFunc['db_fetch_assoc']($request))
 		{
 			$context['category_members'][] = array(
-				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'page' => wiki_get_url_name($row['title'], $row['namespace']),
 				'title' => get_default_display_title($row['title'], $row['namespace']),
 			);
 		}
@@ -405,7 +406,7 @@ function wiki_get_special_page_info($page)
 				'id' => null,
 				'display_title' => get_default_display_title($page, $context['namespace_special']),
 				'title' => get_default_display_title($page, $context['namespace_special']),
-				'name' => wiki_urlname($page, $context['namespace_special']),
+				'name' => wiki_get_url_name($page, $context['namespace_special']),
 				'is_current' => true,
 				'is_locked' => false,
 				'current_revision' => 0,
@@ -420,7 +421,7 @@ function wiki_get_special_page_info($page)
 			'id' => $page,
 			'display_title' => get_default_display_title($page, $context['namespace_special']),
 			'title' => get_default_display_title($page, $context['namespace_special']),
-			'name' => wiki_urlname($page, $context['namespace_special']),
+			'name' => wiki_get_url_name($page, $context['namespace_special']),
 			'is_current' => true,
 			'is_locked' => false,
 			'current_revision' => 0,
@@ -437,84 +438,9 @@ function wiki_get_special_page_info($page)
 function wiki_get_page_info($page, $namespace)
 {
 	global $smcFunc, $context;
-	
-	if ($namespace == $context['namespace_special'])
-		return wiki_get_special_page_info($page);
 
-	$request = $smcFunc['db_query']('', '
-		SELECT id_page, display_title, title, id_revision_current, id_topic, is_locked, is_deleted
-		FROM {wiki_prefix}pages
-		WHERE title = {string:page}
-			AND namespace = {string:namespace}',
-		array(
-			'page' => $page,
-			'namespace' => $namespace['id'],
-		)
-	);
-	
-	if (!$row = $smcFunc['db_fetch_assoc']($request))
-	{
-		$smcFunc['db_free_result']($request);
-
-		return array(
-			'data' => array(
-				'id' => null,
-				'display_title' => get_default_display_title($page, $namespace['id']),
-				'title' => get_default_display_title($page, $namespace['id']),
-				'name' => wiki_urlname($page, $namespace['id']),
-				'is_current' => true,
-				'is_locked' => false,
-				'is_deleted' => false,
-				'current_revision' => 0,
-				'page_tree' => get_page_parents($page, $namespace['id']),
-			),
-			// Minimal cache time for non-existing pages
-			'expires' => time() + 3600,
-			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
-		);
-	}
-	$smcFunc['db_free_result']($request);
-	
-	$page_tree = array();
-	
-	// Get page tree from parent
-	if (strpos($page, '/') !== false)
-	{
-		$parts = explode('/', $page);
-		$new_title = array_pop($parts);
-		
-		$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
-			
-		if (!empty($link_info['page_tree']))
-			$page_tree = $link_info['page_tree'];
-		if ($link_info !== false)
-			$page_tree[] = array(
-				'display_title' => $link_info['display_title'],
-				'title' => $link_info['title'],
-				'name' => $link_info['name'],
-			);
-		else
-			$page_tree[] = array(
-				'title' => get_default_display_title(implode('/', $parts), $namespace['id']),
-				'name' => implode('/', $parts),
-			);
-		
-		if (empty($row['display_title']))
-			$row['display_title'] = get_default_display_title($new_title);
-	}
-	
 	return array(
-		'data' => array(
-			'id' => $row['id_page'],
-			'display_title' => $row['display_title'],
-			'title' => !empty($row['display_title']) ? $row['display_title'] : get_default_display_title($row['title'], $namespace['id']),
-			'name' => wiki_urlname($row['title'], $namespace['id']),
-			'topic' => $row['id_topic'],
-			'is_locked' => !empty($row['is_locked']),
-			'is_deleted' => !empty($row['is_deleted']),
-			'current_revision' => $row['id_revision_current'],
-			'page_tree' => $page_tree,
-		),
+		'data' => $namespace == $context['namespace_special'] ? WikiPage::getSpecialPageInfo($page) : WikiPage::getPageInfo($namespace, $page),
 		'expires' => time() + 3600,
 		'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 	);
@@ -541,7 +467,7 @@ function wiki_get_page_content($page_info, $namespace, $revision, $include = fal
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 		fatal_lang_error('wiki_invalid_revision');
 	
-	$wikiPage = new WikiPage($namespace, $page_info);
+	//$wikiPage = new WikiPage($namespace, $page_info);
 	
 	/*
 	 

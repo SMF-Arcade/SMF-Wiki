@@ -999,9 +999,9 @@ class WikiLink extends WikiElement
 		
 		$parsedPage = WikiParser::toText(array_shift($params));
 		
-		list ($this->linkNamespace, $this->linkPage) = __url_page_parse($parsedPage, true);
+		list ($this->linkNamespace, $this->linkPage) = wiki_parse_url_name($parsedPage, true);
 		
-		$this->link = wiki_urlname($this->linkNamespace, $this->linkPage);
+		$this->link = wiki_get_url_name($this->linkNamespace, $this->linkPage);
 		
 		$this->link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($this->linkNamespace, $this->linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($this->linkPage, $context['namespaces'][$this->linkNamespace]));
 		

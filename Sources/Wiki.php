@@ -121,7 +121,7 @@ function Wiki($standalone = false, $prefix = null)
 		redirectexit($context['namespaces']['']['url']);
 	
 	// Parse namespace from page
-	list ($_REQUEST['namespace'], $_REQUEST['page']) = __url_page_parse($_REQUEST['page']);
+	list ($_REQUEST['namespace'], $_REQUEST['page']) = wiki_parse_url_name($_REQUEST['page']);
 
 	$context['namespace'] = &$context['namespaces'][$_REQUEST['namespace']];
 
@@ -133,7 +133,7 @@ function Wiki($standalone = false, $prefix = null)
 		);
 		
 	// Variable for current page
-	$context['current_page_name'] = wiki_urlname($_REQUEST['page'], $_REQUEST['namespace'], false);
+	$context['current_page_name'] = wiki_get_url_name($_REQUEST['page'], $_REQUEST['namespace'], false);
 
 	// Subactions
 	$subActions = array(
@@ -308,7 +308,7 @@ function Wiki($standalone = false, $prefix = null)
 		}
 		
 		if (isset($context['wiki_page']->pageSettings['redirect_to']) && !isset($_REQUEST['no_redirect']))
-			$context['redirect_page_name'] = wiki_urlname($context['wiki_page']->pageSettings['redirect_to']);
+			$context['redirect_page_name'] = wiki_get_url_name($context['wiki_page']->pageSettings['redirect_to']);
 
 		// Template
 		loadTemplate('WikiPage');
@@ -318,7 +318,7 @@ function Wiki($standalone = false, $prefix = null)
 	else
 	{
 		$namespaceGroup = 'special';
-		$pageName =  wiki_urlname($_REQUEST['page'], $context['namespace']['id']);
+		$pageName =  wiki_get_url_name($_REQUEST['page'], $context['namespace']['id']);
 
 		if (strpos($_REQUEST['page'], '/'))
 			list ($_REQUEST['page'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
@@ -367,13 +367,13 @@ function Wiki($standalone = false, $prefix = null)
 		'items' => array(
 			array(
 				'title' => $txt['wiki_recent_changes'],
-				'page' => wiki_urlname('RecentChanges', $context['namespace_special']['id']),
-				'url' => wiki_get_url(wiki_urlname('RecentChanges', $context['namespace_special']['id'])),
+				'page' => wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
+				'url' => wiki_get_url(wiki_get_url_name('RecentChanges', $context['namespace_special']['id'])),
 			),
 			array(
 				'title' => $txt['wiki_upload_file'],
-				'page' => wiki_urlname('Upload', $context['namespace_special']['id']),
-				'url' => wiki_get_url(wiki_urlname('Upload', $context['namespace_special']['id'])),
+				'page' => wiki_get_url_name('Upload', $context['namespace_special']['id']),
+				'url' => wiki_get_url(wiki_get_url_name('Upload', $context['namespace_special']['id'])),
 			)
 		),
 	);

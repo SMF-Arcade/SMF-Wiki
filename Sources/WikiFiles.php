@@ -262,7 +262,7 @@ function WikiFileUpload()
 				)
 			);
 
-		redirectexit(wiki_get_url(wiki_urlname($fileName, $namespace['id'])));
+		redirectexit(wiki_get_url(wiki_get_url_name($fileName, $namespace['id'])));
 	}
 
 	$editorOptions = array(

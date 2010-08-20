@@ -344,7 +344,7 @@ class WikiPage
 				// Replace entities and trim (if you have linebreak after template name it would use it in name otherwise)
 				$firstParam = trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $item['firstParam'])));
 			
-				list ($namespace, $page) = __url_page_parse($firstParam, true);
+				list ($namespace, $page) = wiki_parse_url_name($firstParam, true);
 
 				// TODO: Make Template special namespace
 				if (empty($namespace))
@@ -392,9 +392,9 @@ class WikiPage
 			{
 				$parsedPage = $this->__parse_part($this->fakeStatus, $item['firstParam']);
 				
-				list ($linkNamespace, $linkPage) = __url_page_parse($parsedPage, true);
+				list ($linkNamespace, $linkPage) = wiki_parse_url_name($parsedPage, true);
 		
-				$realLink = wiki_urlname($linkPage, $linkNamespace);
+				$realLink = wiki_get_url_name($linkPage, $linkNamespace);
 		
 				$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
 				

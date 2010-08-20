@@ -44,7 +44,7 @@ function WikiRecentChanges()
 	{
 		$context['recent_changes'][] = array(
 			'title' => get_default_display_title($row['title'], $row['namespace']),
-			'link' => '<a href="' . wiki_get_url(array('page' => wiki_urlname($row['title'], $row['namespace']))) . '">' . get_default_display_title($row['title'], false) . '</a>',
+			'link' => '<a href="' . wiki_get_url(array('page' => wiki_get_url_name($row['title'], $row['namespace']))) . '">' . get_default_display_title($row['title'], false) . '</a>',
 			'revision' => $row['id_revision'],
 			'date' => timeformat($row['timestamp']),
 			'author' => array(
@@ -56,16 +56,16 @@ function WikiRecentChanges()
 			'comment' => $row['comment'],
 			'previous' => $row['id_prev_revision'],
 			'href' => wiki_get_url(array(
-				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'page' => wiki_get_url_name($row['title'], $row['namespace']),
 				'revision' => $row['id_revision'],
 			)),
 			'diff_href' => wiki_get_url(array(
-				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'page' => wiki_get_url_name($row['title'], $row['namespace']),
 				'sa' => 'diff',
 				'old_revision' => $row['id_prev_revision'],
 			)),
 			'history_href' => wiki_get_url(array(
-				'page' => wiki_urlname($row['title'], $row['namespace']),
+				'page' => wiki_get_url_name($row['title'], $row['namespace']),
 				'sa' => 'history',
 			)),
 		);
