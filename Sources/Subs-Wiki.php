@@ -151,6 +151,7 @@ function get_default_display_title($page, $namespace = '', $html = true)
 
 /**
  * Gets Namespace and Page from url style (Namespace:Page_Title)
+ * @todo Rename this function
  */
 function __url_page_parse($page, $clean = false)
 {
@@ -181,6 +182,7 @@ function __url_page_parse($page, $clean = false)
 
 /**
  * Makes link from page title and namespace
+ * @todo Rename this function
  */
 function wiki_urlname($page, $namespace = null, $clean = true)
 {
@@ -232,6 +234,9 @@ function wiki_cache_escape($namespace, $page)
 	return sha1($namespace) . '-' . sha1($page);
 }
 
+/**
+ * Loads namespaces
+ */
 function loadNamespace()
 {
 	global $smcFunc, $context;
@@ -259,6 +264,9 @@ function loadNamespace()
 		fatal_lang_error('wiki_namespace_broken', false, '(n/a)');
 }
 
+/**
+ * Helper function for namespaces used via cache_quick_get
+ */
 function wiki_get_namespaces()
 {
 	global $smcFunc;
@@ -288,6 +296,9 @@ function wiki_get_namespaces()
 	);
 }
 
+/**
+ * Loads wikipage
+ */
 function loadWikiPage()
 {
 	global $smcFunc, $context;
@@ -376,6 +387,9 @@ function loadWikiPage()
 	}
 }
 
+/**
+ * Returns special page info
+ */
 function wiki_get_special_page_info($page)
 {
 	global $smcFunc, $context;
@@ -417,6 +431,9 @@ function wiki_get_special_page_info($page)
 	);
 }
 
+/**
+ * Returns page info
+ */
 function wiki_get_page_info($page, $namespace)
 {
 	global $smcFunc, $context;
@@ -503,6 +520,9 @@ function wiki_get_page_info($page, $namespace)
 	);
 }
 
+/**
+ * Returns page content
+ */
 function wiki_get_page_content($page_info, $namespace, $revision, $include = false)
 {
 	global $smcFunc;
