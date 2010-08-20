@@ -123,6 +123,7 @@ function Wiki($standalone = false, $prefix = null)
 	// Parse namespace from page
 	list ($_REQUEST['namespace'], $_REQUEST['page']) = wiki_parse_url_name($_REQUEST['page']);
 
+	// Set $context['namepsace'] to reference to current namespace
 	$context['namespace'] = &$context['namespaces'][$_REQUEST['namespace']];
 
 	// Add namespace to linktree if necassary

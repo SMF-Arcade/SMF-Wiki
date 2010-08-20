@@ -64,37 +64,25 @@ class WikiPage
 			)
 		);
 		
+		// Add additional info if page exists
 		if ($row = $smcFunc['db_fetch_assoc']($request))
 		{
+			$wiki_page->exists = true;
 			$wiki_page->id = $row['id_page'];
 			
 			// Set display title 
 			if (!empty($row['display_title']))
 				$wiki_page->title = $row['display_title'];
 				
+			$wiki_page->topic = $row['id_topic'];
+			$wiki_page->locked = !empty($row['is_locked']);
+			$wiki_page->deleted = !empty($row['is_deleted']);
+			
+			$wiki_page->current_revision = $row['id_revision_current'];
 		}
 		$smcFunc['db_free_result']($request);
 		
 		return $wiki_page;
-		
-		
-		$page_tree = array();
-		
-		
-		return array(
-			'data' => array(
-				'id' => ,
-				'title' => !empty($row['display_title']) ? $row['display_title'] : get_default_display_title($row['title'], $namespace['id']),
-				'name' => wiki_urlname($row['title'], $namespace['id']),
-				'topic' => $row['id_topic'],
-				'is_locked' => !empty($row['is_locked']),
-				'is_deleted' => !empty($row['is_deleted']),
-				'current_revision' => $row['id_revision_current'],
-				'page_tree' => $page_tree,
-			),
-			'expires' => time() + 3600,
-			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
-		);
 	}
 	
 	static function getSpecialPageInfo($page)
