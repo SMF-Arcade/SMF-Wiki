@@ -199,7 +199,9 @@ function EditPage2()
 	$context['wiki_page']->raw_content = $body;
 	$context['wiki_page']->parse();
 	
-	$pageOptions = array();
+	$pageOptions = array(
+		'display_title' => !empty($context['wiki_page']->title) ? $context['wiki_page']->title : get_default_display_title($_REQUEST['page'], $context['namespace']),
+	);
 	$revisionOptions = array(
 		'file' => !empty($context['page_info']['id_file']) ? $context['page_info']['id_file'] : 0,
 		'body' => $body,
@@ -207,7 +209,6 @@ function EditPage2()
 	);
 	$posterOptions = array(
 		'id' => $user_info['id'],
-		'display_title' => !empty($context['wiki_page']->title) ? $context['wiki_page']->title : get_default_display_title($_REQUEST['page'], $context['namespace']),
 	);
 
 	if ($context['can_lock_page'])
