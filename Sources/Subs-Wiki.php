@@ -101,13 +101,12 @@ function get_page_parents($page, $namespace)
 	
 	$link_info = cache_quick_get('wiki-pageinfo-' . wiki_cache_escape($namespace['id'], implode('/', $parts)), 'Subs-Wiki.php', 'wiki_get_page_info', array(implode('/', $parts), $namespace));
 		
-	if (!empty($link_info['page_tree']))
-		$page_tree = $link_info['page_tree'];
+	if (!empty($link_info->page_tree))
+		$page_tree = $link_info->page_tree;
 	if ($link_info !== false)
 		$page_tree[] = array(
-			'display_title' => $link_info['display_title'],
-			'title' => $link_info['title'],
-			'name' => $link_info['name'],
+			'title' => $link_info->title,
+			'name' => $link_info->url_name,
 		);
 	else
 		$page_tree[] = array(
@@ -115,8 +114,8 @@ function get_page_parents($page, $namespace)
 			'name' => implode('/', $parts),
 		);
 	
-	if (empty($row['display_title']))
-		$row['display_title'] = get_default_display_title($new_title);
+	//if (empty($row['display_title']))
+	//	$row['display_title'] = get_default_display_title($new_title);
 		
 	return $page_tree;
 }
@@ -449,7 +448,7 @@ function wiki_get_page_info($page, $namespace)
 /**
  * Returns page content
  */
-function wiki_get_page_content($page_info, $namespace, $revision, $include = false)
+function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $include = false)
 {
 	global $smcFunc;
 
@@ -459,7 +458,7 @@ function wiki_get_page_content($page_info, $namespace, $revision, $include = fal
 		WHERE id_page = {int:page}
 			AND id_revision = {raw:revision}',
 		array(
-			'page' => $page_info['id'],
+			'page' => $page_info->id,
 			'revision' => $revision,
 		)
 	);

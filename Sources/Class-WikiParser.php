@@ -1008,7 +1008,7 @@ class WikiLink extends WikiElement
 		if (!empty($params))
 			$this->linkText = WikiParser::toText(array_shift($params));
 		else
-			$this->linkText = $this->link_info['display_title'];
+			$this->linkText = $this->link_info->title;
 			
 		$this->params = $params;
 		
@@ -1027,7 +1027,7 @@ class WikiLink extends WikiElement
 		 
 		*/
 		
-		if ($this->linkNamespace == $context['namespace_images']['id'] && $this->link_info['id'] !== null)
+		if ($this->linkNamespace == $context['namespace_images']['id'] && $this->link_info->exists)
 		{
 			if (!empty($this->params))
 			{
@@ -1120,7 +1120,7 @@ class WikiLink extends WikiElement
 		{
 			$class = array();
 		
-			if ($this->link_info['id'] === null)
+			if (!$this->link_info->exists)
 				$class[] = 'redlink';
 						
 			$this->html .= '<a href="' . wiki_get_url($this->link) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $this->linkText . '</a>';

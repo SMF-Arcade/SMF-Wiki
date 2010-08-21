@@ -46,7 +46,8 @@ class WikiPage
 		$this->is_locked = $page_info['is_locked'];
 		$this->is_deleted = $page_info['is_deleted'];
 		$this->current_revision = $page_info['current_revision'];
-		$this->page_tree = $page_info['page_tree'];*/
+		$this->page_tree = $page_info['page_tree'];
+		*/
 	}
 	
 	static function getPageInfo($namespace, $page)
