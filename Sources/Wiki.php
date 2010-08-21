@@ -397,7 +397,7 @@ function Wiki($standalone = false, $prefix = null)
 		{
 			$context['linktree'][] = array(
 				'url' => wiki_get_url($page['name']),
-				'name' => !empty($page['display_title']) ? $page['display_title'] : $page['title'],
+				'name' => $page['title'],
 			);		
 		}
 

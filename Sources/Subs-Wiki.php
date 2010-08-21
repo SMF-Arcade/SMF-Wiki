@@ -498,7 +498,7 @@ function loadWikiMenu()
 	$page_info = $cacheInfo['data'];
 	unset($cacheInfo);
 
-	if ($page_info['id'] === null)
+	if (!$page_info->exists)
 		return array(
 			'data' => array(),
 			'expires' => time(),
@@ -582,7 +582,7 @@ function loadWikiMenu()
 /**
  * Creates new page without any revision
  */
-function createPage($title, $namespace)
+function createPage($page, $namespace)
 {
 	global $smcFunc;
 
@@ -594,8 +594,8 @@ function createPage($title, $namespace)
 			'namespace' => 'string-255',
 		),
 		array(
-			$title,
-			get_default_display_title($title, $namespace['id']),
+			$page,
+			get_default_display_title($page, $namespace['id']),
 			$namespace['id'],
 		),
 		array('id_page')
