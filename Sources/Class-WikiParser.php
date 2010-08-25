@@ -133,7 +133,7 @@ class WikiParser
 	/**
 	 * Page variable containing WikiPage class.
 	 */
-	private $page;
+	public $page;
 	
 	/**
 	 *
@@ -998,6 +998,13 @@ class WikiLink extends WikiElement
 		global $context;
 		
 		$parsedPage = WikiParser::toText(array_shift($params));
+		$force_link = false;
+		
+		if ($parsedPage[0] == ':')
+		{
+			$parsedPage = substr($parsedPage, 1);
+			$force_link = true;
+		}
 		
 		list ($this->linkNamespace, $this->linkPage) = wiki_parse_url_name($parsedPage, true);
 		
@@ -1011,21 +1018,6 @@ class WikiLink extends WikiElement
 			$this->linkText = $this->link_info->title;
 			
 		$this->params = $params;
-		
-		/*
-
-		$this->link_info Array
-		(
-			[id] => ()
-			[display_title] => WikiLink
-			[title] => WikiLink
-			[name] => WikiLink
-			[is_current] => 1
-			[is_locked] => 
-			[current_revision] => 0
-		)
-		 
-		*/
 		
 		if ($this->linkNamespace == $context['namespace_images']['id'] && $this->link_info->exists)
 		{
@@ -1103,19 +1095,8 @@ class WikiLink extends WikiElement
 			else
 				$this->html .= '<a href="' . wiki_get_url($this->link) . '"><img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="" /></a>';
 		}
-		elseif ($parsedPage[0] !== ':' && $this->linkNamespace == $context['namespace_category']['id'])
-		{
-			// TODO: Add category to page
-			/*
-			$this->categories[$realLink] = array(
-				'id' => $link_info['id'],
-				'link' => wiki_get_url($realLink),
-				'namespace' => $linkNamespace,
-				'title' => $linkPage,
-				'name' => get_default_display_title($linkPage, false),
-				'exists' => $link_info['id'] !== null,
-			);*/
-		}
+		elseif (!$force_link && $this->linkNamespace == $context['namespace_category']['id'])
+			$wikiparser->page->addCategory($link_info);
 		else
 		{
 			$class = array();
@@ -1141,12 +1122,18 @@ class WikiTag extends WikiElement
 	public $tag;
 	public $attributes;
 	public $content;
+	public $html;
 	
 	function __construct($tag, $attributes, $content)
 	{
 		$this->tag = $tag;
 		$this->attributes = $attributes;
 		$this->content = $content;
+	}
+	
+	function __toString()
+	{
+		return $this->html;
 	}
 }
 

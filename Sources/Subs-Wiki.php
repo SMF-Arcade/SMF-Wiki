@@ -305,22 +305,20 @@ function loadWikiPage()
 
 	$context['page_info'] = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($context['namespace']['id'], $_REQUEST['page']), 'Subs-Wiki.php', 'wiki_get_page_info', array($_REQUEST['page'], $context['namespace']));
 
-	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $context['page_info']['current_revision'];
+	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $context['page_info']->current_revision;
 
-	$context['page_info'] += array(
-		'is_current' => $revision == $context['page_info']['current_revision'],
-		'revision' => $revision,
-	);
+	$context['page_info']->revision = $revision;
+	$context['page_info']->is_current = $context['page_info']->revision == $context['page_info']->current_revision;
 
 	// Load Pages in this category 
 	if ($context['namespace'] == $context['namespace_category'])
 	{
-		list (, $category) = wiki_parse_url_name($context['page_info']['name']);
+		list (, $category) = wiki_parse_url_name($context['page_info']->page);
 		
 		$context['category_name'] = $category;
 		
 		$request = $smcFunc['db_query']('', '
-			SELECT page.id_page, page.title, page.namespace
+			SELECT page.id_page, page.display_title, page.title, page.namespace
 			FROM {wiki_prefix}category AS cat
 				INNER JOIN {wiki_prefix}pages AS page ON (cat.id_page = page.id_page)
 			WHERE cat.category = {string:category}
@@ -336,18 +334,18 @@ function loadWikiPage()
 		{
 			$context['category_members'][] = array(
 				'page' => wiki_get_url_name($row['title'], $row['namespace']),
-				'title' => get_default_display_title($row['title'], $row['namespace']),
+				'title' => !empty($row['display_title']) ? $row['display_title'] : get_default_display_title($row['title'], $row['namespace']),
 			);
 		}
 		$smcFunc['db_free_result']($request);
 	}
 	
-	if ($context['page_info']['id'] === null)
+	if (!$context['page_info']->exists)
 		return;
 
 	// Load content itself
 	$context['wiki_page'] = cache_quick_get(
-		'wiki-page-' .  $context['page_info']['id'] . '-rev' . $revision,
+		'wiki-page-' .  $context['page_info']->id . '-rev' . $revision,
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], $revision)
 	);
@@ -466,14 +464,8 @@ function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $incl
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 		fatal_lang_error('wiki_invalid_revision');
 	
-	//$wikiPage = new WikiPage($namespace, $page_info);
-	
-	/*
-	 
-	 , , $row['content'], $include
-	 
-	$wikiPage->parse();
-	*/
+	$wiki_parser = new WikiParser($page_info);
+	$wiki_parser->parse($row['content']);
 	
 	if (!empty($row['id_file']))
 		$wikiPage->addFile($row['id_file']);

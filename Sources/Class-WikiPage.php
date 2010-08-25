@@ -14,42 +14,11 @@
  */
 class WikiPage
 {
-	public $id = 0;
-	public $namespace;
-	public $page;
-	
-	public $title;
-	
-	public $url_name;
-	
-	public $exists = false;
-	public $locked = false;
-	public $deleted = false;
-	
-	public $current_revision = 0;
-	public $topic = 0;
-	
-	public $page_tree;
-	
-	function __construct($namespace, $page)
-	{
-		$this->namespace = $namespace;
-		$this->page = $page;
-		$this->title = get_default_display_title($page, $namespace['id']);
-		$this->page_tree = get_page_parents($page, $namespace['id']);
-		
-		$this->url_name = wiki_get_url_name($page, $namespace);
-		
-	
-		/*
-		$this->topic = $page_info['topic'];
-		$this->is_locked = $page_info['is_locked'];
-		$this->is_deleted = $page_info['is_deleted'];
-		$this->current_revision = $page_info['current_revision'];
-		$this->page_tree = $page_info['page_tree'];
-		*/
-	}
-	
+	/**
+	 * Enter description here ...
+	 * @param array $namespace
+	 * @param string $page
+	 */
 	static function getPageInfo($namespace, $page)
 	{
 		$wiki_page = new WikiPage($namespace, $page);
@@ -86,6 +55,10 @@ class WikiPage
 		return $wiki_page;
 	}
 	
+	/**
+	 * Enter description here ...
+	 * @param string $page
+	 */
 	static function getSpecialPageInfo($page)
 	{
 		global $context;
@@ -94,6 +67,56 @@ class WikiPage
 		
 		die('not implemnted');
 	}
+	
+	public $id = 0;
+	public $namespace;
+	public $page;
+	public $title;
+	public $url_name;
+	
+	public $exists = false;
+	public $locked = false;
+	public $deleted = false;
+	
+	public $is_current = true;
+	public $revision = 0;
+	public $current_revision = 0;
+	public $topic = 0;
+	
+	public $page_tree;
+	
+	public $categories = array();
+	
+	/**
+	 * @param array $namespace
+	 * @param string $page
+	 */
+	function __construct($namespace, $page)
+	{
+		$this->namespace = $namespace;
+		$this->page = $page;
+		$this->title = get_default_display_title($page, $namespace['id']);
+		$this->page_tree = get_page_parents($page, $namespace['id']);
+		
+		$this->url_name = wiki_get_url_name($page, $namespace);
+	}
+	
+	/**
+	 * Adds category to page. Used by WikiParser class
+	 * @param $category
+	 */
+	function addCategory(WikiPage $category)
+	{
+		$this->categories[$category->url_name] = array(
+			'id' => $category->id,
+			'link' => wiki_get_url($category->url_name),
+			'namespace' => $category->namespace,
+			'page' => $category->page,
+			'title' => $category->title,
+			'exists' => $category->exists,
+		);
+	}
+
 }
 
 ?>

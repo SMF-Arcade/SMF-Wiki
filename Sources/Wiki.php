@@ -22,6 +22,7 @@ function loadWiki($mode = '', $prefix = null)
 	
 	loadClassFile('Class-WikiPage.php');
 	loadClassFile('Class-WikiParser.php');
+	loadClassFile('WikiExt-Base.php');
 	
 	// Wiki Version
 	$wiki_version = '0.2';
