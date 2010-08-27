@@ -102,7 +102,7 @@ function template_view_page()
 		</ul>';
 	}
 	
-	if (!empty($context['wiki_page']->categories))
+	if (!empty($context['page_info']->categories))
 	{
 		echo '
 		<div class="windowbg">
@@ -111,7 +111,7 @@ function template_view_page()
 		
 		$first = true;
 		
-		foreach ($context['wiki_page']->categories as $category)
+		foreach ($context['page_info']->categories as $category)
 		{
 			// Make sure delimeter is only after first
 			if (!$first)
@@ -120,7 +120,7 @@ function template_view_page()
 				$first = false;
 				
 			echo '
-			<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['name'], '</a>';
+			<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['title'], '</a>';
 		}
 		
 		echo '
@@ -129,7 +129,7 @@ function template_view_page()
 	}
 }
 
-function template_wiki_content($wikiPage)
+function template_wiki_content(WikiPage $wikiPage)
 {
 	global $context, $modSettings, $txt;
 	
