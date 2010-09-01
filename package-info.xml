@@ -37,6 +37,7 @@
 		<require-file name="Sources/Wiki.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiAdmin.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiEditPage.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiExt-Base.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiFiles.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiHistory.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiPage.php" destination="$sourcedir" />
@@ -69,10 +70,14 @@
 		<modification format="xml" type="file" reverse="true">install.xml</modification>
 
 		<!-- Remove these files from Sources -->
+		<remove-file name="$sourcedir/Class-WikiPage.php" />
+		<remove-file name="$sourcedir/Class-WikiParser.php" />
 		<remove-file name="$sourcedir/Subs-Wiki.php" />
 		<remove-file name="$sourcedir/Wiki.php" />
+		<remove-file name="$sourcedir/WikiAdmin.php" />
 		<remove-file name="$sourcedir/WikiEditPage.php" />
-		<remove-file name="$sourcedir/WikiFile.php" />
+		<remove-file name="$sourcedir/WikiExt-Base.php" />
+		<remove-file name="$sourcedir/WikiFiles.php" />
 		<remove-file name="$sourcedir/WikiHistory.php" />
 		<remove-file name="$sourcedir/WikiPage.php" />
 		<remove-file name="$sourcedir/WikiParser.php" />
