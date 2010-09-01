@@ -16,7 +16,7 @@ function ViewPage()
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
 
 	// Show error page if not found
-	if ($context['page_info']['id'] === null)
+	if (!$context['page_info']->exists)
 	{
 		$context['robot_no_index'] = true;
 		$context['sub_template'] = 'not_found';
@@ -24,11 +24,11 @@ function ViewPage()
 		if (isset($context['wikimenu']['edit']['url']))
 			$context['create_message'] = sprintf($txt['wiki_create_page'], '<a href="' . $context['wikimenu']['edit']['url'] . '">', '</a>');
 	}
-	elseif (!empty($context['page_info']['is_deleted']))
+	elseif ($context['page_info']->deleted)
 	{
 		$context['robot_no_index'] = true;
 		$context['sub_template'] = 'page_deleted';
-	}
+		}
 	else
 	{
 		// Check if page has index tag

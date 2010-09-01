@@ -199,14 +199,14 @@ function Wiki($standalone = false, $prefix = null)
 		loadWikiPage();
 
 		// Don't index older versions please or links to certain version
-		if ($context['page_info']['id'] === null || $context['page_info']['is_deleted'] || !$context['page_info']['is_current'] || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
+		if (!$context['page_info']->exists || $context['page_info']->deleted || !$context['page_info']->is_current || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
 			$context['robot_no_index'] = true;
 
 		$namespaceGroup = 'normal';
 		$subaction = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
 		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
-		if ($context['page_info']['id'] === null && !empty($subActions[$subaction][2]))
+		if (!$context['page_info']->exists && !empty($subActions[$subaction][2]))
 			$subaction = 'view';
 		// Don't allow file actions on plain pages
 		elseif (!isset($context['current_file']) && !empty($subActions[$subaction][3]))
@@ -223,10 +223,10 @@ function Wiki($standalone = false, $prefix = null)
 		$context['can_restore_page'] = allowedTo('wiki_admin');
 		
 		$context['can_create_page'] = allowedTo('wiki_edit');
-		$context['can_edit_page'] = $context['can_edit_page'] && empty($context['page_info']['is_deleted']);
+		$context['can_edit_page'] = $context['can_edit_page'] && !$context['page_info']->deleted;
 
-		// Don't let anyone create page if it's not "normal" page (ie. file)
-		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && $context['page_info']['id'] === null)
+		// Don't let anyone create or edit page if it's not "normal" page (ie. file)
+		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && !$context['page_info']->exists)
 			$context['can_create_page'] = $context['can_edit_page'] = false;
 
 		// Setup tabs
@@ -271,7 +271,7 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'restore',
 				)),
 				'selected' => in_array($subaction, array('restore', 'restore2')),
-				'show' => $context['can_restore_page'] && $context['page_info']['is_deleted'],				
+				'show' => $context['can_restore_page'] && $context['page_info']->deleted,
 			),
 			'history' => array(
 				'title' => $txt['wiki_history'],
@@ -280,7 +280,7 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'history',
 				)),
 				'selected' => in_array($subaction, array('history', 'diff')),
-				'show' => $context['page_info']['id'] !== null && empty($context['page_info']['is_deleted']),
+				'show' => $context['page_info']->exists && !$context['page_info']->deleted,
 			),
 		);
 		
@@ -339,9 +339,9 @@ function Wiki($standalone = false, $prefix = null)
 	}
 
 	// Redirect to page if needed
-	if (isset($context['redirect_page_name']) || $context['current_page_name'] != $context['page_info']['name'])
+	if (isset($context['redirect_page_name']) || $context['current_page_name'] != $context['page_info']->page)
 	{
-		$newUrl = array('page' => isset($context['redirect_page_name']) ? $context['redirect_page_name'] : $context['page_info']['name']);
+		$newUrl = array('page' => isset($context['redirect_page_name']) ? $context['redirect_page_name'] : $context['page_info']->page);
 
 		if (isset($_GET['image']))
 			$newUrl[] = 'image';
@@ -371,11 +371,13 @@ function Wiki($standalone = false, $prefix = null)
 				'title' => $txt['wiki_recent_changes'],
 				'page' => wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
 				'url' => wiki_get_url(wiki_get_url_name('RecentChanges', $context['namespace_special']['id'])),
+				'selected' => $context['current_page_name'] == wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
 			),
 			array(
 				'title' => $txt['wiki_upload_file'],
 				'page' => wiki_get_url_name('Upload', $context['namespace_special']['id']),
 				'url' => wiki_get_url(wiki_get_url_name('Upload', $context['namespace_special']['id'])),
+				'selected' => $context['current_page_name'] == wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
 			)
 		),
 	);
@@ -393,8 +395,8 @@ function Wiki($standalone = false, $prefix = null)
 		}
 	}
 	
-	if (!empty($context['page_info']['page_tree']))
-		foreach ($context['page_info']['page_tree'] as $page)
+	if (!empty($context['page_info']->page_tree))
+		foreach ($context['page_info']->page_tree as $page)
 		{
 			$context['linktree'][] = array(
 				'url' => wiki_get_url($page['name']),
@@ -403,7 +405,7 @@ function Wiki($standalone = false, $prefix = null)
 		}
 
 	// Have display name of page in variable
-	$context['current_page_title'] = $context['page_info']['title'];
+	$context['current_page_title'] = $context['page_info']->title;
 
 	// Special page?
 	if ($namespaceGroup == 'special')

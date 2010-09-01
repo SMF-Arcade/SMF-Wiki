@@ -134,6 +134,11 @@ class WikiParser
 	 * Page variable containing WikiPage class.
 	 */
 	public $page;
+
+	/**
+	 *
+	 */
+	public $parameters;
 	
 	/**
 	 *
@@ -163,20 +168,21 @@ class WikiParser
 	/**
 	 *
 	 */
-	function __construct(WikiPage $page, $parse_bbc = true)
+	function __construct(WikiPage $page, $parameters = array(), $parse_bbc = true)
 	{
 		$this->page = $page;
+		$this->parameters = $parameters;
 		$this->parse_bbc = $parse_bbc;
 	}
 	
 	/**
 	 * Parser page and returns results
 	 */
-	public function parse($text)
+	public function parse($text, $is_template = false)
 	{
 		$this->content = array();
 		
-		$this->__parse($this, $text, false);
+		$this->__parse($this, $text, $is_template);
 		
 		return $this->content;
 	}
@@ -212,14 +218,12 @@ class WikiParser
 		}
 		
 		if ($type == WikiParser::SECTION_HEADER)
-		{
 			$this->tableOfContents[] = array(
-				'id' => $html_id,
+				'id' => $this->html_id($content),
 				'level' => $additonal['level'],
 				'title' => $content,
 				'subtoc' => array(),
 			);
-		}
 		
 		if ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::BLOCK_LEVEL_OPEN || $type == WikiParser::BLOCK_LEVEL_CLOSE)
 		{
@@ -445,8 +449,6 @@ class WikiParser
 				
 				// Tell elment that it's really complete and let it finalize.
 				$elm = $element->finalize();
-				
-				var_dump($elm);die();
 				
 				// Add element to page
 				$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
@@ -747,7 +749,7 @@ class WikiElement_Parser
 	const WIKILINK = 1;
 	const TEMPLATE = 2;
 	const TEMPLATE_PARAM = 3;
-	const HASHTAG = 3;
+	const HASHTAG = 4;
 	
 	static public $rules = array(
 		'[' => array(
@@ -772,7 +774,7 @@ class WikiElement_Parser
 			'min' => 1,
 			'max' => 1,
 			'names' => array(
-				1 => HASHTAG,
+				1 => WikiElement_Parser::HASHTAG,
 			),
 			'no_param' => true,
 			'has_name' => true,
@@ -787,6 +789,8 @@ class WikiElement_Parser
 	
 	private $content;
 	private $is_complete;
+
+
 	
 	private $page;
 	
@@ -807,10 +811,6 @@ class WikiElement_Parser
 	public function throwContent($type, $content, $unparsed = null, $additonal = array())
 	{
 		$i = count($this->content);
-		
-		// "Line" starts from this part
-		if ($this->lineStart == null)
-			$this->lineStart = $i;
 		
 		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
 		{
@@ -910,8 +910,60 @@ class WikiElement_Parser
 		
 		if ($this->type == WikiElement_Parser::WIKILINK)
 			return new WikiLink($this->page, $params);
-		else
+		elseif ($this->type == WikiElement_Parser::TEMPLATE)
+		{
+			list ($namespace, $page) = wiki_parse_url_name(WikiParser::toText(array_pop($params)), true);
+
+			// TODO: Make Template special namespace
+			if (empty($namespace))
+				$namespace = 'Template';
+
+			$template = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace, $page), 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
+
+			if ($template->exists)
+			{
+				$raw_content = wiki_get_page_raw_content($template, $template_info['current_revision']);
+				
+				/*$templatePage = cache_quick_get(
+					'wiki-page-include-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
+					'Subs-Wiki.php', 'wiki_get_page_content',
+					array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'], true)
+				);
+
+				$templatePage->status = $this->status;
+				$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . $templatePage->getTemplateCode($item['params']) . (!empty($item['lineEnd']) ? '<br />' : '');
+				$this->status = $templatePage->status;
+
+				$this->categories += $templatePage->categories;*/
+			}
+			else
+			{
+				die('TMPL NOT FOUND');
+			}
 			die(var_dump($this));
+		}
+		elseif ($this->type == WikiElement_Parser::TEMPLATE_PARAM)
+		{
+			$variable = WikiParser::toText($params[0], true);
+
+			// Get variable
+			if (count($params) == 1)
+			{
+				if (isset($this->page->parameters[$variable]))
+					$value = $this->page->parameters[$variable];
+				else
+					$value = WikiExtension::getVariable($variable);
+
+				if ($value === false)
+					return $this->getUnparsed();
+				elseif (is_string($value))
+					return $value;
+				else
+					die('NOT IMPLEMENTED!');
+			}
+			else
+				die('NOT IMPLEMENTED!');
+		}
 	}
 	
 	
@@ -1008,7 +1060,7 @@ class WikiLink extends WikiElement
 		
 		list ($this->linkNamespace, $this->linkPage) = wiki_parse_url_name($parsedPage, true);
 		
-		$this->link = wiki_get_url_name($this->linkNamespace, $this->linkPage);
+		$this->link = wiki_get_url_name($this->linkPage, $this->linkNamespace);
 		
 		$this->link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($this->linkNamespace, $this->linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($this->linkPage, $context['namespaces'][$this->linkNamespace]));
 		

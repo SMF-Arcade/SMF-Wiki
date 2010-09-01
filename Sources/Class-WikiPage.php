@@ -21,6 +21,8 @@ class WikiPage
 	 */
 	static function getPageInfo($namespace, $page)
 	{
+		global $smcFunc;
+		
 		$wiki_page = new WikiPage($namespace, $page);
 		
 		$request = $smcFunc['db_query']('', '
@@ -63,7 +65,7 @@ class WikiPage
 	{
 		global $context;
 		
-		$wiki_page = new WikiPage($namespace, $page);
+		$wiki_page = new WikiPage($context['namespace_special'], $page);
 		
 		die('not implemnted');
 	}
@@ -84,21 +86,25 @@ class WikiPage
 	public $topic = 0;
 	
 	public $page_tree;
+
+	public $parser;
 	
 	public $categories = array();
+
+	public $raw_content = '';
 	
 	/**
 	 * @param array $namespace
 	 * @param string $page
 	 */
-	function __construct($namespace, $page)
+	function __construct(array $namespace, $page)
 	{
 		$this->namespace = $namespace;
 		$this->page = $page;
 		$this->title = get_default_display_title($page, $namespace['id']);
 		$this->page_tree = get_page_parents($page, $namespace['id']);
 		
-		$this->url_name = wiki_get_url_name($page, $namespace);
+		$this->url_name = wiki_get_url_name($page, $namespace['id']);
 	}
 	
 	/**

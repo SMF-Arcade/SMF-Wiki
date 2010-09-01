@@ -2,9 +2,9 @@
 
 $db_show_debug=true;
 require_once('./SSI.php');
-require_once($sourcedir . '/Subs-Wiki.php');
-loadClassFile('Class-WikiPage.php');
-loadClassFile('Class-WikiParser.php');
+require_once($sourcedir . '/Wiki.php');
+
+loadWiki();
 
 $tests = array(
 "11o1oob<br />
@@ -20,6 +20,7 @@ level 2 content line 5.<br />
 <nowiki>line 6</nowiki></nowiki>
 <nowiki>broken no wiki tag this should parse normally<br /><br />
 {mr.brackets}
+{{wikiversion}}
 
 second paragraph<br /><br/>third<br />line 2 of third<br />
 ===broken header===
@@ -28,7 +29,7 @@ This tag is not closed: [[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[[daa[
 
 foreach ($tests as $test)
 {
-	$page = new WikiPage();
+	$page = new WikiPage(array('id' => ''), 'test_page');
 	$parser = new WikiParser($page);
 
 	echo '
