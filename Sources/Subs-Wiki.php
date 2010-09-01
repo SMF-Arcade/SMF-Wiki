@@ -532,6 +532,7 @@ function wiki_get_page_content($page_info, $namespace, $revision, $include = fal
 
 	if (!$row = $smcFunc['db_fetch_assoc']($request))
 		fatal_lang_error('wiki_invalid_revision');
+	$smcFunc['db_free_result']($request);
 	
 	$wikiPage = new WikiPage($page_info, $namespace, $row['content'], $include);
 	$wikiPage->parse();
