@@ -449,9 +449,17 @@ class WikiParser
 				
 				// Tell elment that it's really complete and let it finalize.
 				$elm = $element->finalize();
-				
+	
 				// Add element to page
-				$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
+				if (is_object($elm))
+				{
+					$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
+				}
+				// Adds as text (Todo: make sure this works 100% might have to use multiple throwContent)
+				else
+				{
+					$target->throwContent(WikiParser::TEXT, $elm[0], isset($elm[1]) ? $elm[1] : null);
+				}
 				
 				// Not sure if necassary but let's do it anyway.
 				unset($element);
@@ -884,7 +892,9 @@ class WikiElement_Parser
 	 * Function to finalize content so it can be added to page (or another element)
 	 */
 	public function finalize()
-	{		
+	{
+		global $context;
+		
 		$param = 0;
 		$params = array();
 		
@@ -955,9 +965,9 @@ class WikiElement_Parser
 					$value = WikiExtension::getVariable($variable);
 
 				if ($value === false)
-					return $this->getUnparsed();
+					return array($this->getUnparsed());
 				elseif (is_string($value))
-					return $value;
+					return array($value, $this->getUnparsed());
 				else
 					die('NOT IMPLEMENTED!');
 			}
