@@ -1000,7 +1000,28 @@ class WikiElement_Parser
 			}*/
 
 		if ($type == WikiElement_Parser::WIKILINK)
-			$target->throwContent(WikiParser::ELEMENT, new WikiLink($this->wikiparser, $params), $this->getUnparsed());
+		{
+			$parsedPage = WikiParser::toText(array_shift($params));
+			$force_link = false;
+
+			if ($parsedPage[0] == ':')
+			{
+				$parsedPage = substr($parsedPage, 1);
+				$force_link = true;
+			}
+
+			list ($linkNamespace, $linkPage) = wiki_parse_url_name($parsedPage, true);
+			$link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($linkNamespace, $linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($linkPage, $context['namespaces'][$linkNamespace]));
+
+			if (!$force_link && $linkNamespace == $context['namespace_category']['id'])
+			{
+				$this->wikiparser->page->addCategory($link_info);
+			}
+			else
+			{
+				$target->throwContent(WikiParser::ELEMENT, new WikiLink($this->wikiparser, $link_info, $params), $this->getUnparsed());
+			}
+		}
 		elseif ($type == WikiElement_Parser::TEMPLATE)
 		{
 			$page = WikiParser::toText(array_shift($params));
@@ -1106,7 +1127,6 @@ class WikiLink extends WikiElement
 	private $linkNamespace;
 	
 	private $link;
-	private $linkPage;
 	private $linkText;
 	
 	private $params;
@@ -1114,24 +1134,13 @@ class WikiLink extends WikiElement
 	private $html = '';
 	private $is_block_level = false;
 	
-	function __construct(Wikiparser $wikiparser, $params)
+	function __construct(Wikiparser $wikiparser, WikiPage $link_info, $params)
 	{
 		global $context;
 		
-		$parsedPage = WikiParser::toText(array_shift($params));
-		$force_link = false;
+		$this->link = wiki_get_url_name($link_info->page, $link_info->namespace['id']);
 		
-		if ($parsedPage[0] == ':')
-		{
-			$parsedPage = substr($parsedPage, 1);
-			$force_link = true;
-		}
-		
-		list ($this->linkNamespace, $this->linkPage) = wiki_parse_url_name($parsedPage, true);
-		
-		$this->link = wiki_get_url_name($this->linkPage, $this->linkNamespace);
-		
-		$this->link_info = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($this->linkNamespace, $this->linkPage), 'Subs-Wiki.php', 'wiki_get_page_info', array($this->linkPage, $context['namespaces'][$this->linkNamespace]));
+		$this->link_info = $link_info;
 		
 		if (!empty($params))
 			$this->linkText = WikiParser::toText(array_shift($params));
@@ -1139,11 +1148,8 @@ class WikiLink extends WikiElement
 			$this->linkText = $this->link_info->title;
 			
 		$this->params = $params;
-	}
 
-	function throwContentTo($target)
-	{
-		if ($this->linkNamespace == $context['namespace_images']['id'] && $this->link_info->exists)
+		if ($link_info->namespace['id'] == $context['namespace_images']['id'] && $this->link_info->exists)
 		{
 			if (!empty($this->params))
 			{
@@ -1202,8 +1208,6 @@ class WikiLink extends WikiElement
 
 					$this->is_block_level = true;
 
-					$target->throwContent(
-
 					$this->html = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>
 						<span class="topslice"><span></span></span>
 						<div style="padding: 5px">';
@@ -1221,8 +1225,6 @@ class WikiLink extends WikiElement
 			else
 				$this->html .= '<a href="' . wiki_get_url($this->link) . '"><img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="" /></a>';
 		}
-		elseif (!$force_link && $this->linkNamespace == $context['namespace_category']['id'])
-			$wikiparser->page->addCategory($link_info);
 		else
 		{
 			$class = array();

@@ -15,7 +15,7 @@ level 2<br />
 level 3<br>
 {{:Main_Page|wikiversion=1}}<br /><br />
 {{{1}}}<br/><br />
-{{DISPLAYTITLE:aaa}}"
+{{DISPLAYTITLE:aaa}}<br /><br />[[Main_Page]]. [[Main_Page|click here]]"
 );
 
 foreach ($tests as $test)
