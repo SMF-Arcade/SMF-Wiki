@@ -84,21 +84,21 @@ class WikiExtension_Core extends WikiExtensionBase
 		WikiExtension::addVariable('displaytitle', array('WikiExtension_Core', 'variable_DisplayTitle'));
 	}
 
-	static function variable_WikiVersion($target, $parameters, $unparsed)
+	static function variable_WikiVersion(WikiParser $wikiparser, $parameters)
 	{
 		global $wiki_version;
 
-		$target->throwContent(WikiParser::TEXT, $wiki_version, $unparsed);
+		return $wiki_version;
 	}
 
-	static function variable_DisplayTitle($target, $parameters, $unparsed)
+	static function variable_DisplayTitle(WikiParser $wikiparser, $parameters)
 	{
-		global $wiki_version;
-
 		if (empty($parameters))
-			$target->throwContent(WikiParser::TEXT, $target->page->title, $unparsed);
+			return $wikiparser->page->title;
 		else
-			$target->page->title = WikiParser::toText(array_shift($parameters));
+			$wikiparser->title = WikiParser::toText(array_shift($parameters));
+
+		return true;
 	}
 }
 

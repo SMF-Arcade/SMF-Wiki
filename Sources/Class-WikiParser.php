@@ -22,7 +22,6 @@ class WikiParser
 	const HTML_COMMENT = 5;
 	const COMMENT = 6;
 	const WARNING = 7;
-	const CALLBACK = 8;
 	
 	// Parsing rules
 	const NO_PARSE = 21;
@@ -700,7 +699,7 @@ class WikiParser
 						$endPos = $endTagPos + strlen($endTag);
 					}
 					
-					$target->throwContent(WikiParser::TAG, new WikiTag($tagName, $attributes, $tagContent), substr($text, $i, $endPos - $i));
+					$target->throwContent(WikiParser::TAG, new WikiTag($target, $tagName, $attributes, $tagContent), substr($text, $i, $endPos - $i));
 						
 					$i = $endPos;
 					
@@ -1070,12 +1069,8 @@ class WikiElement_Parser
 				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
 			elseif ($value === false && count($params) == 1)
 				$this->wikiparser->page->variables[$variable] = WikiParser::toText($params[0]);
-			elseif (is_string($value))
-				$target->throwContent(WikiParser::TEXT, $value, $unparsed);
 			elseif ($value !== false)
-			{
-				call_user_func($value['callback'], $target, $params, $unparsed);
-			}
+				$target->throwContent(WikiParser::ELEMENT, new WikiVariable($this->wikiparser, $value['callback'], $params), $unparsed);
 			else
 				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
 		}
@@ -1092,59 +1087,6 @@ class WikiElement_Parser
 		$this->len = $lenght;
 		$this->content[0]['unparsed'] = str_repeat($this->char, $lenght);
 	}
-	
-	
-		/*if ($piece['current_param'] !== null)
-					{
-						if (!isset($piece['firstParam']))
-							$piece['firstParam'] = $piece['current_param'];
-						elseif ($piece['current_param_name'] == null)
-						{
-							if (strpos($piece['current_param'][0], '=') !== false)
-							{
-								list ($paramName, $paramValue) = explode('=', $piece['current_param'][0], 2);					
-								$piece['params'][$paramName] = array($paramValue) + $piece['current_param'];
-								unset($paramName, $paramValue);
-							}
-							else
-								$piece['params'][$piece['num_index']++] = $piece['current_param'];
-						}
-						else
-							$piece['params'][$piece['current_param_name']] = $piece['current_param'];
-	
-						$piece['current_param'] = null;
-						$piece['current_param_name'] = null;
-					}*/
-	
-					/*$name = $rule['names'][$matchLen];
-					
-					if ($name == 'template')
-					{
-						$source = isset($piece['var']) ? $piece['var'] : $piece['firstParam'];
-						$piece['var_parsed'] = strtolower(trim(str_replace(array('<br />', '&nbsp;'), array("\n", ' '), $this->__parse_part($this->fakeStatus, $source))));
-						
-						if (isset($context['wiki_parser_extensions']['variables'][$piece['var_parsed']]))
-						{
-							$name = 'variable';
-							
-							if (!isset($piece['var']))
-								unset($piece['firstParam']);
-						}
-						elseif (isset($context['wiki_parser_extensions']['functions'][$piece['var_parsed']]))
-						{
-							$name = 'function';
-							
-							if (!isset($piece['var']))
-								unset($piece['firstParam']);
-						}
-						elseif (isset($piece['var']))
-						{
-							$piece['var'][] = ':';
-							$piece['firstParam'] = array_merge($piece['var'], $piece['firstParam']);
-							unset($piece['var']);
-							unset($piece['var_parsed']);
-						}
-					}*/
 }
 
 /**
@@ -1152,7 +1094,7 @@ class WikiElement_Parser
  */
 abstract class WikiElement
 {
-	
+	//abstract function throwContentTo($target);
 }
 
 /**
@@ -1197,7 +1139,10 @@ class WikiLink extends WikiElement
 			$this->linkText = $this->link_info->title;
 			
 		$this->params = $params;
-		
+	}
+
+	function throwContentTo($target)
+	{
 		if ($this->linkNamespace == $context['namespace_images']['id'] && $this->link_info->exists)
 		{
 			if (!empty($this->params))
@@ -1211,7 +1156,7 @@ class WikiLink extends WikiElement
 				if (!empty($this->params[0]))
 				{
 					$size = WikiParser::toText($this->params[0]);
-					
+
 					if ($size == 'thumb')
 						$size = ' width="180"';
 					elseif (is_numeric($size))
@@ -1241,28 +1186,30 @@ class WikiLink extends WikiElement
 				// Caption
 				if (!empty($this->params[3]))
 					$alt = WikiParser::toText($this->params[3]);
-						
+
 				if (!empty($align) || !empty($caption))
 				{
 					$this->__paragraph_handler($status, $currentHtml, 'close');
-					
+
 					$style = array();
 					$class = array();
-						
+
 					if (!empty($align))
 					{
 						$style[] = 'float: ' . $align;
 						$style[] = 'clear: ' . $align;
 					}
-					
+
 					$this->is_block_level = true;
+
+					$target->throwContent(
 
 					$this->html = '<div' . (!empty($class) ? ' class="' . implode(' ', $class) . '"' : '') . (!empty($style) ? ' style="' . implode('; ', $style) . '"' : '') . '>
 						<span class="topslice"><span></span></span>
 						<div style="padding: 5px">';
-						
+
 				}
-				
+
 				$this->html .= '<a href="' . wiki_get_url($this->link) . '"><img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
 
 				if (!empty($align) || !empty($caption))
@@ -1279,17 +1226,12 @@ class WikiLink extends WikiElement
 		else
 		{
 			$class = array();
-		
+
 			if (!$this->link_info->exists)
 				$class[] = 'redlink';
-						
+
 			$this->html .= '<a href="' . wiki_get_url($this->link) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $this->linkText . '</a>';
 		}
-	}
-	
-	function __toString()
-	{
-		return $this->html;
 	}
 }
 
@@ -1309,10 +1251,31 @@ class WikiTag extends WikiElement
 		$this->attributes = $attributes;
 		$this->content = $content;
 	}
-	
-	function __toString()
+
+	function throwContentTo($target)
 	{
-		return $this->html;
+	}
+}
+
+/**
+ *
+ */
+class WikiVariable extends WikiElement
+{
+	var $wikiparser;
+	var $callback;
+	var $params;
+
+	function __construct(Wikiparser $wikiparser, $callback, $params)
+	{
+		$this->wikiparser = $wikiparser;
+		$this->callback = $callback;
+		$this->params = $params;
+	}
+
+	function getValue()
+	{
+		return call_user_func($this->callback, $this->wikiparser, $this->params);
 	}
 }
 

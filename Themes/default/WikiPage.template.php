@@ -132,8 +132,10 @@ function template_view_page()
 function template_wiki_content(WikiPage $wikiPage)
 {
 	global $context, $modSettings, $txt;
+
+	var_dump($context['wiki_page']);
 	
-	foreach ($wikiPage->sections as $section)
+	/*foreach ($wikiPage->sections as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
@@ -177,7 +179,7 @@ function template_wiki_content(WikiPage $wikiPage)
 					output_toc($context['current_page_url'], '', $wikiPage->tableOfContents), '
 				</ul>
 			</div>';
-	}
+	}*/
 }
 
 function template_talk_page()

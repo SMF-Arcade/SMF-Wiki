@@ -349,7 +349,7 @@ function loadWikiPage()
 	
 	unset($page_data);
 
-	$context['page_info']['title'] = $context['wiki_page']->title;
+	$context['page_info']->title = $context['wiki_page']->title;
 
 	// Is there file attached to this page?
 	if (!empty($context['wiki_page']->id_file))
