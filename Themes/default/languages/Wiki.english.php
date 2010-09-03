@@ -81,9 +81,13 @@ $txt['wikiAttachmentsDir'] = 'File Upload Directory';
 $txt['wiki_recent_changes'] = 'Recent Changes';
 $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 
-// Error
-$txt['template_not_found'] = 'Error: Template &quot;%s&quot; not found!';
-$txt['invalid_function'] = 'Error: Function &quot;%s&quot; is unknown!';
+// Parser errors
+$txt['parser_warning_prefix'] = 'Warning:';
+$txt['parser_template_not_found'] = 'Template &quot;%s&quot; not found!';
+$txt['parser_unknown_function'] = 'Function &quot;%s&quot; is unknown!';
+$txt['parser_unknown_variable'] = 'Variable &quot;%s&quot; is unknown!';
+
+// Errors
 $txt['wiki_page_not_found'] = 'There is no page with this name in this wiki.';
 $txt['wiki_page_deleted'] = 'This page has been deleted.';
 $txt['wiki_file_not_found'] = 'File was not found.';

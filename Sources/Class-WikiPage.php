@@ -19,7 +19,7 @@ class WikiPage
 	 * @param array $namespace
 	 * @param string $page
 	 */
-	static function getPageInfo($namespace, $page)
+	static function getPageInfo(array $namespace, $page)
 	{
 		global $smcFunc;
 		
@@ -90,6 +90,7 @@ class WikiPage
 	public $parser;
 	
 	public $categories = array();
+	public $variables = array();
 
 	public $raw_content = '';
 	

@@ -444,9 +444,13 @@ function wiki_get_page_info($page, $namespace)
  * Returns raw (unparsed) page content.
  * Used to get templates from WikiParser
  */
-function wiki_get_page_raw_content(WikiPage $page_info, $revision)
+function wiki_get_page_raw_content(WikiPage $page_info, $revision = null)
 {
 	global $smcFunc;
+
+	// Default to current revision
+	if ($revision === null)
+		$revision = $page_info->current_revision;
 
 	$request = $smcFunc['db_query']('', '
 		SELECT content
@@ -469,6 +473,7 @@ function wiki_get_page_raw_content(WikiPage $page_info, $revision)
 /**
  * Returns page content
  * @todo $namespace, $include removal?
+ * @todo Add default value for $revision as current_revision
  */
 function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $include = false)
 {

@@ -19,6 +19,10 @@ class WikiParser
 	const NEW_LINE = 2;
 	const NEW_PARAGRAPH = 3;
 	const SECTION_HEADER = 4;
+	const HTML_COMMENT = 5;
+	const COMMENT = 6;
+	const WARNING = 7;
+	const CALLBACK = 8;
 	
 	// Parsing rules
 	const NO_PARSE = 21;
@@ -31,7 +35,9 @@ class WikiParser
 	const ELEMENT = 40;
 	const ELEMENT_OPEN = 41;
 	const ELEMENT_NAME = 42;
-	const ELEMENT_NEW_PARAM = 43;
+	const ELEMENT_PARAM_NAME = 43;
+	const ELEMENT_NEW_PARAM = 44;
+	const ELEMENT_SEMI_COLON = 45;
 	const ELEMENT_CLOSE = 49;
 	
 	// Behaviour Switch
@@ -109,6 +115,7 @@ class WikiParser
 		{
 			switch ($c['type'])
 			{
+				case WikiParser::ELEMENT_SEMI_COLON:
 				case WikiParser::TEXT:
 					$return .= $c['content'];
 					break;
@@ -154,7 +161,6 @@ class WikiParser
 	 *
 	 */
 	private $tableOfContents;
-	
 	private $_htmlIDs = array();
 	
 	// Lines
@@ -173,6 +179,8 @@ class WikiParser
 		$this->page = $page;
 		$this->parameters = $parameters;
 		$this->parse_bbc = $parse_bbc;
+
+		$this->content = array();
 	}
 	
 	/**
@@ -180,13 +188,22 @@ class WikiParser
 	 */
 	public function parse($text, $is_template = false)
 	{
-		$this->content = array();
+		if (!empty($this->content))
+			return $this->content;
 		
 		$this->__parse($this, $text, $is_template);
 		
 		return $this->content;
 	}
-	
+
+	/**
+	 * Parser page into another WikiParser (used for templates)
+	 */
+	public function parseTo(WikiParser $target, $text, $is_template = true)
+	{
+		$this->__parse($target, $text, $is_template);
+	}
+
 	/**
 	 * Adds content to this page
 	 */
@@ -218,14 +235,24 @@ class WikiParser
 		}
 		
 		if ($type == WikiParser::SECTION_HEADER)
+		{
+			$html_id = WikiParser::html_id($content);
+
+			$i2 = 1;
+
+			// Make sure html_id is unique in page context
+			while (in_array($html_id, $this->_htmlIDs))
+				$html_id = WikiParser::html_id($content . '_'. $i2++);
+			$this->_htmlIDs[] = $html_id;
+
 			$this->tableOfContents[] = array(
-				'id' => $this->html_id($content),
+				'id' => $this->html_id($html_id),
 				'level' => $additonal['level'],
 				'title' => $content,
 				'subtoc' => array(),
 			);
-		
-		if ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::BLOCK_LEVEL_OPEN || $type == WikiParser::BLOCK_LEVEL_CLOSE)
+		}
+		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::BLOCK_LEVEL_OPEN || $type == WikiParser::BLOCK_LEVEL_CLOSE)
 		{
 			if (!empty($this->lineStart))
 			{
@@ -257,7 +284,7 @@ class WikiParser
 	/**
 	 * Main parser function
 	 */
-	private function __parse(WikiParser $target, $text, $is_template = false)
+	private function __parse($target, $text, $is_template = false)
 	{
 		global $context;
 		
@@ -307,7 +334,7 @@ class WikiParser
 
 			if ($target instanceof WikiElement_Parser)
 			{
-				$search .= $target->rule['close'] . (empty($target->rule['no_param']) ? '|' : '') . ($target->rule['close'] == '}' ? ':' : '');
+				$search .= $target->rule['close'] . (empty($target->rule['no_param']) ? '|=' : '') . ($target->rule['close'] == '}' ? ':' : '');
 				$closeTag = $target->rule['close'];
 			}
 			else
@@ -448,18 +475,7 @@ class WikiParser
 					$target = array_pop($stack);
 				
 				// Tell elment that it's really complete and let it finalize.
-				$elm = $element->finalize();
-	
-				// Add element to page
-				if (is_object($elm))
-				{
-					$target->throwContent(WikiParser::ELEMENT, $elm, $element->getUnparsed());
-				}
-				// Adds as text (Todo: make sure this works 100% might have to use multiple throwContent)
-				else
-				{
-					$target->throwContent(WikiParser::TEXT, $elm[0], isset($elm[1]) ? $elm[1] : null);
-				}
+				$element->throwContentTo($target);
 				
 				// Not sure if necassary but let's do it anyway.
 				unset($element);
@@ -519,11 +535,23 @@ class WikiParser
 			}
 			// Parameter delimiter
 			elseif ($curChar == '|')
-				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '', '|');
+			{
+				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '|');
+				$i++;
+			}
 			// Function delimiter / variable value delimeter
 			elseif ($curChar == ':')
-				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '', ':');
-			// New Section 
+			{
+				$target->throwContent(WikiParser::ELEMENT_SEMI_COLON, ':');
+				$i++;
+			}
+			// Function delimiter / variable value delimeter
+			elseif ($target instanceof WikiElement_Parser && empty($target->rule['no_param']) && $curChar == '=')
+			{
+				$target->throwContent(WikiParser::ELEMENT_PARAM_NAME, '=');
+				$i++;
+			}
+			// New Section
 			elseif (($i == 0 || $text[$i - 1] == "\n") && $curChar == '=')
 			{
 				$len = strcspn($text, "\n", $i);
@@ -758,6 +786,8 @@ class WikiElement_Parser
 	const TEMPLATE = 2;
 	const TEMPLATE_PARAM = 3;
 	const HASHTAG = 4;
+	const FUNC = 5;
+	const VARIABLE = 6;
 	
 	static public $rules = array(
 		'[' => array(
@@ -797,18 +827,16 @@ class WikiElement_Parser
 	
 	private $content;
 	private $is_complete;
-
-
 	
-	private $page;
+	private $wikiparser;
 	
-	public function __construct(WikiParser $wikipage, $char, $len)
+	public function __construct(WikiParser $wikiparser, $char, $len)
 	{
 		$this->rule = WikiElement_Parser::$rules[$char];
 		$this->char = $char;
 		$this->len = $len;
 		$this->is_complete = false;
-		$this->page = $wikipage;
+		$this->wikiparser = $wikiparser;
 		
 		$this->throwContent(WikiParser::ELEMENT_OPEN, '', str_repeat($char, $len));
 	}
@@ -843,12 +871,26 @@ class WikiElement_Parser
 			'additional' => $additonal,
 		);
 	}
+
+	/**
+	 * Return original unparsed content
+	 */
+	public function getUnparsed()
+	{
+		$return = '';
+		foreach ($this->content as $c)
+			$return .= $c['unparsed'] !== null ? $c['unparsed'] : $c['content'];
+		return $return;
+	}
 	
 	/**
-	 * Re-throws content into upper level.
+	 * Adds content to upper level element.
+	 * @todo
 	 */
 	public function throwContentTo($target)
 	{
+		global $context;
+		
 		// If this is incomplete throw as original
 		if (!$this->is_complete)
 		{
@@ -864,18 +906,181 @@ class WikiElement_Parser
 						$c['additional']
 					);
 			}
+
+			return;
 		}
-	}
-	
-	/**
-	 * Return original unparsed content
-	 */
-	public function getUnparsed()
-	{
-		$return = '';
+
+		// If it's complete then we can parse it
+		$param = 0;
+		$param_name = 0;
+		$has_name = false;
+		$found_semicolon = false;
+		
+		$params = array();
+
+		$type = $this->rule['names'][$this->len];
+
 		foreach ($this->content as $c)
-			$return .= $c['unparsed'] !== null ? $c['unparsed'] : $c['content'];
-		return $return;
+		{
+			switch ($c['type'])
+			{
+				case WikiParser::ELEMENT_OPEN:
+				case WikiParser::ELEMENT_CLOSE:
+					break;
+
+				case WikiParser::ELEMENT_PARAM_NAME:
+					if (!$has_name)
+					{
+						$param_name = WikiParser::toText($params[$param]);
+						unset($params[$param]);
+						$params[$param_name] = array();
+						$has_name = true;
+					}
+					else
+					{
+						$params[$param][] = $c;
+					}
+					break;
+
+				case WikiParser::ELEMENT_NEW_PARAM:
+					$param++;
+					$param_name = $param;
+					$has_name = false;
+					break;
+
+				case WikiParser::ELEMENT_SEMI_COLON:
+					// {{DISPLAYTITLE:My Display Title}}
+					if (!$found_semicolon && $this->rule['close'] == '}' && $this->len == 2 && $param == 0 && isset($params[0]))
+					{
+						$page = WikiParser::toText($params[0]);
+
+						if ($page[0] == '#' || WikiExtension::isFunction($page))
+						{
+							$type = WikiElement_Parser::FUNC;
+							$param++;
+							$found_semicolon = true;
+						}
+						elseif (WikiExtension::variableExists($page))
+						{
+							$type = WikiElement_Parser::VARIABLE;
+							$param++;
+							$found_semicolon = true;
+						}
+						else
+						{
+							$c['type'] = WikiParser::TEXT;
+							$params[$param][] = $c;
+						}
+					}
+					else
+						$params[$param][] = $c;
+					break;
+
+				default:
+					$params[$param][] = $c;
+					break;
+			}
+		}
+
+		if ($type == WikiElement_Parser::TEMPLATE)
+		{
+			var_dump($params);
+			 $page = WikiParser::toText($params[0]);
+
+			 if ($page[0] == '#')
+				$type = WikiElement_Parser::FUNC;
+			elseif (WikiExtension::isFunction($page))
+				$type = WikiElement_Parser::FUNC;
+			elseif (WikiExtension::variableExists($page))
+				$type = WikiElement_Parser::VARIABLE;
+		}
+
+		/*
+				//{{#if:{{{title}}}|<h2>{{{title}}}</h2>}}
+				die('NOT IMPLEMENTED!');
+			}*/
+
+		if ($type == WikiElement_Parser::WIKILINK)
+			$target->throwContent(WikiParser::ELEMENT, new WikiLink($this->wikiparser, $params), $this->getUnparsed());
+		elseif ($type == WikiElement_Parser::TEMPLATE)
+		{
+			$page = WikiParser::toText(array_shift($params));
+
+			if (strpos($page, ':') === false)
+				$namespace = 'Template';
+			else
+				list ($namespace, $page) = wiki_parse_url_name($page, true);
+
+			$template = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace, $page), 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
+
+			if ($template->exists)
+			{
+				$raw_content = wiki_get_page_raw_content($template);
+
+				$template_params = array();
+				$id = 1;
+				foreach ($params as $value)
+				{
+					$name = isset($params_name[$id]) ? WikiParser::toText($params_name[$id]) : $id++;
+					$template_params[$name] = WikiParser::toText($value);
+				}
+
+				$template_parser = new WikiParser($this->wikiparser->page, $template_params);
+				$template_parser->parseTo($target, $raw_content);
+				unset($template_parser);
+			}
+			else
+				$target->throwContent(WikiParser::WARNING, 'template_not_found', $this->getUnparsed(), array(wiki_get_url_name($page, $namespace)));
+		}
+		elseif ($type == WikiElement_Parser::TEMPLATE_PARAM)
+		{
+			$variable = WikiParser::toText(array_shift($params), true);
+			$unparsed = $this->getUnparsed();
+
+			// Get variable
+			if (count($params) == 0)
+			{
+				if (isset($this->wikiparser->parameters[$variable]))
+				{
+					$value = $this->wikiparser->parameters[$variable];
+
+					if ($value === false)
+						$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
+					elseif (is_string($value))
+						$target->throwContent(WikiParser::TEXT, $value, $unparsed);
+					else
+						$target->throwContent(WikiParser::TEXT, WikiParser::toText($value), $unparsed);
+
+				}
+				else
+					$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
+			}
+			else
+				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
+		}
+		elseif ($type == WikiElement_Parser::VARIABLE)
+		{
+			$variable = WikiParser::toText(array_shift($params), true);
+			$unparsed = $this->getUnparsed();
+			
+			// Get variable
+			$value = WikiExtension::getVariable($variable);
+
+			if ($value === false && count($params) !== 0)
+				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
+			elseif ($value === false && count($params) == 1)
+				$this->wikiparser->page->variables[$variable] = WikiParser::toText($params[0]);
+			elseif (is_string($value))
+				$target->throwContent(WikiParser::TEXT, $value, $unparsed);
+			elseif ($value !== false)
+			{
+				call_user_func($value['callback'], $target, $params, $unparsed);
+			}
+			else
+				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
+		}
+		else
+			die('NOT IMPLEMENTED!');
 	}
 	
 	/**
@@ -886,94 +1091,6 @@ class WikiElement_Parser
 	{
 		$this->len = $lenght;
 		$this->content[0]['unparsed'] = str_repeat($this->char, $lenght);
-	}
-	
-	/**
-	 * Function to finalize content so it can be added to page (or another element)
-	 */
-	public function finalize()
-	{
-		global $context;
-		
-		$param = 0;
-		$params = array();
-		
-		foreach ($this->content as $c)
-		{
-			switch ($c['type'])
-			{
-				case WikiParser::ELEMENT_OPEN:
-				case WikiParser::ELEMENT_CLOSE:
-					break;
-				
-				case WikiParser::ELEMENT_NEW_PARAM:
-					$param++;
-					break;
-				
-				default:
-					$params[$param][] = $c;
-					break;
-			}
-		}
-		
-		$this->type = $this->rule['names'][$this->len];
-		
-		if ($this->type == WikiElement_Parser::WIKILINK)
-			return new WikiLink($this->page, $params);
-		elseif ($this->type == WikiElement_Parser::TEMPLATE)
-		{
-			list ($namespace, $page) = wiki_parse_url_name(WikiParser::toText(array_pop($params)), true);
-
-			// TODO: Make Template special namespace
-			if (empty($namespace))
-				$namespace = 'Template';
-
-			$template = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($namespace, $page), 'Subs-Wiki.php', 'wiki_get_page_info', array($page, $context['namespaces'][$namespace]));
-
-			if ($template->exists)
-			{
-				$raw_content = wiki_get_page_raw_content($template, $template_info['current_revision']);
-				
-				/*$templatePage = cache_quick_get(
-					'wiki-page-include-' . $template_info['id'] . '-rev' . $template_info['current_revision'],
-					'Subs-Wiki.php', 'wiki_get_page_content',
-					array($template_info, $context['namespaces'][$namespace], $template_info['current_revision'], true)
-				);
-
-				$templatePage->status = $this->status;
-				$currentHtml .= (!empty($item['lineStart']) ? '<br />' : '') . $templatePage->getTemplateCode($item['params']) . (!empty($item['lineEnd']) ? '<br />' : '');
-				$this->status = $templatePage->status;
-
-				$this->categories += $templatePage->categories;*/
-			}
-			else
-			{
-				die('TMPL NOT FOUND');
-			}
-			die(var_dump($this));
-		}
-		elseif ($this->type == WikiElement_Parser::TEMPLATE_PARAM)
-		{
-			$variable = WikiParser::toText($params[0], true);
-
-			// Get variable
-			if (count($params) == 1)
-			{
-				if (isset($this->page->parameters[$variable]))
-					$value = $this->page->parameters[$variable];
-				else
-					$value = WikiExtension::getVariable($variable);
-
-				if ($value === false)
-					return array($this->getUnparsed());
-				elseif (is_string($value))
-					return array($value, $this->getUnparsed());
-				else
-					die('NOT IMPLEMENTED!');
-			}
-			else
-				die('NOT IMPLEMENTED!');
-		}
 	}
 	
 	
@@ -1033,7 +1150,7 @@ class WikiElement_Parser
 /**
  * WikiElement base class
  */
-class WikiElement
+abstract class WikiElement
 {
 	
 }

@@ -27,6 +27,9 @@ function loadWiki($mode = '', $prefix = null)
 	// Wiki Version
 	$wiki_version = '0.2';
 
+	// Add basic extension
+	WikiExtension::addExtension('WikiExtension_Core');
+
 	loadTemplate('Wiki', array('wiki'));
 	loadLanguage('Wiki');
 
@@ -41,10 +44,7 @@ function loadWiki($mode = '', $prefix = null)
 			// format 'variable' (lowercase only) => array(function to call, can have parameter)
 			// function: (&wiki_parser, variable[, value]) (value is present when parameter given, otherwise null)
 			// returns html code for display
-			'variables' => array(
-				'wikiversion' => array(create_function('&$wiki_parser, $variable', 'return $GLOBALS[\'wiki_version\'];'), false),
-				'displaytitle' => array(create_function('&$wiki_parser, $variable, $value', 'if ($value === null) { return $wiki_parser->title; } else { $wiki_parser->title = $value; return true; }'), true),
-			),
+
 			// Functions
 			// format 'function' (lowercase only) => array(function to call)
 			// function: (&wiki_parser, item)
