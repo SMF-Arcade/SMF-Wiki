@@ -159,8 +159,13 @@ class WikiParser
 	/**
 	 *
 	 */
-	private $tableOfContents;
+	public $tableOfContents;
 	private $_htmlIDs = array();
+
+	/**
+	 *
+	 */
+	private $current_section = array();
 	
 	// Lines
 	private $lineStart = null;
@@ -179,7 +184,16 @@ class WikiParser
 		$this->parameters = $parameters;
 		$this->parse_bbc = $parse_bbc;
 
-		$this->content = array();
+		$this->tableOfContents = array(
+			array(
+				'id' => 'wikitop',
+				'level' => 1,
+				'title' => &$page->title,
+				'content' => array(),
+			),
+		);
+
+		$this->content = &$this->tableOfContents[0]['content'];
 	}
 	
 	/**
@@ -192,7 +206,7 @@ class WikiParser
 		
 		$this->__parse($this, $text, $is_template);
 		
-		return $this->content;
+		return $this->tableOfContents;
 	}
 
 	/**
@@ -248,8 +262,9 @@ class WikiParser
 				'id' => $this->html_id($html_id),
 				'level' => $additonal['level'],
 				'title' => $content,
-				'subtoc' => array(),
+				'content' => array(),
 			);
+			$this->content = &$this->tableOfContents[count($this->tableOfContents) - 1]['content'];
 		}
 		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::BLOCK_LEVEL_OPEN || $type == WikiParser::BLOCK_LEVEL_CLOSE)
 		{
