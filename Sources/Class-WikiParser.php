@@ -199,14 +199,12 @@ class WikiParser
 	/**
 	 * Parser page and returns results
 	 */
-	public function parse($text, $is_template = false)
+	public function parse($text)
 	{
 		if (!empty($this->content))
 			return $this->content;
 		
-		$this->__parse($this, $text, $is_template);
-		
-		return $this->tableOfContents;
+		$this->__parse($this, $text);
 	}
 
 	/**
