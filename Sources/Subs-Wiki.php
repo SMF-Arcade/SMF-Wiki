@@ -302,11 +302,6 @@ function loadWikiPage()
 
 	$context['page_info'] = cache_quick_get('wiki-pageinfo-' .  wiki_cache_escape($context['namespace']['id'], $_REQUEST['page']), 'Subs-Wiki.php', 'wiki_get_page_info', array($_REQUEST['page'], $context['namespace']));
 
-	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $context['page_info']->current_revision;
-
-	$context['page_info']->revision = $revision;
-	$context['page_info']->is_current = $context['page_info']->revision == $context['page_info']->current_revision;
-
 	// Load Pages in this category 
 	if ($context['namespace'] == $context['namespace_category'])
 	{
@@ -336,9 +331,14 @@ function loadWikiPage()
 		}
 		$smcFunc['db_free_result']($request);
 	}
-	
-	if (!$context['page_info']->exists)
+
+	if ($context['namespace'] === $context['namespace_special'] || !$context['page_info']->exists)
 		return;
+
+	$revision = !empty($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : $context['page_info']->current_revision;
+
+	$context['page_info']->revision = $revision;
+	$context['page_info']->is_current = $context['page_info']->revision == $context['page_info']->current_revision;
 
 	// Load content itself
 	$context['wiki_page'] = cache_quick_get(

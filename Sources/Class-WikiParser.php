@@ -18,17 +18,18 @@ class WikiParser
 	const TEXT = 1;
 	const NEW_LINE = 2;
 	const NEW_PARAGRAPH = 3;
-	const SECTION_HEADER = 4;
-	const HTML_COMMENT = 5;
-	const COMMENT = 6;
-	const WARNING = 7;
+	const END_PARAGRAPH = 4;
+	const SECTION_HEADER = 5;
+	const HTML_COMMENT = 6;
+	const COMMENT = 7;
+	const WARNING = 8;
 	
 	// Parsing rules
 	const NO_PARSE = 21;
 
 	// Block level rules (for managing paragraphs)
-	const BLOCK_LEVEL_OPEN = 38;
-	const BLOCK_LEVEL_CLOSE = 39;
+	const CONTROL_BLOCK_LEVEL_OPEN = 38;
+	const CONTROL_BLOCK_LEVEL_CLOSE = 39;
 	
 	// Rules for WikiElement (such as Wikilinks etc.)
 	const ELEMENT = 40;
@@ -196,7 +197,7 @@ class WikiParser
 	public $page;
 
 	/**
-	 *
+	 * Contains parameters given to page if it's template
 	 */
 	public $parameters;
 	
@@ -206,7 +207,7 @@ class WikiParser
 	private $parse_bbc;
 	
 	/**
-	 *
+	 * Pointer to current section
 	 */
 	private $content;
 	
@@ -214,17 +215,18 @@ class WikiParser
 	 *
 	 */
 	public $tableOfContents;
-	private $_htmlIDs = array();
 
 	/**
-	 *
+	 * Contains used html ids to prevent duplicates
 	 */
-	private $current_section = array();
+	private $_htmlIDs = array();
 	
 	// Lines
 	private $lineStart = null;
 	private $linePointers = array();
-	
+	private $blockNestingLevel = 0;
+	private $paragraphOpen = false;
+
 	// Errors
 	private $errors;
 	private $_maxSeverity;
@@ -280,6 +282,18 @@ class WikiParser
 		{
 			throw new Exception('Invalid type given for throwContent()', EXPECTION_INVALID_TYPE);
 		}*/
+
+		if ($type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN)
+		{
+			if ($this->blockNestingLevel == 0 && $this->paragraphOpen == false)
+				$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
+
+			$this->blockNestingLevel++;
+		}
+		elseif ($type == WikiParser::CONTROL_BLOCK_LEVEL_CLOSE)
+		{
+			$this->blockNestingLevel--;
+		}
 		
 		// "Line" starts from this part
 		if ($this->lineStart == null)
@@ -301,6 +315,10 @@ class WikiParser
 		
 		if ($type == WikiParser::SECTION_HEADER)
 		{
+			if ($this->blockNestingLevel == 0 && $this->paragraphOpen == true)
+				$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
+			$this->paragraphOpen = false;
+
 			unset($this->content);
 			
 			$html_id = WikiParser::html_id($content);
@@ -314,18 +332,38 @@ class WikiParser
 
 			$this->tableOfContents[] = array(
 				'id' => $this->html_id($html_id),
-				'level' => $additonal['level'],
+				'level' => 1 + $additonal['level'],
 				'title' => $content,
 				'content' => array(),
 			);
 			$this->content = &$this->tableOfContents[count($this->tableOfContents) - 1]['content'];
+
+			return;
 		}
-		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::BLOCK_LEVEL_OPEN || $type == WikiParser::BLOCK_LEVEL_CLOSE)
+		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN || $type == WikiParser::CONTROL_BLOCK_LEVEL_CLOSE)
 		{
 			if (!empty($this->lineStart))
 			{
 				$this->linePointers[] = array($this->lineStart, $i - 1);
 				$this->lineStart = null;
+			}
+
+			if ($type == WikiParser::NEW_PARAGRAPH)
+			{
+				if ($this->paragraphOpen == true)
+				{
+					$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
+					$this->paragraphOpen = false;
+				}
+			}
+		}
+
+		if ($this->paragraphOpen == false && $this->blockNestingLevel == 0)
+		{
+			if ($type == WikiParser::TEXT || ($type == WikiParser::ELEMENT && !$content->is_block_level()))
+			{
+				$this->throwContent(WikiParser::NEW_PARAGRAPH, '<p>');
+				$this->paragraphOpen = true;
 			}
 		}
 		
@@ -646,7 +684,7 @@ class WikiParser
 				continue;
 			}
 			// New paragraph (2 * new line)
-			elseif ($this->parse_bbc && $can_open_paragraph && $curChar == "\n" && $text[$i + 1] == "\n")
+			elseif ($this->parse_bbc && $this->blockNestingLevel == 0 && $curChar == "\n" && $text[$i + 1] == "\n")
 			{
 				$target->throwContent(WikiParser::NEW_PARAGRAPH, "\n\n");
 
@@ -672,18 +710,13 @@ class WikiParser
 				{
 					if (WikiParser::$blockTags[$tag] === false)
 					{
-						$can_open_paragraph = false;
-						$blockLevelNesting++;
-						
-						$target->throwContent(WikiParser::BLOCK_LEVEL_OPEN, substr($text, $i, $tagLen));
+						$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_OPEN);
+						$target->throwContent(WikiParser::TEXT, substr($text, $i, $tagLen));
 					}
 					elseif (!$can_open_paragraph)
 					{
-						$blockLevelNesting--;
-						
-						$can_open_paragraph = $blockLevelNesting == 0;
-						
-						$target->throwContent(WikiParser::BLOCK_LEVEL_CLOSE, substr($text, $i, $tagLen));
+						$target->throwContent(WikiParser::TEXT, substr($text, $i, $tagLen));
+						$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_CLOSE);
 					}
 					else
 						$target->throwContent(WikiParser::TEXT, substr($text, $i, $tagLen));
@@ -916,6 +949,7 @@ class WikiElement_Parser
 	public function throwContent($type, $content, $unparsed = null, $additonal = array())
 	{
 		$i = count($this->content);
+
 		
 		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
 		{
@@ -1196,7 +1230,15 @@ class WikiElement_Parser
  */
 abstract class WikiElement
 {
-	//abstract function throwContentTo($target);
+	/**
+	 * Tell if Element is block level (for example <div>)
+	 */
+	abstract function is_block_level();
+
+	/**
+	 * Returns html to display element
+	 */
+	abstract function getHtml();
 }
 
 /**
@@ -1276,8 +1318,6 @@ class WikiLink extends WikiElement
 
 				if (!empty($align) || !empty($caption))
 				{
-					$this->__paragraph_handler($status, $currentHtml, 'close');
-
 					$style = array();
 					$class = array();
 
@@ -1325,6 +1365,15 @@ class WikiLink extends WikiElement
 	{
 		return $this->html;
 	}
+
+	/**
+	 * Returns if this is block level tag
+	 * @return boolean
+	 */
+	function is_block_level()
+	{
+		return $this->is_block_level;
+	}
 }
 
 /**
@@ -1342,6 +1391,24 @@ class WikiTag extends WikiElement
 		$this->tag = $tag;
 		$this->attributes = $attributes;
 		$this->content = $content;
+	}
+
+	/**
+	 * Returns html code for this element
+	 * @return string html for this element
+	 */
+	function getHtml()
+	{
+		die('not implemented');
+	}
+
+	/**
+	 * Returns if this is block level tag
+	 * @return boolean
+	 */
+	function is_block_level()
+	{
+		die('not implemented');
 	}
 }
 
@@ -1378,6 +1445,16 @@ class WikiVariable extends WikiElement
 	{
 		return $this->getValue();
 	}
+
+	/**
+	 * Returns if this is block level tag
+	 * @return boolean
+	 * @todo implemnet actual code
+	 */
+	function is_block_level()
+	{
+		return false;
+	}
 }
 
 /**
@@ -1403,6 +1480,25 @@ class WikiFunction extends WikiElement
 	function getValue()
 	{
 		return call_user_func($this->callback, $this->wikiparser, $this->params);
+	}
+
+	/**
+	 * Returns html code fir this element
+	 * @return string html for this element
+	 */
+	function getHtml()
+	{
+		return $this->getValue();
+	}
+
+	/**
+	 * Returns if this is block level tag
+	 * @return boolean
+	 * @todo implemnet actual code
+	 */
+	function is_block_level()
+	{
+		return false;
 	}
 }
 

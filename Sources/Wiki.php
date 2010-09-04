@@ -27,6 +27,9 @@ function loadWiki($mode = '', $prefix = null)
 	// Wiki Version
 	$wiki_version = '0.2';
 
+	// Load namespaces
+	loadNamespace();
+
 	// Add basic extension
 	WikiExtension::addExtension('WikiExtension_Core');
 
@@ -95,8 +98,6 @@ function loadWiki($mode = '', $prefix = null)
 	// Admin Mode
 	elseif ($mode == 'admin')
 		loadTemplate('WikiAdmin');
-		
-	loadNamespace();
 }
 
 function Wiki($standalone = false, $prefix = null)
@@ -192,29 +193,52 @@ function Wiki($standalone = false, $prefix = null)
 		return;
 	}
 
+	if ($context['namespace'] === $context['namespace_special'])
+	{
+		$pageName = $_REQUEST['page'];
+
+		if (strpos($_REQUEST['page'], '/'))
+			list ($_REQUEST['page'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
+		else
+			$_REQUEST['sub_page'] = '';
+
+		// Correct current_page_name
+		$context['current_page_name'] = wiki_get_url_name($_REQUEST['page'], $context['namespace']['id'], false);
+	}
+
+	// Load page info
+	loadWikiPage();
+
+	// Requested subaction?
+	$subaction = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
+
+	// View tab is shown always
+	$context['wikimenu'] = array(
+		'view' => array(
+			'title' => $txt['wiki_view'],
+			'url' => wiki_get_url($context['current_page_name']),
+			'selected' => in_array($subaction, array('view')),
+			'show' => true,
+		)
+	);
+
+	// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
+	if (!$context['page_info']->exists && !empty($subActions[$subaction][2]))
+		$subaction = 'view';
+	// Don't allow file actions on plain pages
+	elseif (!isset($context['current_file']) && !empty($subActions[$subaction][3]))
+		$subaction = 'view';
+	// Download image if asked to
+	elseif (isset($context['current_file']) && $context['current_file']['is_image'] && isset($_REQUEST['image']))
+		$subaction = 'download';
+
+	// Don't index older versions please or links to certain version
+	if (!$context['page_info']->exists || $context['page_info']->deleted || !$context['page_info']->is_current || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
+		$context['robot_no_index'] = true;
+
 	// Load Page info if namesapce isn't "Special" namespace
 	if ($context['namespace']['type'] != 1)
 	{
-		// Load page info
-		loadWikiPage();
-
-		// Don't index older versions please or links to certain version
-		if (!$context['page_info']->exists || $context['page_info']->deleted || !$context['page_info']->is_current || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
-			$context['robot_no_index'] = true;
-
-		$subaction = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
-
-		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
-		if (!$context['page_info']->exists && !empty($subActions[$subaction][2]))
-			$subaction = 'view';
-		// Don't allow file actions on plain pages
-		elseif (!isset($context['current_file']) && !empty($subActions[$subaction][3]))
-			$subaction = 'view';
-
-		// Download image if asked to
-		if (isset($context['current_file']) && $context['current_file']['is_image'] && isset($_REQUEST['image']))
-			$subaction = 'download';
-
 		$context['can_edit_page'] = allowedTo('wiki_admin') || (allowedTo('wiki_edit') && !$context['page_info']['is_locked']);
 		$context['can_lock_page'] = allowedTo('wiki_admin');
 		$context['can_delete_page'] = allowedTo('wiki_admin');
@@ -228,14 +252,8 @@ function Wiki($standalone = false, $prefix = null)
 		if ($context['namespace']['type'] != 0 && $context['namespace']['type'] != 4 && $context['namespace']['type'] != 5 && !$context['page_info']->exists)
 			$context['can_create_page'] = $context['can_edit_page'] = false;
 
-		// Setup tabs
-		$context['wikimenu'] = array(
-			'view' => array(
-				'title' => $txt['wiki_view'],
-				'url' => wiki_get_url($context['current_page_name']),
-				'selected' => in_array($subaction, array('view')),
-				'show' => true,
-			),
+		// Add additional tabs
+		$context['wikimenu'] += array(
 			'talk' => array(
 				'title' => $txt['wiki_talk'],
 				'url' => wiki_get_url(array(
@@ -310,33 +328,12 @@ function Wiki($standalone = false, $prefix = null)
 		
 		if (isset($context['wiki_page']->pageSettings['redirect_to']) && !isset($_REQUEST['no_redirect']))
 			$context['redirect_page_name'] = wiki_get_url_name($context['wiki_page']->pageSettings['redirect_to']);
-
-		// Template
-		loadTemplate('WikiPage');
-		$context['template_layers'][] = 'wikipage';
-	}
-	// Load required info for Special pages
-	else
-	{
-		$pageName =  wiki_get_url_name($_REQUEST['page'], $context['namespace']['id']);
-
-		if (strpos($_REQUEST['page'], '/'))
-			list ($_REQUEST['page'], $_REQUEST['sub_page']) = explode('/', $_REQUEST['page'], 2);
-		else
-			$_REQUEST['sub_page'] = '';
-
-		$subaction = $_REQUEST['page'];
-
-		$context['page_info'] = WikiPage::getSpecialPageInfo($pageName);
-
-		// Variable for current page
-		$context['current_page_name'] = wiki_get_url_name($_REQUEST['page'], $_REQUEST['namespace'], false);
 	}
 
 	// Redirect to page if needed
-	if (isset($context['redirect_page_name']) || $context['current_page_name'] != $context['page_info']->page)
+	if (isset($context['redirect_page_name']) || $context['current_page_name'] != $context['page_info']->url_name)
 	{
-		$newUrl = array('page' => isset($context['redirect_page_name']) ? $context['redirect_page_name'] : $context['page_info']->page);
+		$newUrl = array('page' => isset($context['redirect_page_name']) ? $context['redirect_page_name'] : $context['page_info']->url_name);
 
 		if (isset($_GET['image']))
 			$newUrl[] = 'image';
@@ -354,11 +351,14 @@ function Wiki($standalone = false, $prefix = null)
 		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
 	);
 	$context['current_page_url'] = wiki_get_url($context['wiki_url']);
-	
+
+	// Have display name of page in variable
+	$context['current_page_title'] = $context['page_info']->title;
+
 	// Highlight current section
 	foreach ($context['wiki_navigation'] as $id => $grp)
 	{
-		if ($grp['page'] == $context['current_page_name'])
+		if (isset($grp['page']) && $grp['page'] == $context['current_page_name'])
 			$context['wiki_navigation'][$id]['selected'] = true;
 
 		foreach ($grp['items'] as $subid => $item)
@@ -367,8 +367,10 @@ function Wiki($standalone = false, $prefix = null)
 				$context['wiki_navigation'][$id]['items'][$subid]['selected'] = true;
 		}
 	}
-	
+
+	// Setup parent pages
 	if (!empty($context['page_info']->page_tree))
+	{
 		foreach ($context['page_info']->page_tree as $page)
 		{
 			$context['linktree'][] = array(
@@ -376,22 +378,6 @@ function Wiki($standalone = false, $prefix = null)
 				'name' => $page['title'],
 			);		
 		}
-
-	// Have display name of page in variable
-	$context['current_page_title'] = $context['page_info']->title;
-
-	// Special page?
-	if ($context['page_info']->specialPage)
-	{
-		// Template
-		loadTemplate('WikiPage');
-		$context['template_layers'][] = 'wikipage';
-		
-		require_once($sourcedir . '/' . $wiki_page->specialPage['file']);
-
-		call_user_func($context['page_info']->specialPage['callback'], $_REQUEST['sub_page']);
-		
-		return;
 	}
 	
 	// Add Page to Link tree
@@ -403,8 +389,23 @@ function Wiki($standalone = false, $prefix = null)
 	// Page Title
 	$context['page_title'] = $context['forum_name'] . ' - ' . un_htmlspecialchars($context['current_page_title']);
 
-	require_once($sourcedir . '/' . $subActions[$subaction][0]);
-	$subActions[$subaction][1]();
+	// Template
+	loadTemplate('WikiPage');
+	$context['template_layers'][] = 'wikipage';
+
+	// Special page?
+	if ($context['page_info']->specialPage)
+	{
+		require_once($sourcedir . '/' . $context['page_info']->specialPage['file']);
+		call_user_func($context['page_info']->specialPage['callback'], $_REQUEST['sub_page']);
+
+		return;
+	}
+	else
+	{
+		require_once($sourcedir . '/' . $subActions[$subaction][0]);
+		$subActions[$subaction][1]();
+	}
 }
 
 ?>
