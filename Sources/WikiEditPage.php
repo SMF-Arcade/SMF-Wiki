@@ -197,7 +197,7 @@ function EditPage2()
 	$wikiParser->parse($body);
 	
 	$pageOptions = array(
-		'display_title' => $context['page_info']->title,
+		'display_title' => $wikiParser->page->title,
 	);
 	$revisionOptions = array(
 		'file' => !empty($context['page_info']->file) ? $context['page_info']->file : 0,

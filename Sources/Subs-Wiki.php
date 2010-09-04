@@ -352,14 +352,14 @@ function loadWikiPage()
 	$context['page_info']->title = $context['wiki_page']->title;
 
 	// Is there file attached to this page?
-	if (!empty($context['wiki_page']->id_file))
+	if (!empty($context['wiki_page']->file))
 	{
 		$request = $smcFunc['db_query']('', '
 			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
 			FROM {wiki_prefix}files
 			WHERE id_file = {int:file}',
 			array(
-				'file' => $context['wiki_page']->id_file,
+				'file' => $context['wiki_page']->file,
 			)
 		);
 

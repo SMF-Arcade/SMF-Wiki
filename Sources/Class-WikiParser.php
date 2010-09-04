@@ -17,12 +17,14 @@ class WikiParser
 	// General
 	const TEXT = 1;
 	const NEW_LINE = 2;
-	const NEW_PARAGRAPH = 3;
-	const END_PARAGRAPH = 4;
-	const SECTION_HEADER = 5;
-	const HTML_COMMENT = 6;
-	const COMMENT = 7;
-	const WARNING = 8;
+	const COMMENT = 3;
+	const HTML_COMMENT = 4;
+	const WARNING = 5;
+
+	const SECTION_HEADER = 11;
+	const NEW_PARAGRAPH = 12;
+	const END_PARAGRAPH = 13;
+	const END_PAGE = 14;
 	
 	// Parsing rules
 	const NO_PARSE = 21;
@@ -313,13 +315,22 @@ class WikiParser
 			return;
 		}
 		
-		if ($type == WikiParser::SECTION_HEADER)
+		if ($type == WikiParser::SECTION_HEADER || $type == WikiParser::END_PAGE)
 		{
+			while (in_array($this->content[$i - 1]['type'],array(WikiParser::NEW_LINE)))
+			{
+				unset($this->content[$i - 1]);
+				$i--;
+			}
+
 			if ($this->blockNestingLevel == 0 && $this->paragraphOpen == true)
 				$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
 			$this->paragraphOpen = false;
 
 			unset($this->content);
+
+			if ($type == WikiParser::END_PAGE)
+				return;
 			
 			$html_id = WikiParser::html_id($content);
 
@@ -334,13 +345,14 @@ class WikiParser
 				'id' => $this->html_id($html_id),
 				'level' => 1 + $additonal['level'],
 				'title' => $content,
+				'edit_url' => '#',
 				'content' => array(),
 			);
 			$this->content = &$this->tableOfContents[count($this->tableOfContents) - 1]['content'];
 
 			return;
 		}
-		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN || $type == WikiParser::CONTROL_BLOCK_LEVEL_CLOSE)
+		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN || $type == WikiParser::CONTROL_BLOCK_LEVEL_CLOSE)
 		{
 			if (!empty($this->lineStart))
 			{
@@ -348,23 +360,36 @@ class WikiParser
 				$this->lineStart = null;
 			}
 
-			if ($type == WikiParser::NEW_PARAGRAPH)
+
+			if ($type == WikiParser::NEW_LINE)
 			{
-				if ($this->paragraphOpen == true)
-				{
-					$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
-					$this->paragraphOpen = false;
-				}
+				// Let's not start with new line
+				if (empty($this->content))
+					return;
 			}
 		}
 
-		if ($this->paragraphOpen == false && $this->blockNestingLevel == 0)
+		if ($type == WikiParser::NEW_PARAGRAPH)
 		{
-			if ($type == WikiParser::TEXT || ($type == WikiParser::ELEMENT && !$content->is_block_level()))
-			{
-				$this->throwContent(WikiParser::NEW_PARAGRAPH, '<p>');
-				$this->paragraphOpen = true;
-			}
+			if ($this->paragraphOpen != false || $this->blockNestingLevel != 0)
+				return;
+		}
+		elseif ($type == WikiParser::END_PARAGRAPH)
+		{
+			if ($this->paragraphOpen != true)
+				return;
+			$this->paragraphOpen = false;
+		}
+		elseif ($this->paragraphOpen == false && $this->blockNestingLevel == 0
+				&& ($type == WikiParser::TEXT || ($type == WikiParser::ELEMENT && !$content->is_block_level())))
+		{
+			$this->content[$i++] = array(
+				'type' => WikiParser::NEW_PARAGRAPH,
+				'content' => '<p>',
+				'unparsed' => '',
+				'additional' => array(),
+			);
+			$this->paragraphOpen = true;
 		}
 		
 		$this->content[$i] = array(
@@ -686,7 +711,7 @@ class WikiParser
 			// New paragraph (2 * new line)
 			elseif ($this->parse_bbc && $this->blockNestingLevel == 0 && $curChar == "\n" && $text[$i + 1] == "\n")
 			{
-				$target->throwContent(WikiParser::NEW_PARAGRAPH, "\n\n");
+				$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
 
 				$i += 2;
 				
@@ -694,7 +719,7 @@ class WikiParser
 			}
 			elseif ($curChar == "\n")
 			{
-				$target->throwContent(WikiParser::NEW_LINE, "\n");
+				$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
 				$i++;
 				
 				continue;
@@ -847,6 +872,9 @@ class WikiParser
 			
 			unset($element);
 		}
+
+		if (!$is_template)
+			$this->throwContent(WikiParser::END_PAGE, '');
 		
 		/*while (!empty($this->_tocStack))
 		{
@@ -1420,12 +1448,14 @@ class WikiVariable extends WikiElement
 	var $wikiparser;
 	var $callback;
 	var $params;
+	var $value;
 
 	function __construct(Wikiparser $wikiparser, $callback, $params)
 	{
 		$this->wikiparser = $wikiparser;
 		$this->callback = $callback;
 		$this->params = $params;
+		$this->value = call_user_func($this->callback, $this->wikiparser, $this->params);
 	}
 
 	/**
@@ -1434,7 +1464,7 @@ class WikiVariable extends WikiElement
 	 */
 	function getValue()
 	{
-		return call_user_func($this->callback, $this->wikiparser, $this->params);
+		return $this->value;
 	}
 
 	/**
@@ -1443,7 +1473,9 @@ class WikiVariable extends WikiElement
 	 */
 	function getHtml()
 	{
-		return $this->getValue();
+		$value = $this->getValue();
+
+		return is_string($value) ? $value : '';
 	}
 
 	/**
