@@ -15,6 +15,8 @@ class WikiExtension
 {
 	static protected $variables = array();
 	static protected $functions = array();
+	static protected $magicwords = array();
+	static protected $specialPages = array();
 
 	/**
 	 * Checks if variable exists
@@ -44,6 +46,16 @@ class WikiExtension
 	}
 
 	/**
+	 *
+	 * @param <type> $variable
+	 * @param <type> $callback
+	 */
+	static function addVariable($variable, $callback)
+	{
+		WikiExtension::$variables[$variable] = array('callback' => $callback);
+	}
+
+	/**
 	 * Check if function exists
 	 * 
 	 * @param string $function
@@ -51,17 +63,106 @@ class WikiExtension
 	 */
 	static function isFunction($function)
 	{
+		$function = strtolower($function);
+
 		return isset(WikiExtension::$functions[$function]);
 	}
 
+	/**
+	 * Returns variable from extension(s)
+	 * @param string $variable
+	 * @return mixed String if variable exists. False if not
+	 */
+	static function getFunction($function)
+	{
+		$function = strtolower($function);
+
+		if (!isset(WikiExtension::$functions[$function]))
+			return false;
+
+		return WikiExtension::$functions[$function];
+	}
+
+	/**
+	 *
+	 * @param <type> $variable
+	 * @param <type> $callback
+	 */
+	static function addFunction($function, $callback)
+	{
+		WikiExtension::$functions[$function] = array('callback' => $callback);
+	}
+
+	/**
+	 * Check if Magic word exists
+	 *
+	 * @param string $function
+	 * @return boolean True if function exists
+	 */
+	static function isMagicword($magicword)
+	{
+		$magicword = strtolower($magicword);
+
+		return isset(WikiExtension::$magicwords[$magicword]);
+	}
+
+	/**
+	 * Returns variable from extension(s)
+	 * @param string $variable
+	 * @return mixed String if variable exists. False if not
+	 */
+	static function getMagicword($magicword)
+	{
+		$magicword = strtolower($magicword);
+
+		if (!isset(WikiExtension::$magicwords[$magicword]))
+			return false;
+
+		return WikiExtension::$magicwords[$magicword];
+	}
+
+	/**
+	 *
+	 * @param <type> $variable
+	 * @param <type> $callback
+	 */
+	static function addMagicword($magicword, $callback)
+	{
+		$magicword = strtolower($magicword);
+		
+		WikiExtension::$magicwords[$magicword] = array('callback' => $callback);
+	}
+
+	/**
+	 * Returns variable from extension(s)
+	 * @param string $variable
+	 * @return mixed String if variable exists. False if not
+	 */
+	static function getSpecialPage($specialpage)
+	{
+		if (!isset(WikiExtension::$specialPages[$specialpage]))
+			return false;
+
+		return WikiExtension::$specialPages[$specialpage];
+	}
+
+	/**
+	 *
+	 * @param <type> $specialpage
+	 * @param <type> $callback
+	 */
+	static function registerSpecialPage($specialpage, $title, $file, $callback)
+	{
+		WikiExtension::$specialPages[$specialpage] = array('title' => $title, 'file' => $file, 'callback' => $callback);
+	}
+
+	/**
+	 *
+	 * @param string $name class name of extension
+	 */
 	static function addExtension($name)
 	{
 		call_user_func(array($name, 'registerExtension'));
-	}
-
-	static function addVariable($variable, $callback)
-	{
-		WikiExtension::$variables[$variable] = array('callback' => $callback);
 	}
 }
 
@@ -78,12 +179,26 @@ abstract class WikiExtensionBase
  */
 class WikiExtension_Core extends WikiExtensionBase
 {
+	/**
+	 *
+	 */
 	static function registerExtension()
 	{
 		WikiExtension::addVariable('wikiversion', array('WikiExtension_Core', 'variable_WikiVersion'));
 		WikiExtension::addVariable('displaytitle', array('WikiExtension_Core', 'variable_DisplayTitle'));
+
+		WikiExtension::addVariable('if', array('WikiExtension_Core', 'function_if'));
+
+		WikiExtension::addMagicword('index', array('WikiExtension_Core', 'magicword_index'));
 	}
 
+	/**
+	 *
+	 * @global <type> $wiki_version
+	 * @param WikiParser $wikiparser
+	 * @param <type> $parameters
+	 * @return <type>
+	 */
 	static function variable_WikiVersion(WikiParser $wikiparser, $parameters)
 	{
 		global $wiki_version;
@@ -91,14 +206,35 @@ class WikiExtension_Core extends WikiExtensionBase
 		return $wiki_version;
 	}
 
+	/**
+	 *
+	 * @param WikiParser $wikiparser
+	 * @param <type> $parameters
+	 * @return <type>
+	 */
 	static function variable_DisplayTitle(WikiParser $wikiparser, $parameters)
 	{
 		if (empty($parameters))
 			return $wikiparser->page->title;
 		else
-			$wikiparser->title = WikiParser::toText(array_shift($parameters));
+			$wikiparser->page->title = WikiParser::toText(array_shift($parameters));
 
 		return true;
+	}
+
+	/**
+	 *
+	 * @param WikiParser $wikiparser
+	 * @param <type> $parameters
+	 */
+	static function function_if(WikiParser $wikiparser, $parameters)
+	{
+		$result = WikiParser::toBoolean(array_shift($parameters));
+		$true_cond = array_shift($parameters);
+		if (!empty($parameters))
+			$false_cond = array_shift($parameters);
+
+		return $result ? $true_cond : (!isset($false_cond) ? $false_cond : array());
 	}
 }
 

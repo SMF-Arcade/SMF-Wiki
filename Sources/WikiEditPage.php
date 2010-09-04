@@ -186,24 +186,21 @@ function EditPage2()
 		}
 	}
 
-	if ($context['page_info']['id'] === null)
-		$context['page_info']['id'] = createPage($_REQUEST['page'], $context['namespace']);
+	if (!$context['page_info']->exists)
+		$context['page_info']->id = createPage($_REQUEST['page'], $context['namespace']);
 
 	preparsecode($_POST['comment']);
 
-	// Parse Page for usage in 
-	$context['wiki_page'] = new WikiPage($context['page_info'], $context['namespace'], $body);
-	
-	$context['wiki_page']->title = null;
-	$context['wiki_page']->parse_bbc = true;
-	$context['wiki_page']->raw_content = $body;
-	$context['wiki_page']->parse();
+	// Parse Page for usage in
+	$context['page_info']->title = get_default_display_title($_REQUEST['page'], $context['namespace']['id']);
+	$wikiParser = new WikiParser($context['page_info']);
+	$wikiParser->parse($body);
 	
 	$pageOptions = array(
-		'display_title' => !empty($context['wiki_page']->title) ? $context['wiki_page']->title : get_default_display_title($_REQUEST['page'], $context['namespace']),
+		'display_title' => $context['page_info']->title,
 	);
 	$revisionOptions = array(
-		'file' => !empty($context['page_info']['id_file']) ? $context['page_info']['id_file'] : 0,
+		'file' => !empty($context['page_info']->file) ? $context['page_info']->file : 0,
 		'body' => $body,
 		'comment' => $_POST['comment'],
 	);
@@ -214,21 +211,21 @@ function EditPage2()
 	if ($context['can_lock_page'])
 		$pageOptions['lock'] = !empty($_REQUEST['lock_page']);
 
-	createRevision($context['page_info']['id'], $pageOptions, $revisionOptions, $posterOptions);
+	createRevision($context['page_info']->id, $pageOptions, $revisionOptions, $posterOptions);
 
 	// Categories
 	$rows = array();
 	
 	if (!empty($context['wiki_page']->categories))
 		foreach ($context['wiki_page']->categories as $cat)
-			$rows[$cat['title']] = array($context['page_info']['id'], $cat['title']);
+			$rows[$cat['title']] = array($context['page_info']->id, $cat['title']);
 	
 	// Remove categories first
 	$smcFunc['db_query']('', '
 		DELETE FROM {wiki_prefix}category
 		WHERE id_page = {int:page}',
 		array(
-			'page' => $context['page_info']['id'],
+			'page' => $context['page_info']->id,
 		)
 	);
 	

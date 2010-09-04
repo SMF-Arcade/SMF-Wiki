@@ -133,9 +133,7 @@ function template_wiki_content(WikiPage $wikiPage)
 {
 	global $context, $modSettings, $txt;
 
-	var_dump($context['wiki_page']);
-	
-	/*foreach ($wikiPage->sections as $section)
+	foreach ($wikiPage->parser->tableOfContents as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
@@ -170,16 +168,34 @@ function template_wiki_content(WikiPage $wikiPage)
 		if ($section['level'] == 1 && isset($context['current_file']))
 			print_r($context['current_file']);
 
-		echo $section['html'];
+		//echo $section['html'];
+
+		var_dump($section);
+
+		foreach ($section['content'] as $content)
+		{
+			switch ($content['type'])
+			{
+				case WikiParser::TEXT:
+					echo $content['content'];
+					break;
+				case WikiParser::ELEMENT:
+					echo $content['content']->getHtml();
+					break;
+				default:
+					die('Template: Unknown part type ' . $content['type']);
+					break;
+			}
+		}
 		
-		if ($section['level'] == 1 && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->tableOfContents))
+		/*if ($section['level'] == 1 && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->tableOfContents))
 			echo '
 			<div class="wikitoc floatright">
 				<ul class="reset">',
 					output_toc($context['current_page_url'], '', $wikiPage->tableOfContents), '
 				</ul>
-			</div>';
-	}*/
+			</div>';*/
+	}
 }
 
 function template_talk_page()
@@ -331,7 +347,7 @@ function template_edit_page()
 
 			if ($context['can_lock_page'])
 				echo '
-				<input type="checkbox" name="lock_page" value="1"', $context['page_info']['is_locked'] ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
+				<input type="checkbox" name="lock_page" value="1"', $context['page_info']->locked ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
 
 			echo '
 			</div>

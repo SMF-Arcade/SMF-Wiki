@@ -66,8 +66,20 @@ class WikiPage
 		global $context;
 		
 		$wiki_page = new WikiPage($context['namespace_special'], $page);
-		
-		die('not implemnted');
+
+		$wiki_page->specialPage = WikiExtension::getSpecialPage($page);
+
+		if (!$wiki_page->specialPage)
+		{
+			$wiki_page->exists = false;
+		}
+		else
+		{
+			$wiki_page->exists = true;
+			$wiki_page->title = $wiki_page->specialPage['title'];
+		}
+
+		return $wiki_page;
 	}
 	
 	public $id = 0;
@@ -75,6 +87,8 @@ class WikiPage
 	public $page;
 	public $title;
 	public $url_name;
+
+	public $file = 0;
 	
 	public $exists = false;
 	public $locked = false;
@@ -88,6 +102,11 @@ class WikiPage
 	public $page_tree;
 
 	public $parser;
+
+	/**
+	 *
+	 */
+	public $specialPage;
 	
 	public $categories = array();
 	public $variables = array();

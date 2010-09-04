@@ -54,6 +54,13 @@ $txt['wiki_upload_file'] = 'Upload file';
 $txt['wiki_upload_button'] = 'Upload file';
 $txt['file_description'] = 'Description';
 
+// Recent Changes
+$txt['wiki_recent_changes'] = 'Recent Changes';
+$txt['wiki_recent_changes_title'] = '%s - Recent Changes';
+
+// Special pages
+$txt['wiki_special_pages'] = 'Special Pages';
+
 // Admin
 $txt['wiki_settings'] = 'Wiki Settings';
 $txt['wiki_admin_title'] = 'Wiki';
@@ -76,10 +83,6 @@ $txt['wikiStandalone_2'] = 'Enabled (Friendly URLs)';
 $txt['wikiStandaloneUrl'] = 'Standalone URL';
 $txt['wikiTalkBoard'] = 'Talk Board';
 $txt['wikiAttachmentsDir'] = 'File Upload Directory';
-
-// Recent Changes
-$txt['wiki_recent_changes'] = 'Recent Changes';
-$txt['wiki_recent_changes_title'] = '%s - Recent Changes';
 
 // Parser errors
 $txt['parser_warning_prefix'] = 'Warning:';

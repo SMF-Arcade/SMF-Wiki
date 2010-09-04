@@ -103,6 +103,40 @@ class WikiParser
 			$name = substr($name, 1);
 		return $name;
 	}
+
+
+	/**
+	 * Prepares content array for boolean conversion
+	 * @param array $content
+	 * @return array
+	 */
+	static protected function __boolean_trim($content)
+	{
+		$return = array();
+		foreach ($content as $c)
+		{
+			switch ($c['type'])
+			{
+				case WikiParser::ELEMENT_SEMI_COLON:
+				case WikiParser::TEXT:
+					$c['content'] = trim($c['content']);
+					if ($c['content'] !== '')
+						$return[] = $c;
+					break;
+				case WikiParser::NEW_LINE:
+				case WikiParser::NEW_PARAGRAPH:
+					break;
+				case WikiParser::ELEMENT:
+					$return[] = $c;
+					break;
+				default:
+					die('__boolean_trim: Unknown part type ' . $c['type']);
+					break;
+			}
+		}
+
+		return $return;
+	}
 	
 	/**
 	 * Parser content into text for use in parameters etc.
@@ -128,14 +162,34 @@ class WikiParser
 					$return .= $c['content']->toText();
 					break;
 				default:
-					die('Unknown part type ' . $c['type']);
+					die('toText: Unknown part type ' . $c['type']);
 					break;
 			}
 		}
 		
 		return $return;
 	}
+
+	/**
+	 * Convert content array to boolean
+	 * @param array $content content array to compare
+	 * @return boolean Result
+	 */
+	static function toBoolean($content)
+	{
+		$content = WikiParser::__boolean_trim($content);
 		
+		if (count($content) != 1 || $content[0]['type'] != WikiParser::ELEMENT)
+		{
+			$result = WikiParser::toText($content);
+			return !empty($result);
+		}
+		else
+		{
+			return $content[0]['content']->toBoolean();
+		}
+	}
+
 	/**
 	 * Page variable containing WikiPage class.
 	 */
@@ -247,6 +301,8 @@ class WikiParser
 		
 		if ($type == WikiParser::SECTION_HEADER)
 		{
+			unset($this->content);
+			
 			$html_id = WikiParser::html_id($content);
 
 			$i2 = 1;
@@ -727,7 +783,7 @@ class WikiParser
 			// Behaviour switch
 			elseif ($this->parse_bbc && $curChar == '_' && $text[$i + 1] == '_')
 			{
-				// Find next space
+				// Find next space or new line
 				$bLen = strcspn($text, " \n", $i + 2);
 				$bSwitch = substr($text, $i + 2, $bLen);
 				
@@ -739,6 +795,7 @@ class WikiParser
 					continue;
 				}
 			}
+			// Else add it as text
 			else
 			{
 				$target->throwContent(WikiParser::TEXT, $curChar);
@@ -819,7 +876,7 @@ class WikiElement_Parser
 				3 => WikiElement_Parser::TEMPLATE_PARAM,
 			),
 		),
-		'#' => array(
+		/*'#' => array(
 			'close' => "\n",
 			'min' => 1,
 			'max' => 1,
@@ -828,7 +885,7 @@ class WikiElement_Parser
 			),
 			'no_param' => true,
 			'has_name' => true,
-		),
+		),*/
 	);
 	
 	public $char;
@@ -897,7 +954,6 @@ class WikiElement_Parser
 	
 	/**
 	 * Adds content to upper level element.
-	 * @todo
 	 */
 	public function throwContentTo($target)
 	{
@@ -994,9 +1050,9 @@ class WikiElement_Parser
 			}
 		}
 
+		// Template might not actually be actual template but function or variable
 		if ($type == WikiElement_Parser::TEMPLATE)
 		{
-			var_dump($params);
 			 $page = WikiParser::toText($params[0]);
 
 			 if ($page[0] == '#')
@@ -1007,11 +1063,7 @@ class WikiElement_Parser
 				$type = WikiElement_Parser::VARIABLE;
 		}
 
-		/*
-				//{{#if:{{{title}}}|<h2>{{{title}}}</h2>}}
-				die('NOT IMPLEMENTED!');
-			}*/
-
+		// Wikilink
 		if ($type == WikiElement_Parser::WIKILINK)
 		{
 			$parsedPage = WikiParser::toText(array_shift($params));
@@ -1035,6 +1087,20 @@ class WikiElement_Parser
 				$target->throwContent(WikiParser::ELEMENT, new WikiLink($this->wikiparser, $link_info, $params), $this->getUnparsed());
 			}
 		}
+		// Function
+		elseif ($type == WikiElement_Parser::FUNC)
+		{
+			$function = WikiParser::toText(array_shift($params));
+			$unparsed = $this->getUnparsed();
+
+			if ($function[0] == '#')
+				$function = substr($function, 1);
+			
+			$value = WikiExtension::getFunction($function);
+
+			$target->throwContent(WikiParser::ELEMENT, new WikiFunction($this->wikiparser, $value['callback'], $params), $unparsed);
+		}
+		// Template
 		elseif ($type == WikiElement_Parser::TEMPLATE)
 		{
 			$page = WikiParser::toText(array_shift($params));
@@ -1065,6 +1131,7 @@ class WikiElement_Parser
 			else
 				$target->throwContent(WikiParser::WARNING, 'template_not_found', $this->getUnparsed(), array(wiki_get_url_name($page, $namespace)));
 		}
+		// Template parameter
 		elseif ($type == WikiElement_Parser::TEMPLATE_PARAM)
 		{
 			$variable = WikiParser::toText(array_shift($params), true);
@@ -1091,6 +1158,7 @@ class WikiElement_Parser
 			else
 				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
 		}
+		// Variable
 		elseif ($type == WikiElement_Parser::VARIABLE)
 		{
 			$variable = WikiParser::toText(array_shift($params), true);
@@ -1109,7 +1177,7 @@ class WikiElement_Parser
 				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
 		}
 		else
-			die('NOT IMPLEMENTED!');
+			die('NOT IMPLEMENTED!' . $type);
 	}
 	
 	/**
@@ -1132,7 +1200,7 @@ abstract class WikiElement
 }
 
 /**
- * Wikilink class
+ * Represents wikilink like [[Main_Page|link text]]
  */
 class WikiLink extends WikiElement
 {
@@ -1248,10 +1316,19 @@ class WikiLink extends WikiElement
 			$this->html .= '<a href="' . wiki_get_url($this->link) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $this->linkText . '</a>';
 		}
 	}
+
+	/**
+	 * Returns html code for this element
+	 * @return string html for this element
+	 */
+	function getHtml()
+	{
+		return $this->html;
+	}
 }
 
 /**
- *
+ * Represents XML Tags like <my_tag></my_tag>
  */
 class WikiTag extends WikiElement
 {
@@ -1266,14 +1343,10 @@ class WikiTag extends WikiElement
 		$this->attributes = $attributes;
 		$this->content = $content;
 	}
-
-	function throwContentTo($target)
-	{
-	}
 }
 
 /**
- *
+ * Represents template variables like {{{1}}}
  */
 class WikiVariable extends WikiElement
 {
@@ -1288,6 +1361,45 @@ class WikiVariable extends WikiElement
 		$this->params = $params;
 	}
 
+	/**
+	 *
+	 * @return mixed
+	 */
+	function getValue()
+	{
+		return call_user_func($this->callback, $this->wikiparser, $this->params);
+	}
+
+	/**
+	 * Returns html code fir this element
+	 * @return string html for this element
+	 */
+	function getHtml()
+	{
+		return $this->getValue();
+	}
+}
+
+/**
+ * Represents functions like {{#if:{{{varable}}}|variable set|variable not set}}
+ */
+class WikiFunction extends WikiElement
+{
+	var $wikiparser;
+	var $callback;
+	var $params;
+
+	function __construct(Wikiparser $wikiparser, $callback, $params)
+	{
+		$this->wikiparser = $wikiparser;
+		$this->callback = $callback;
+		$this->params = $params;
+	}
+
+	/**
+	 *
+	 * @return mixed
+	 */
 	function getValue()
 	{
 		return call_user_func($this->callback, $this->wikiparser, $this->params);

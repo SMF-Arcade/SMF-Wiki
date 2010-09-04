@@ -40,23 +40,6 @@ function loadWiki($mode = '', $prefix = null)
 		$context['template_layers'][] = 'wiki';
 		
 		$context['wiki_parser_extensions'] = array(
-			// Custom variables 
-			// format 'variable' (lowercase only) => array(function to call, can have parameter)
-			// function: (&wiki_parser, variable[, value]) (value is present when parameter given, otherwise null)
-			// returns html code for display
-
-			// Functions
-			// format 'function' (lowercase only) => array(function to call)
-			// function: (&wiki_parser, item)
-			// returns html code for display
-			'functions' => array(
-				'#if' => array(create_function('&$wiki_parser, $item', '							
-					$result = trim(str_replace(array(\'<br />\', \'&nbsp;\'), array("\n", \' \'), $wiki_parser->__parse_part($wiki_parser->fakeStatus, $item[\'firstParam\'], true)));
-							
-					if (isset($item[\'params\'][!empty($result) ? 1 : 2]))
-						return $wiki_parser->__parse_part($status, $item[\'params\'][!empty($result) ? 1 : 2]);
-					return \'\';')),
-			),
 			// format 'switch' => function to call
 			// function: (&wiki_parser)
 			// returns nothing
@@ -83,19 +66,30 @@ function loadWiki($mode = '', $prefix = null)
 		);
 		
 		// Special Pages
-		$context['wiki_special_pages'] = array(
-			'RecentChanges' => array(
-				'file' => 'WikiHistory.php',
-				'function' => 'WikiRecentChanges',
+		WikiExtension::registerSpecialPage('RecentChanges', $txt['wiki_recent_changes'], 'WikiHistory.php', 'WikiRecentChanges');
+		WikiExtension::registerSpecialPage('SpecialPages', $txt['wiki_special_pages'], 'WikiSpecialPages.php', 'WikiListOfSpecialPages');
+		WikiExtension::registerSpecialPage('Upload', $txt['wiki_upload_file'], 'WikiFiles.php', 'WikiFileUpload');
+
+		// Load Navigation
+		$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
+
+		// Add toolbox to navigation menu
+		$context['wiki_navigation'][] = array(
+			'title' => $txt['wiki_toolbox'],
+			'items' => array(
+				array(
+					'title' => $txt['wiki_recent_changes'],
+					'page' => wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
+					'url' => wiki_get_url(wiki_get_url_name('RecentChanges', $context['namespace_special']['id'])),
+					'selected' => false,
+				),
+				array(
+					'title' => $txt['wiki_upload_file'],
+					'page' => wiki_get_url_name('Upload', $context['namespace_special']['id']),
+					'url' => wiki_get_url(wiki_get_url_name('Upload', $context['namespace_special']['id'])),
+					'selected' => false,
+				)
 			),
-			'SpecialPages' => array(
-				'file' => 'WikiSpecialPages.php',
-				'function' => 'WikiListOfSpecialPages',		
-			),
-			'Upload' =>  array(
-				'file' => 'WikiFiles.php',
-				'function' => 'WikiFileUpload',
-			),	
 		);
 	}
 	// Admin Mode
@@ -110,32 +104,6 @@ function Wiki($standalone = false, $prefix = null)
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
 	
 	loadWiki('', $prefix);
-	
-	// Linktree
-	$context['linktree'][] = array(
-		'url' => $context['namespaces']['']['url'],
-		'name' => $txt['wiki'],
-	);
-
-	// Go to default page if not defined
-	if (!isset($_REQUEST['page']) || empty($_REQUEST['page']))
-		redirectexit($context['namespaces']['']['url']);
-	
-	// Parse namespace from page
-	list ($_REQUEST['namespace'], $_REQUEST['page']) = wiki_parse_url_name($_REQUEST['page']);
-
-	// Set $context['namepsace'] to reference to current namespace
-	$context['namespace'] = &$context['namespaces'][$_REQUEST['namespace']];
-
-	// Add namespace to linktree if necassary
-	if (!empty($context['namespace']['prefix']))
-		$context['linktree'][] = array(
-			'url' =>  $context['namespace']['url'],
-			'name' => $context['namespace']['prefix'],
-		);
-		
-	// Variable for current page
-	$context['current_page_name'] = wiki_get_url_name($_REQUEST['page'], $_REQUEST['namespace'], false);
 
 	// Subactions
 	$subActions = array(
@@ -154,15 +122,44 @@ function Wiki($standalone = false, $prefix = null)
 		'download' => array('WikiFiles.php', 'WikiFileView', true, true),
 		'purge' => array('WikiPage.php', 'CleanCache'),
 	);
-	
+
 	// Don't allow talk actions if it's not enalbed
 	if (empty($modSettings['wikiTalkBoard']))
 		unset($subActions['talk'], $subActions['talk2']);
 
+	// Linktree
+	$context['linktree'][] = array(
+		'url' => $context['namespaces']['']['url'],
+		'name' => $txt['wiki'],
+	);
+
+	// Go to default page if not defined
+	if (!isset($_REQUEST['page']) || empty($_REQUEST['page']))
+		redirectexit($context['namespaces']['']['url']);
+	
+	// Parse namespace from page
+	list ($_REQUEST['namespace'], $_REQUEST['page']) = wiki_parse_url_name($_REQUEST['page']);
+
+	// Set $context['namepsace'] to reference to current namespace
+	$context['namespace'] = &$context['namespaces'][$_REQUEST['namespace']];
+
+	// If accessing empty page redirect to default page of namespace
+	if (empty($_REQUEST['page']))
+		redirectexit($context['namespace']['url']);
+
+	// Add namespace to linktree if necassary
+	if (!empty($context['namespace']['prefix']))
+		$context['linktree'][] = array(
+			'url' =>  $context['namespace']['url'],
+			'name' => $context['namespace']['prefix'],
+		);
+		
+	// Variable for current page
+	$context['current_page_name'] = wiki_get_url_name($_REQUEST['page'], $_REQUEST['namespace'], false);
+
 	// show error page for invalid titles
 	if (!is_valid_pagename($_REQUEST['page'], $context['namespace']))
 	{
-		$namespaceGroup = 'normal';
 		$subaction = 'view';
 
 		$context['page_info'] = array(
@@ -189,20 +186,22 @@ function Wiki($standalone = false, $prefix = null)
 		loadTemplate('WikiPage');
 		$context['template_layers'][] = 'wikipage';
 		$context['sub_template'] = 'not_found';
-	}
-	// Load Page info if namesapce isn't "Special" namespace
-	elseif ($context['namespace']['type'] != 1)
-	{
-		if (empty($_REQUEST['page']))
-			redirectexit($context['namespace']['url']);
 
+		require_once($sourcedir . '/' . $subActions[$subaction][0]);
+		$subActions[$subaction][1]();
+		return;
+	}
+
+	// Load Page info if namesapce isn't "Special" namespace
+	if ($context['namespace']['type'] != 1)
+	{
+		// Load page info
 		loadWikiPage();
 
 		// Don't index older versions please or links to certain version
 		if (!$context['page_info']->exists || $context['page_info']->deleted || !$context['page_info']->is_current || isset($_REQUEST['revision']) || isset($_REQUEST['old_revision']))
 			$context['robot_no_index'] = true;
 
-		$namespaceGroup = 'normal';
 		$subaction = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';
 
 		// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
@@ -244,10 +243,10 @@ function Wiki($standalone = false, $prefix = null)
 					'sa' => 'talk',
 				)),
 				'selected' => in_array($subaction, array('talk')),
-				'show' => !empty($modSettings['wikiTalkBoard']) && empty($context['page_info']['is_deleted']),
+				'show' => !empty($modSettings['wikiTalkBoard']) && empty($context['page_info']->deleted),
 			),
 			'edit' => array(
-				'title' => !$context['can_create_page'] ? $txt['wiki_edit'] : $txt['wiki_create'],
+				'title' => !$context['page_info']->exists ? $txt['wiki_create'] : $txt['wiki_edit'],
 				'url' => wiki_get_url(array(
 					'page' => $context['current_page_name'],
 					'sa' => 'edit',
@@ -319,7 +318,6 @@ function Wiki($standalone = false, $prefix = null)
 	// Load required info for Special pages
 	else
 	{
-		$namespaceGroup = 'special';
 		$pageName =  wiki_get_url_name($_REQUEST['page'], $context['namespace']['id']);
 
 		if (strpos($_REQUEST['page'], '/'))
@@ -329,13 +327,10 @@ function Wiki($standalone = false, $prefix = null)
 
 		$subaction = $_REQUEST['page'];
 
-		$context['page_info'] = array(
-			'id' => null,
-			'title' => get_default_display_title($_REQUEST['page'], $context['namespace']['id']),
-			'name' => $pageName,
-			'namespace' => $context['namespace']['id'],
-			'is_locked' => false,
-		);
+		$context['page_info'] = WikiPage::getSpecialPageInfo($pageName);
+
+		// Variable for current page
+		$context['current_page_name'] = wiki_get_url_name($_REQUEST['page'], $_REQUEST['namespace'], false);
 	}
 
 	// Redirect to page if needed
@@ -359,28 +354,6 @@ function Wiki($standalone = false, $prefix = null)
 		'revision' => isset($_REQUEST['revision']) ? (int) $_REQUEST['revision'] : null,
 	);
 	$context['current_page_url'] = wiki_get_url($context['wiki_url']);
-
-	// Load Navigation
-	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
-
-	// Add toolbox to navigation menu
-	$context['wiki_navigation'][] = array(
-		'title' => $txt['wiki_toolbox'],
-		'items' => array(
-			array(
-				'title' => $txt['wiki_recent_changes'],
-				'page' => wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
-				'url' => wiki_get_url(wiki_get_url_name('RecentChanges', $context['namespace_special']['id'])),
-				'selected' => $context['current_page_name'] == wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
-			),
-			array(
-				'title' => $txt['wiki_upload_file'],
-				'page' => wiki_get_url_name('Upload', $context['namespace_special']['id']),
-				'url' => wiki_get_url(wiki_get_url_name('Upload', $context['namespace_special']['id'])),
-				'selected' => $context['current_page_name'] == wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
-			)
-		),
-	);
 	
 	// Highlight current section
 	foreach ($context['wiki_navigation'] as $id => $grp)
@@ -408,28 +381,15 @@ function Wiki($standalone = false, $prefix = null)
 	$context['current_page_title'] = $context['page_info']->title;
 
 	// Special page?
-	if ($namespaceGroup == 'special')
+	if ($context['page_info']->specialPage)
 	{
 		// Template
 		loadTemplate('WikiPage');
 		$context['template_layers'][] = 'wikipage';
-			
-		// Invalid special page?
-		if (!isset($context['wiki_special_pages'][$subaction]))
-		{
-			$namespaceGroup = 'normal';
-			$subaction = 'view';
-			
-			$context['sub_template'] = 'not_found';
-			
-			require_once($sourcedir . '/' . $subActions[$subaction][0]);
-			$subActions[$subaction][1]();
-			
-			return;
-		}
 		
-		require_once($sourcedir . '/' . $context['wiki_special_pages'][$subaction]['file']);
-		$context['wiki_special_pages'][$subaction]['function']();
+		require_once($sourcedir . '/' . $wiki_page->specialPage['file']);
+
+		call_user_func($context['page_info']->specialPage['callback'], $_REQUEST['sub_page']);
 		
 		return;
 	}
