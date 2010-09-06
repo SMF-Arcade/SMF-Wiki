@@ -139,7 +139,7 @@ function template_wiki_content(WikiPage $wikiPage)
 		{
 			echo '
 			<h', $section['level'] + 1, ' id="', $section['id'], '">
-				<span class="floatleft">', $section['name'], '</span>';
+				<span class="floatleft">', $section['title'], '</span>';
 
 			if (!empty($context['can_edit_page']))
 				echo '
@@ -169,13 +169,15 @@ function template_wiki_content(WikiPage $wikiPage)
 			print_r($context['current_file']);
 
 		//echo $section['html'];
-
-		var_dump($section);
+		//var_dump($section);
 
 		foreach ($section['content'] as $content)
 		{
 			switch ($content['type'])
 			{
+				case WikiParser::NEW_PARAGRAPH:
+				case WikiParser::END_PARAGRAPH:
+				case WikiParser::NEW_LINE:
 				case WikiParser::TEXT:
 					echo $content['content'];
 					break;
