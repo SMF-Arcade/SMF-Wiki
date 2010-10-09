@@ -162,7 +162,7 @@ class WikiParser
 					$return .= $single_line ? ' ' : '<br /><br />';
 					break;
 				case WikiParser::ELEMENT:
-					$return .= $c['content']->toText();
+					$return .= $c['content']->getHtml();
 					break;
 				default:
 					die('toText: Unknown part type ' . $c['type']);
@@ -1353,7 +1353,7 @@ class WikiLink extends WikiElement
 				{
 					$link = WikiParser::toText($this->params['link']);
 					if (!empty($link) && substr(0,7, $link) !== 'http://')
-						$link = wiki_get_url($link);
+						$link = wiki_get_url($this->params['link']);
 				}
 
 				if (!empty($align) || !empty($caption))

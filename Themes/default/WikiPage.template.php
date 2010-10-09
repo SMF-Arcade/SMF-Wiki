@@ -199,8 +199,11 @@ function template_wiki_content(WikiPage $wikiPage)
 				case WikiParser::ELEMENT:
 					echo $content['content']->getHtml();
 					break;
+				case WikiParser::WARNING:
+					echo '<span class="wiki_warning" title="' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '">' . $content['unparsed'] . '</span>';
+					break;
 				default:
-					die('Template: Unknown part type ' . $content['type']);
+					//print_r($content);
 					break;
 			}
 		}

@@ -223,7 +223,7 @@ function Wiki($standalone = false, $prefix = null)
 	);
 
 	// Force page to be "view" for non existing and asked to, it's here to make correct tab highlight
-	if (!$context['wiki_page']->exists && !empty($subActions[$subaction][2]))
+	if (!$context['page_info']->exists && !empty($subActions[$subaction][2]))
 		$subaction = 'view';
 	// Don't allow file actions on plain pages
 	elseif (empty($context['wiki_page']->file) && !empty($subActions[$subaction][3]))
@@ -353,7 +353,7 @@ function Wiki($standalone = false, $prefix = null)
 	$context['current_page_url'] = wiki_get_url($context['wiki_url']);
 
 	// Have display name of page in variable
-	$context['current_page_title'] = $context['wiki_page']->title;
+	$context['current_page_title'] = isset($context['wiki_page']) ?  $context['wiki_page']->title : $context['page_info']->title;
 
 	// Highlight current section
 	foreach ($context['wiki_navigation'] as $id => $grp)
