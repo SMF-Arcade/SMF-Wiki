@@ -346,40 +346,8 @@ function loadWikiPage()
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], $revision)
 	);
-	
-	unset($page_data);
 
-	$context['page_info']->title = $context['wiki_page']->title;
-
-	// Is there file attached to this page?
-	if (!empty($context['wiki_page']->file))
-	{
-		$request = $smcFunc['db_query']('', '
-			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
-			FROM {wiki_prefix}files
-			WHERE id_file = {int:file}',
-			array(
-				'file' => $context['wiki_page']->file,
-			)
-		);
-
-		$row = $smcFunc['db_fetch_assoc']($request);
-		$smcFunc['db_free_result']($request);
-
-		if (!$row)
-			fatal_lang_error('wiki_file_not_found', false);
-
-		$context['current_file'] = array(
-			'local_name' => $row['localname'],
-			'mime_type' => $row['mime_type'],
-			'file_ext' => $row['file_ext'],
-			'time' => timeformat($row['timestamp']),
-			'filesize' => $row['filesize'] / 1024,
-			'width' => $row['img_width'],
-			'height' => $row['img_height'],
-			'is_image' => !empty($row['mime_type']),
-		);
-	}
+	$context['page_info']->file = &$context['wiki_page']->file;
 }
 
 /**

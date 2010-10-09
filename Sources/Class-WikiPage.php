@@ -88,8 +88,6 @@ class WikiPage
 	public $title;
 	public $url_name;
 
-	public $file = 0;
-	
 	public $exists = false;
 	public $locked = false;
 	public $deleted = false;
@@ -111,8 +109,11 @@ class WikiPage
 	public $categories = array();
 	public $variables = array();
 
-	public $raw_content = '';
-	
+	/**
+	 * File if this page contains one
+	 */
+	public $file;
+
 	/**
 	 * @param array $namespace
 	 * @param string $page
@@ -143,6 +144,45 @@ class WikiPage
 		);
 	}
 
+
+	/**
+	 * Adds file to this page
+	 */
+	public function addFile($id_file)
+	{
+		global $smcFunc;
+		
+		$request = $smcFunc['db_query']('', '
+			SELECT localname, mime_type, file_ext, filesize, timestamp, img_width, img_height
+			FROM {wiki_prefix}files
+			WHERE id_file = {int:file}',
+			array(
+				'file' => $id_file,
+			)
+		);
+
+		$row = $smcFunc['db_fetch_assoc']($request);
+		$smcFunc['db_free_result']($request);
+
+		if (!$row)
+			return false;
+
+		$this->file = array(
+			'name' => $this->url_name,
+			'local_name' => $row['localname'],
+			'mime_type' => $row['mime_type'],
+			'file_ext' => $row['file_ext'],
+			'time' => timeformat($row['timestamp']),
+			'filesize' => $row['filesize'] / 1024,
+			'width' => $row['img_width'],
+			'height' => $row['img_height'],
+			'view_url' => !empty($row['mime_type']) ? wiki_get_url(array('page' => $this->url_name, 'image')) : null,
+			'download_url' => wiki_get_url(array('page' => $this->url_name, 'sa' => 'download')),
+			'is_image' => !empty($row['mime_type']),
+		);
+
+		return true;
+	}
 }
 
 ?>

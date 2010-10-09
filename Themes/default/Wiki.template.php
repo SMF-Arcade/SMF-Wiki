@@ -12,7 +12,7 @@ function template_wiki_above()
 	{
 		echo '
 		<div class="cat_bar">
-			<h3 class="catbg', $group['selected'] ? ' selected' : '', '">';
+			<h3 class="catbg', !empty($group['selected']) ? ' selected' : '', '">';
 
 		if (!empty($group['url']))
 			echo '

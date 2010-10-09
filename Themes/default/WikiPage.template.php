@@ -5,6 +5,10 @@ function template_wikipage_above()
 {
 	global $context, $modSettings, $txt;
 
+	// temp
+	if ($context['sub_template']=='fatal_error')
+		return;
+
 	echo '
 	<div class="wikipage_top cat_bar">
 		<h3 class="catbg">
@@ -20,7 +24,7 @@ function template_wikipage_above()
 
 	foreach ($context['wikimenu'] as $id => $item)
 		echo '
-						<li class="firstlevel"><a', $item['selected'] ? ' class="active"' : '', ' href="', $item['url'], '"><span class="firstlevel">', $item['title'], '</span></a></li>';
+						<li class="firstlevel"><a', !empty($item['selected']) ? ' class="active"' : '', ' href="', $item['url'], '"><span class="firstlevel">', $item['title'], '</span></a></li>';
 
 	echo '
 					</ul>
@@ -165,8 +169,19 @@ function template_wiki_content(WikiPage $wikiPage)
 			</h6>';
 		}
 
-		if ($section['level'] == 1 && isset($context['current_file']))
-			print_r($context['current_file']);
+		if ($section['level'] == 1 && !empty($context['wiki_page']->file))
+		{
+			if ($context['wiki_page']->file['is_image'])
+			{
+				echo '
+				<img src="', $context['wiki_page']->file['view_url'], '" alt="" /><br />';
+			}
+
+			echo '
+			<a href="', $context['wiki_page']->file['download_url'], '">', $context['wiki_page']->file['name'], '</a> (', $context['wiki_page']->file['filesize'],
+				$context['wiki_page']->file['is_image'] ? ', ' .$context['wiki_page']->file['width'] . 'x' . $context['wiki_page']->file['height']  : '', ')';
+		}
+
 
 		//echo $section['html'];
 		//var_dump($section);
@@ -425,6 +440,10 @@ function template_wikipage_below()
 {
 	global $context, $txt;
 
+		// temp
+	if ($context['sub_template']=='fatal_error')
+		return;
+	
 	echo '
 			</div></div>
 		</div>

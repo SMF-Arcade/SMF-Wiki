@@ -17,13 +17,13 @@ function WikiFileView()
 
 	$context['no_last_modified'] = true;
 
-	$filename = $modSettings['wikiAttachmentsDir'] . '/' . $context['current_file']['local_name'];
-	$mime_type = $context['current_file']['mime_type'];
-	$file_ext = $context['current_file']['extension'];
+	$filename = $modSettings['wikiAttachmentsDir'] . '/' . $context['wiki_page']->file['local_name'];
+	$mime_type = $context['page_info']->file['mime_type'];
+	$file_ext = $context['page_info']->file['extension'];
 
 	// This is logged because it should be there
 	if (!file_exists($filename))
-		fatal_lang_error('wiki_file_not_found', 'general', $context['current_file']['local_name']);
+		fatal_lang_error('wiki_file_not_found', 'general', $context['wiki_page']->file['local_name']);
 
 	$filesize = filesize($filename);
 

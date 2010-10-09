@@ -53,7 +53,7 @@ function DiffPage()
 
 	// Load content itself
 	$context['wiki_parser_compare'] = cache_quick_get(
-		'wiki-page-' .  $context['page_info']['id'] . '-rev' . (int) $_REQUEST['old_revision'],
+		'wiki-page-' .  $context['page_info']->id . '-rev' . (int) $_REQUEST['old_revision'],
 		'Subs-Wiki.php', 'wiki_get_page_content',
 		array($context['page_info'], $context['namespace'], (int) $_REQUEST['old_revision'])
 	);
@@ -112,10 +112,10 @@ function DiffPage()
 		}
 	}
 
-	$context['current_page_title'] = $context['page_info']['title'];
+	$context['current_page_title'] = $context['current_page_title'];
 
 	// Template
-	$context['page_title'] = $context['forum_name'] . ' - ' . $context['page_info']['title'];
+	$context['page_title'] = $context['forum_name'] . ' - ' . $context['current_page_title'];
 	$context['sub_template'] = 'view_page';
 }
 

@@ -200,7 +200,7 @@ function EditPage2()
 		'display_title' => $wikiParser->page->title,
 	);
 	$revisionOptions = array(
-		'file' => !empty($context['page_info']->file) ? $context['page_info']->file : 0,
+		'file' => !empty($context['wiki_page']->file) ? $context['wiki_page']->file : 0,
 		'body' => $body,
 		'comment' => $_POST['comment'],
 	);
@@ -269,7 +269,7 @@ function DeletePage2()
 	
 	$delete_permanently = !empty($context['can_delete_permanent']) && !empty($_REQUEST['permanent_delete']);
 	
-	deleteWikiPage($context['page_info']['id'], !$delete_permanently);
+	deleteWikiPage($context['page_info']->id, !$delete_permanently);
 	
 	redirectexit($context['current_page_url']);
 }
@@ -300,7 +300,7 @@ function RestorePage2()
 	
 	checkSession('post');
 	
-	restoreWikiPage($context['page_info']['id'], !$delete_permanently);
+	restoreWikiPage($context['page_info']->id, !$delete_permanently);
 	
 	redirectexit($context['current_page_url']);
 }

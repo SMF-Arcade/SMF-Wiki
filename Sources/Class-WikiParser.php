@@ -212,7 +212,7 @@ class WikiParser
 	 * Pointer to current section
 	 */
 	private $content;
-	
+
 	/**
 	 *
 	 */
@@ -1293,8 +1293,11 @@ class WikiLink extends WikiElement
 		
 		$this->link_info = $link_info;
 		
-		if (!empty($params))
-			$this->linkText = WikiParser::toText(array_shift($params));
+		if (isset($params[0]))
+		{
+			$this->linkText = WikiParser::toText($params[0]);
+			unset($params[0]);
+		}
 		else
 			$this->linkText = $this->link_info->title;
 			
@@ -1308,11 +1311,12 @@ class WikiLink extends WikiElement
 				$size = '';
 				$caption = '';
 				$alt = '';
+				$link = wiki_get_url($this->link);
 
 				// Size
-				if (!empty($this->params[0]))
+				if (!empty($this->params[1]))
 				{
-					$size = WikiParser::toText($this->params[0]);
+					$size = WikiParser::toText($this->params[1]);
 
 					if ($size == 'thumb')
 						$size = ' width="180"';
@@ -1330,19 +1334,27 @@ class WikiLink extends WikiElement
 				}
 
 				// Align
-				if (!empty($this->params[1]))
+				if (!empty($this->params[2]))
 				{
 					$align = trim(WikiParser::toText($this->params[1]));
 					$align = ($align == 'left' || $align == 'right') ? $align : '';
 				}
 
 				// Alt
-				if (!empty($this->params[2]))
+				if (!empty($this->params[3]))
 					$alt = WikiParser::toText($this->params[2]);
 
 				// Caption
-				if (!empty($this->params[3]))
+				if (!empty($this->params[4]))
 					$alt = WikiParser::toText($this->params[3]);
+
+				// Link
+				if (isset($this->params['link']))
+				{
+					$link = WikiParser::toText($this->params['link']);
+					if (!empty($link) && substr(0,7, $link) !== 'http://')
+						$link = wiki_get_url($link);
+				}
 
 				if (!empty($align) || !empty($caption))
 				{
@@ -1363,7 +1375,7 @@ class WikiLink extends WikiElement
 
 				}
 
-				$this->html .= '<a href="' . wiki_get_url($this->link) . '"><img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' /></a>';
+				$this->html .= (!empty($link) ? '<a href="' . $link . '">' : '') . '<img src="' . wiki_get_url(array('page' => $this->link, 'image')) . '" alt="' . $alt . '"' . (!empty($caption) ? ' title="' . $caption . '"' : '') . $size . ' />' . (!empty($link) ? '</a>' : '');
 
 				if (!empty($align) || !empty($caption))
 					$this->html .= (!empty($caption) ? '<span style="text-align: center">' . $caption . '</span>' : '') . '

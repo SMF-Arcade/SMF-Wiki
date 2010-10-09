@@ -24,9 +24,9 @@ function ViewTalkPage()
 		'sa' => 'talk2',
 	));
 	
-	if (!empty($context['page_info']['topic']))
+	if (!empty($context['page_info']->topic))
 	{
-		$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic} AND m.id_board = {int:board}', array('topic' => $context['page_info']['topic'], 'board' => $modSettings['wikiTalkBoard']), '', 'm.id_msg DESC', 'array');
+		$context['comments'] = ssi_queryPosts('m.id_topic = {int:topic} AND m.id_board = {int:board}', array('topic' => $context['page_info']->topic, 'board' => $modSettings['wikiTalkBoard']), '', 'm.id_msg DESC', 'array');
 	
 		if (empty($context['comments']))
 			$smcFunc['db_query']('' ,'
@@ -34,16 +34,16 @@ function ViewTalkPage()
 				SET id_topic = {int:topic}
 				WHERE id_page = {int:page}',
 				array(
-					'page' => $context['page_info']['id'],
+					'page' => $context['page_info']->id,
 					'topic' => 0,
 				)
 			);
 	}
 	
-	$context['current_page_title'] = sprintf($txt['talk_page'], $context['page_info']['title']);
+	$context['current_page_title'] = sprintf($txt['talk_page'], $context['current_page_title']);
 
 	// Template
-	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['talk_page'], $context['page_info']['title']);
+	$context['page_title'] = $context['forum_name'] . ' - ' . sprintf($txt['talk_page'], $context['current_page_title']);
 	$context['sub_template'] = 'talk_page';
 }
 
@@ -66,15 +66,15 @@ function ViewTalkPage2()
 	preparsecode($message);
 
 	$msgOptions = array(
-		'subject' => '[WikiTalk] ' . $context['page_info']['title'],
+		'subject' => '[WikiTalk] ' . $context['current_page_title'],
 		'body' => $message,
 	);
 	$topicOptions = array(
 		'board' => $modSettings['wikiTalkBoard'],
 	);
 
-	if (!empty($context['page_info']['topic']))
-		$topicOptions['id'] = $context['page_info']['topic'];
+	if (!empty($context['page_info']->topic))
+		$topicOptions['id'] = $context['page_info']->topic;
 
 	if ($user_info['is_guest'])
 	{
@@ -93,14 +93,14 @@ function ViewTalkPage2()
 
 	createPost($msgOptions, $topicOptions, $posterOptions);
 
-	if (empty($context['page_info']['topic']))
+	if (empty($context['page_info']->topic))
 	{
 		$smcFunc['db_query']('' ,'
 			UPDATE {wiki_prefix}pages
 			SET id_topic = {int:topic}
 			WHERE id_page = {int:page}',
 			array(
-				'page' => $context['page_info']['id'],
+				'page' => $context['page_info']->id,
 				'topic' => $topicOptions['id'],
 			)
 		);
@@ -108,7 +108,7 @@ function ViewTalkPage2()
 		cache_put_data('wiki-pageinfo-' . wiki_cache_escape($context['namespace']['id'], $_REQUEST['page']), null, 3600);
 	}
 
-	redirectexit(wiki_get_url(array('page' => $context['page_info']['name'], 'sa' => 'talk')));
+	redirectexit(wiki_get_url(array('page' => $context['current_page_name'], 'sa' => 'talk')));
 }
 
 ?>
