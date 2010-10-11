@@ -455,7 +455,7 @@ function loadWikiMenu()
 	$wikiPage = $cacheInfo['data'];
 	unset($cacheInfo);
 
-	$menu = preg_split('~<br( /)?' . '>~', $wikiPage->raw_content);
+	$menu = preg_split('~<br( /)?' . '>~', $wikiPage->parser->getRawContent());
 
 	$current_menu = false;
 
