@@ -133,11 +133,11 @@ function template_view_page()
 	}
 }
 
-function template_wiki_content(WikiPage $wikiPage)
+function template_wiki_content(WikiPage $wikiPage, $options = array())
 {
 	global $context, $modSettings, $txt;
 
-	foreach ($wikiPage->parser->tableOfContents as $section)
+	foreach ($wikiPage->parser->sections as $section)
 	{
 		if ($section['level'] > 1 && $section['level'] < 5)
 		{
@@ -182,10 +182,6 @@ function template_wiki_content(WikiPage $wikiPage)
 				$context['wiki_page']->file['is_image'] ? ', ' .$context['wiki_page']->file['width'] . 'x' . $context['wiki_page']->file['height']  : '', ')';
 		}
 
-
-		//echo $section['html'];
-		//var_dump($section);
-
 		foreach ($section['content'] as $content)
 		{
 			switch ($content['type'])
@@ -203,18 +199,18 @@ function template_wiki_content(WikiPage $wikiPage)
 					echo '<span class="wiki_warning" title="' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '">' . $content['unparsed'] . '</span>';
 					break;
 				default:
-					//print_r($content);
+					fatal_error('unknown type used by parsed... check that all files are from same version');
 					break;
 			}
 		}
 		
-		/*if ($section['level'] == 1 && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->tableOfContents))
+		if ($section['level'] == 1 && empty($options['no_toc']) && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->parser->tableOfContents))
 			echo '
 			<div class="wikitoc floatright">
 				<ul class="reset">',
-					output_toc($context['current_page_url'], '', $wikiPage->tableOfContents), '
+					output_toc($context['current_page_url'], '', $wikiPage->parser->tableOfContents), '
 				</ul>
-			</div>';*/
+			</div>';
 	}
 }
 
@@ -345,7 +341,7 @@ function template_edit_page()
 
 	if (isset($context['wiki_page_preview']))
 	{
-		template_wiki_content($context['wiki_page_preview']);
+		template_wiki_content($context['page_info_preview']);
 
 		echo '
 		<hr />';

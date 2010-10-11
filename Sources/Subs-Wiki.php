@@ -420,11 +420,7 @@ function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $incl
 	
 	$wiki_parser = new WikiParser($page_info);
 	$wiki_parser->parse($row['content']);
-	
-	$page_info->raw_content = $row['content'];
-	$page_info->parser = $wiki_parser;
-	//
-	
+
 	if (!empty($row['id_file']))
 		$page_info->addFile($row['id_file']);
 		

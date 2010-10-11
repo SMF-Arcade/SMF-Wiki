@@ -187,7 +187,7 @@ class WikiExtension_Core extends WikiExtensionBase
 		WikiExtension::addVariable('wikiversion', array('WikiExtension_Core', 'variable_WikiVersion'));
 		WikiExtension::addVariable('displaytitle', array('WikiExtension_Core', 'variable_DisplayTitle'));
 
-		WikiExtension::addVariable('if', array('WikiExtension_Core', 'function_if'));
+		WikiExtension::addFunction('if', array('WikiExtension_Core', 'function_if'));
 
 		WikiExtension::addMagicword('index', array('WikiExtension_Core', 'magicword_index'));
 	}
@@ -234,7 +234,7 @@ class WikiExtension_Core extends WikiExtensionBase
 		if (!empty($parameters))
 			$false_cond = array_shift($parameters);
 
-		return $result ? $true_cond : (!isset($false_cond) ? $false_cond : array());
+		$wikiparser->throwContentArray($result ? $true_cond : (isset($false_cond) ? $false_cond : array()));
 	}
 }
 

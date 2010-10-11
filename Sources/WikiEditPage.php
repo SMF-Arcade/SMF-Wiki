@@ -33,7 +33,7 @@ function EditPage()
 	if (!isset($context['wiki_page']) || !$context['wiki_page'] instanceof WikiPage)
 		$body = '';
 	elseif (empty($_REQUEST['section']))
-		$body = $context['wiki_page']->raw_content;
+		$body = $context['wiki_page']->parser->getRawContent();
 	else
 	{
 		// Reparse without bbc conversion or any fixes
@@ -41,7 +41,7 @@ function EditPage()
 		$context['wiki_page']->parse();
 		
 		if (!isset($context['wiki_page']->sections[$_REQUEST['section']]))
-			$body = $context['wiki_page']->raw_content;
+			$body = $context['wiki_page']->parser->getRawContent();
 		else
 		{
 			$context['edit_section'] = $_REQUEST['section'];
@@ -66,10 +66,13 @@ function EditPage()
 	{
 		preparsecode($preview_content);
 		
-		$context['wiki_page_preview'] = new WikiPage($context['page_info'], $context['namespace'], $preview_content);
-		$context['wiki_page_preview']->parse();
+		$context['page_info_preview'] = clone $context['page_info'];
 		
-		$context['current_page_title'] = $context['wiki_page_preview']->title;
+		// $preview_content
+		$context['wiki_page_preview'] = new WikiParser($context['page_info_preview']);
+		$context['wiki_page_preview']->parse($preview_content);
+		
+		$context['current_page_title'] = $context['page_info_preview']->title;
 	}
 
 	$context['comment'] = '';

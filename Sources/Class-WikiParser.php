@@ -214,9 +214,20 @@ class WikiParser
 	private $content;
 
 	/**
+	 * Unparsed content
+	 */
+	private $raw_content;
+
+	/**
+	 *
+	 */
+	public $sections;
+
+	/**
 	 *
 	 */
 	public $tableOfContents;
+
 
 	/**
 	 * Contains used html ids to prevent duplicates
@@ -239,10 +250,12 @@ class WikiParser
 	function __construct(WikiPage $page, $parameters = array(), $parse_bbc = true)
 	{
 		$this->page = $page;
+		$this->page->parser = $this;
+		
 		$this->parameters = $parameters;
 		$this->parse_bbc = $parse_bbc;
 
-		$this->tableOfContents = array(
+		$this->sections = array(
 			array(
 				'id' => 'wikitop',
 				'level' => 1,
@@ -251,18 +264,72 @@ class WikiParser
 			),
 		);
 
-		$this->content = &$this->tableOfContents[0]['content'];
+		$this->content = &$this->sections[0]['content'];
 	}
 	
 	/**
-	 * Parser page and returns results
+	 * Parses context
 	 */
 	public function parse($text)
 	{
-		if (!empty($this->content))
-			return $this->content;
-		
+		$this->raw_content = $text;
 		$this->__parse($this, $text);
+
+		$this->tableOfContents = $this->__parseTableOfContent($this->sections);
+	}
+
+	/**
+	 *
+	 */
+	public function getRawContent()
+	{
+		return $this->raw_content;
+	}
+
+	/**
+	 *
+	 */
+	private function __parseTableOfContent($sections, $main = true, $tlevel = 2)
+	{
+		$stack = array(
+			array(),
+			array(),
+		);
+		$num = 0;
+		$mainToc = array();
+		
+		foreach ($sections as $section)
+		{
+			if ($section['level'] == $tlevel)
+			{
+				if (!empty($stack[0]))
+					$mainToc[] = array(
+						'id' => $stack[0]['id'],
+						'level' => $num,
+						'name' => $stack[0]['title'],
+						'sub' => !empty($stack[1]) ? $this->__parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
+					);
+
+				$stack = array(
+					$section,
+					array()
+				);
+
+				$num++;
+			}
+			else
+				$stack[1][] = $section;
+		}
+
+		if (!empty($stack[0]))
+			$mainToc[] = array(
+				'id' => $stack[0]['id'],
+				'level' => $num,
+				'name' => $stack[0]['title'],
+				'sub' => !empty($stack[1]) ? $this->__parseTableOfContent($stack[1], false, $tlevel + 1) : array(),
+			);
+
+		return $mainToc;
 	}
 
 	/**
@@ -317,7 +384,7 @@ class WikiParser
 		
 		if ($type == WikiParser::SECTION_HEADER || $type == WikiParser::END_PAGE)
 		{
-			while (in_array($this->content[$i - 1]['type'],array(WikiParser::NEW_LINE)))
+			while (isset($this->content[$i - 1]) && in_array($this->content[$i - 1]['type'], array(WikiParser::NEW_LINE)))
 			{
 				unset($this->content[$i - 1]);
 				$i--;
@@ -341,14 +408,14 @@ class WikiParser
 				$html_id = WikiParser::html_id($content . '_'. $i2++);
 			$this->_htmlIDs[] = $html_id;
 
-			$this->tableOfContents[] = array(
+			$this->sections[] = array(
 				'id' => $this->html_id($html_id),
-				'level' => 1 + $additonal['level'],
+				'level' => $additonal['level'],
 				'title' => $content,
 				'edit_url' => '#',
 				'content' => array(),
 			);
-			$this->content = &$this->tableOfContents[count($this->tableOfContents) - 1]['content'];
+			$this->content = &$this->sections[count($this->sections) - 1]['content'];
 
 			return;
 		}
@@ -399,7 +466,16 @@ class WikiParser
 			'additional' => $additonal,
 		);
 	}
-	
+
+	/**
+	 *
+	 */
+	public function throwContentArray($array)
+	{
+		foreach ($array as $cont)
+			$this->throwContent($cont['type'], $cont['content'], $cont['unparsed'], $cont['additional']);
+	}
+
 	/**
 	 *
 	 */
@@ -697,7 +773,7 @@ class WikiParser
 
 				if ($c == $c2)
 				{
-					$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => strlen($c)));
+					$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => $c));
 					$i += $len;
 				}
 				else
@@ -753,7 +829,7 @@ class WikiParser
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, htmlspecialchars($curChar));
+					$target->throwContent(WikiParser::TEXT, $curChar);
 					$i++;
 				}
 			}
@@ -875,35 +951,6 @@ class WikiParser
 
 		if (!$is_template)
 			$this->throwContent(WikiParser::END_PAGE, '');
-		
-		/*while (!empty($this->_tocStack))
-		{
-			$toc = array_pop($this->_tocStack);
-			$toc2 = array_pop($this->_tocStack);
-			
-			$html_id = WikiParser::html_id($content);
-			
-			$i = 1;
-			
-			// Make sure html_id is unique in page context
-			while (in_array($html_id, $this->_htmlIDs))
-				$html_id = WikiParser::html_id($content . '_'. $i++);
-			$this->_htmlIDs[] = $html_id;
-			
-			if ($toc2['level'] < $toc['level'])
-			{
-				$toc2['subtoc'] = $toc;
-			}
-			elseif ($toc2['level'] == $toc['level'])
-			{
-				$this->tableOfContents[] = $toc;
-				$this->_tocStack[] = $toc2;
-			}
-			elseif ($toc2['level'] > $toc['level'])
-			{
-				die('TOC2>TOC');
-			}
-		}*/
 	}
 }
 
@@ -1001,6 +1048,15 @@ class WikiElement_Parser
 			'unparsed' => $unparsed,
 			'additional' => $additonal,
 		);
+	}
+
+	/**
+	 *
+	 */
+	public function throwContentArray($array)
+	{
+		foreach ($array as $cont)
+			$this->throwContent($cont['type'], $cont['content'], $cont['unparsed'], $cont['additional']);
 	}
 
 	/**
@@ -1160,7 +1216,7 @@ class WikiElement_Parser
 			
 			$value = WikiExtension::getFunction($function);
 
-			$target->throwContent(WikiParser::ELEMENT, new WikiFunction($this->wikiparser, $value['callback'], $params), $unparsed);
+			call_user_func($value['callback'], $this->wikiparser, $params);
 		}
 		// Template
 		elseif ($type == WikiElement_Parser::TEMPLATE)
@@ -1488,51 +1544,6 @@ class WikiVariable extends WikiElement
 		$value = $this->getValue();
 
 		return is_string($value) ? $value : '';
-	}
-
-	/**
-	 * Returns if this is block level tag
-	 * @return boolean
-	 * @todo implemnet actual code
-	 */
-	function is_block_level()
-	{
-		return false;
-	}
-}
-
-/**
- * Represents functions like {{#if:{{{varable}}}|variable set|variable not set}}
- */
-class WikiFunction extends WikiElement
-{
-	var $wikiparser;
-	var $callback;
-	var $params;
-
-	function __construct(Wikiparser $wikiparser, $callback, $params)
-	{
-		$this->wikiparser = $wikiparser;
-		$this->callback = $callback;
-		$this->params = $params;
-	}
-
-	/**
-	 *
-	 * @return mixed
-	 */
-	function getValue()
-	{
-		return call_user_func($this->callback, $this->wikiparser, $this->params);
-	}
-
-	/**
-	 * Returns html code fir this element
-	 * @return string html for this element
-	 */
-	function getHtml()
-	{
-		return $this->getValue();
 	}
 
 	/**
