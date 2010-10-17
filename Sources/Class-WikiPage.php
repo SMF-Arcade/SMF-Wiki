@@ -41,6 +41,10 @@ class WikiPage
 		{
 			$wiki_page->exists = true;
 			$wiki_page->id = $row['id_page'];
+
+			// Set page as it might have been in different case
+			$wiki_page->page = $row['title'];
+			$wiki_page->url_name = wiki_get_url_name($wiki_page->page, $wiki_page->namespace['id']);
 			
 			// Set display title 
 			if (!empty($row['display_title']))

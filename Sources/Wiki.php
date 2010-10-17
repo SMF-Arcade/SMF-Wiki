@@ -11,6 +11,9 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
+/**
+ *
+ */
 function loadWiki($mode = '', $prefix = null)
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir, $wiki_version, $wiki_prefix, $db_prefix;
@@ -100,6 +103,9 @@ function loadWiki($mode = '', $prefix = null)
 		loadTemplate('WikiAdmin');
 }
 
+/**
+ *
+ */
 function Wiki($standalone = false, $prefix = null)
 {
 	global $context, $modSettings, $settings, $txt, $user_info, $smcFunc, $sourcedir;
