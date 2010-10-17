@@ -131,6 +131,11 @@ div.wikimenu ul
 	list-style: none;
 }
 
+.wiki_sourcebox
+{
+	width: 100%;
+}
+
 /* ************************************* */
 /* Styles from WikiHistory.template      */
 /* ************************************* */

@@ -120,6 +120,7 @@ function Wiki($standalone = false, $prefix = null)
 		'talk2' => array('WikiTalkPage.php', 'ViewTalkPage2', true),
 		'diff' => array('WikiPage.php', 'DiffPage', true),
 		'history' => array('WikiHistory.php', 'ViewPageHistory', true),
+		'source' => array('WikiEditPage.php', 'ViewPageSource'),
 		'edit' => array('WikiEditPage.php', 'EditPage'),
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
 		'delete' => array('WikiEditPage.php', 'DeletePage'),
@@ -268,6 +269,15 @@ function Wiki($standalone = false, $prefix = null)
 				)),
 				'selected' => in_array($subaction, array('talk')),
 				'show' => !empty($modSettings['wikiTalkBoard']) && empty($context['page_info']->deleted),
+			),
+			'source' => array(
+				'title' => $txt['wiki_source'],
+				'url' => wiki_get_url(array(
+					'page' => $context['current_page_name'],
+					'sa' => 'source',
+				)),
+				'selected' => in_array($subaction, array('source')),
+				'show' => $context['page_info']->exists && !$context['can_edit_page'],
 			),
 			'edit' => array(
 				'title' => !$context['page_info']->exists ? $txt['wiki_create'] : $txt['wiki_edit'],

@@ -11,6 +11,9 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
+/**
+ *
+ */
 function EditPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -100,6 +103,9 @@ function EditPage()
 	$context['sub_template'] = 'edit_page';
 }
 
+/**
+ *
+ */
 function EditPage2()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -244,6 +250,28 @@ function EditPage2()
 	redirectexit($context['current_page_url']);
 }
 
+/**
+ *
+ */
+function ViewPageSource()
+{
+	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
+
+	require_once($sourcedir . '/Subs-Editor.php');
+	require_once($sourcedir . '/Subs-Post.php');
+
+	$context['page_source'] = un_preparsecode($context['wiki_page']->parser->getRawContent());
+
+	// Template
+	loadTemplate('WikiPage');
+	$context['page_title'] = sprintf($txt['view_source'], $context['current_page_title']);
+	$context['current_page_title'] = sprintf($txt['view_source'], $context['current_page_title']);
+	$context['sub_template'] = 'view_source';
+}
+
+/**
+ *
+ */
 function DeletePage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -262,6 +290,9 @@ function DeletePage()
 	$context['sub_template'] = 'delete_page';	
 }
 
+/**
+ *
+ */
 function DeletePage2()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -277,6 +308,9 @@ function DeletePage2()
 	redirectexit($context['current_page_url']);
 }
 
+/**
+ *
+ */
 function RestorePage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -295,6 +329,9 @@ function RestorePage()
 	$context['sub_template'] = 'restore_page';	
 }
 
+/**
+ *
+ */
 function RestorePage2()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;

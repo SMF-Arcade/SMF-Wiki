@@ -321,6 +321,22 @@ function template_page_history()
 	</form>';
 }
 
+/**
+ *
+ */
+function template_view_source()
+{
+	global $context;
+
+	echo '
+	<textarea class="wiki_sourcebox" cols="20" rows="50">
+		', $context['page_source'], '
+	</textarea>';
+}
+
+/**
+ *
+ */
 function template_edit_page()
 {
 	global $context, $modSettings, $txt, $user_info;

@@ -4,6 +4,7 @@
 $txt['wiki'] = 'Wiki';
 $txt['wiki_view'] = 'view';
 $txt['wiki_talk'] = 'talk';
+$txt['wiki_source'] = 'source';
 $txt['wiki_edit'] = 'edit';
 $txt['wiki_create'] = 'create';
 $txt['wiki_delete'] = 'delete';
@@ -22,6 +23,9 @@ $txt['wiki_categories'] = 'Categories';
 $txt['wiki_pages_in_category'] = 'Pages in category &quot;%s&quot;';
 
 $txt['wiki_create_page'] = 'You can %1$screate this page%2$s.';
+
+// View Source code
+$txt['view_source'] = 'Source code for page: %s';
 
 // Edit
 $txt['edit_page'] = 'Edit page %s';
