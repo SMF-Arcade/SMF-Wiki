@@ -1267,7 +1267,10 @@ class WikiElement_Parser
 					elseif (is_string($value))
 						$target->throwContent(WikiParser::TEXT, $value, $unparsed);
 					else
-						$target->throwContent(WikiParser::TEXT, WikiParser::toText($value), $unparsed);
+					{
+						$target->throwContent(WikiParser::TEXT, '', $unparsed);
+						$target->throwContentArray($value);
+					}
 
 				}
 				else
@@ -1290,7 +1293,10 @@ class WikiElement_Parser
 			elseif ($value === false && count($params) == 1)
 				$this->wikiparser->page->variables[$variable] = WikiParser::toText($params[0]);
 			elseif ($value !== false)
-				$target->throwContent(WikiParser::ELEMENT, new WikiVariable($this->wikiparser, $value['callback'], $params), $unparsed);
+			{
+				$target->throwContent(WikiParser::TEXT, '', $unparsed);
+				call_user_func($value['callback'], $this->wikiparser, $params);
+			}
 			else
 				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
 		}
@@ -1505,55 +1511,6 @@ class WikiTag extends WikiElement
 	function is_block_level()
 	{
 		die('not implemented');
-	}
-}
-
-/**
- * Represents template variables like {{{1}}}
- */
-class WikiVariable extends WikiElement
-{
-	var $wikiparser;
-	var $callback;
-	var $params;
-	var $value;
-
-	function __construct(Wikiparser $wikiparser, $callback, $params)
-	{
-		$this->wikiparser = $wikiparser;
-		$this->callback = $callback;
-		$this->params = $params;
-		$this->value = call_user_func($this->callback, $this->wikiparser, $this->params);
-	}
-
-	/**
-	 *
-	 * @return mixed
-	 */
-	function getValue()
-	{
-		return $this->value;
-	}
-
-	/**
-	 * Returns html code fir this element
-	 * @return string html for this element
-	 */
-	function getHtml()
-	{
-		$value = $this->getValue();
-
-		return is_string($value) ? $value : '';
-	}
-
-	/**
-	 * Returns if this is block level tag
-	 * @return boolean
-	 * @todo implemnet actual code
-	 */
-	function is_block_level()
-	{
-		return false;
 	}
 }
 
