@@ -194,23 +194,20 @@ class WikiExtension_Core extends WikiExtensionBase
 
 	/**
 	 *
-	 * @global <type> $wiki_version
 	 * @param WikiParser $wikiparser
-	 * @param <type> $parameters
-	 * @return <type>
+	 * @param array $parameters
 	 */
 	static function variable_WikiVersion(WikiParser $wikiparser, $parameters)
 	{
 		global $wiki_version;
 
-		return $wiki_version;
+		$wikiparser->throwContent(WikiParser::TEXT, $wiki_version);
 	}
 
 	/**
 	 *
 	 * @param WikiParser $wikiparser
 	 * @param <type> $parameters
-	 * @return <type>
 	 */
 	static function variable_DisplayTitle(WikiParser $wikiparser, $parameters)
 	{
