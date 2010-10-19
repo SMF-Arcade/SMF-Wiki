@@ -1125,7 +1125,7 @@ class WikiElement_Parser
 					}
 					else
 					{
-						$params[$param][] = $c;
+						$params[$param_name][] = $c;
 					}
 					break;
 
@@ -1156,15 +1156,15 @@ class WikiElement_Parser
 						else
 						{
 							$c['type'] = WikiParser::TEXT;
-							$params[$param][] = $c;
+							$params[$param_name][] = $c;
 						}
 					}
 					else
-						$params[$param][] = $c;
+						$params[$param_name][] = $c;
 					break;
 
 				default:
-					$params[$param][] = $c;
+					$params[$param_name][] = $c;
 					break;
 			}
 		}
@@ -1235,15 +1235,7 @@ class WikiElement_Parser
 			{
 				$raw_content = wiki_get_page_raw_content($template);
 
-				$template_params = array();
-				$id = 1;
-				foreach ($params as $value)
-				{
-					$name = isset($params_name[$id]) ? WikiParser::toText($params_name[$id]) : $id++;
-					$template_params[$name] = WikiParser::toText($value);
-				}
-
-				$template_parser = new WikiParser($this->wikiparser->page, $template_params, true, true);
+				$template_parser = new WikiParser($this->wikiparser->page, $params, true, true);
 				$template_parser->parseTo($target, $raw_content);
 				unset($template_parser);
 			}
@@ -1268,7 +1260,7 @@ class WikiElement_Parser
 					elseif (is_string($value))
 						$target->throwContent(WikiParser::TEXT, $value, $unparsed);
 					else
-						$target->throwContent(WikiParser::TEXT, WikiParser::toText($value), $unparsed);
+						$target->throwContentArray($value);
 
 				}
 				else
