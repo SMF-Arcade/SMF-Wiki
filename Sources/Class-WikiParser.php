@@ -226,6 +226,12 @@ class WikiParser
 	/**
 	 *
 	 */
+	public $pageOptions = array();
+
+
+	/**
+	 *
+	 */
 	public $tableOfContents;
 
 
@@ -923,12 +929,19 @@ class WikiParser
 				$bLen = strcspn($text, " \n", $i + 2);
 				$bSwitch = substr($text, $i + 2, $bLen);
 				
-				if (substr($bSwitch, -2) == '__')
+				if (substr($bSwitch, -2) == '__' && WikiExtension::isMagicword(substr($bSwitch, 0, -2)))
 				{
-					$target->throwContent(WikiParser::BEHAVIOUR_SWITCH, substr($bSwitch, 0, -2), substr($text, $i, $bLen + 2));
+					$magicWord = WikiExtension::getMagicword($magicword);
+
+					call_user_func($magicWord['callback'], $this);
+
 					$i += $bLen + 2;
 					
 					continue;
+				}
+				else
+				{
+					$target->throwContent(WikiParser::TEXT, substr($text, $i, $bLen + 2));
 				}
 			}
 			// Else add it as text

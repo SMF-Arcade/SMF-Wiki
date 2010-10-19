@@ -190,6 +190,7 @@ class WikiExtension_Core extends WikiExtensionBase
 		WikiExtension::addFunction('if', array('WikiExtension_Core', 'function_if'));
 
 		WikiExtension::addMagicword('index', array('WikiExtension_Core', 'magicword_index'));
+		WikiExtension::addMagicword('noindex', array('WikiExtension_Core', 'magicword_noindex'));
 	}
 
 	/**
@@ -235,6 +236,22 @@ class WikiExtension_Core extends WikiExtensionBase
 			$false_cond = array_shift($parameters);
 
 		$wikiparser->throwContentArray($result ? $true_cond : (isset($false_cond) ? $false_cond : array()));
+	}
+
+	/**
+	 *
+	 */
+	static function magicword_index(WikiParser $wikiparser)
+	{
+		$wikiparser->pageOptions['index'] = true;
+	}
+
+	/**
+	 *
+	 */
+	static function magicword_noindex(WikiParser $wikiparser)
+	{
+		$wikiparser->pageOptions['index'] = true;
 	}
 }
 
