@@ -192,7 +192,6 @@ function Wiki($standalone = false, $prefix = null)
 
 		// Template
 		loadTemplate('WikiPage');
-		$context['template_layers'][] = 'wikipage';
 		$context['sub_template'] = 'not_found';
 
 		require_once($sourcedir . '/' . $subActions[$subaction][0]);
@@ -407,7 +406,6 @@ function Wiki($standalone = false, $prefix = null)
 
 	// Template
 	loadTemplate('WikiPage');
-	$context['template_layers'][] = 'wikipage';
 
 	// Special page?
 	if ($context['page_info']->specialPage)

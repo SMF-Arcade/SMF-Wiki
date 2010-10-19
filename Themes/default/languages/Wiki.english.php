@@ -14,6 +14,7 @@ $txt['wiki_save'] = 'Save';
 
 // Navigation Menu
 $txt['wiki_navigation'] = 'Navigation';
+$txt['edit'] = 'Edit';
 $txt['wiki_main_page'] = 'Main Page';
 $txt['wiki_toolbox'] = 'Toolbox';
 

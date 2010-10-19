@@ -8,6 +8,8 @@ function template_wiki_above()
 	echo '
 	<div class="floatleft wikileft"><div>';
 
+	$is_first = true;
+
 	foreach ($context['wiki_navigation'] as $group)
 	{
 		echo '
@@ -20,6 +22,14 @@ function template_wiki_above()
 		else
 			echo '
 				', $group['title'];
+
+		if ($is_first)
+		{
+			echo '
+			<span class="floatright"><a href="', wiki_get_url('SMFWiki:Sidebar'), '">', $txt['edit'], '</span>';
+
+			$is_first = false;
+		}
 
 		echo '
 			</h3>
@@ -52,11 +62,29 @@ function template_wiki_above()
 			$template = 'template_' . $group['template'];
 			$template();
 		}
+
 	}
 
 	echo '
 	</div></div>
 	<div class="wikiright">';
+
+	echo '
+		<div class="wikimenu buttonlist">
+			<ul>';
+
+	foreach ($context['wikimenu'] as $id => $item)
+		echo '
+				<li class="firstlevel"><a', !empty($item['selected']) ? ' class="active"' : '', ' href="', $item['url'], '"><span class="firstlevel">', $item['title'], '</span></a></li>';
+
+	echo '
+			</ul>
+		</div>
+		<div class="wikipage_top cat_bar">
+			<h3 class="catbg">
+			', $context['current_page_title'], '
+			</h3>
+		</div>';
 }
 
 function template_wiki_below()

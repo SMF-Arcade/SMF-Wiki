@@ -1,36 +1,6 @@
 <?php
 // Version: 0.2; WikiPage
 
-function template_wikipage_above()
-{
-	global $context, $modSettings, $txt;
-
-	// temp
-	if ($context['sub_template']=='fatal_error')
-		return;
-
-	echo '
-	<div class="wikipage_top cat_bar">
-		<h3 class="catbg">
-			', $context['current_page_title'], '
-		</h3>
-	</div>
-	<div class="wikicontent windowbg2 clearright">
-		<span class="topslice"><span></span></span>
-		<div class="content">
-			<div class="post"><div class="inner">
-				<div class="wikimenu buttonlist">
-					<ul>';
-
-	foreach ($context['wikimenu'] as $id => $item)
-		echo '
-						<li class="firstlevel"><a', !empty($item['selected']) ? ' class="active"' : '', ' href="', $item['url'], '"><span class="firstlevel">', $item['title'], '</span></a></li>';
-
-	echo '
-					</ul>
-				</div>';
-}
-
 function output_toc($baseurl, $blevel, $toc)
 {
 	global $context, $modSettings, $txt;
@@ -54,6 +24,12 @@ function output_toc($baseurl, $blevel, $toc)
 function template_view_page()
 {
 	global $context, $modSettings, $txt;
+
+	echo '
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">';
 	
 	if (isset($context['diff']))
 	{
@@ -91,6 +67,12 @@ function template_view_page()
 	}
 
 	template_wiki_content($context['wiki_page']);
+
+	echo '
+			</div></div>
+		</div>
+		<span class="botslice"><span></span></span>
+	</div>';
 	
 	if (!empty($context['category_members']))
 	{
@@ -219,73 +201,57 @@ function template_talk_page()
 {
 	global $context, $modSettings, $txt;
 
+	echo '
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">';
+
 	if (!empty($context['comments']))
 	{
 		echo '
-	<div style="width: 90%; text-align; center; margin: auto;">';
+				<div style="width: 90%; text-align; center; margin: auto;">';
 
 		foreach ($context['comments'] as $comment)
 		{
 			echo '
-		<div class="comment wikibg2">
-			', $comment['body'], '
-		</div>
-		<div class="commentinfo smalltext">', $comment['time'], ' ', $txt['by'], ' ', $comment['poster']['link'], '</div>';
+					<div class="comment wikibg2">
+						', $comment['body'], '
+					</div>
+					<div class="commentinfo smalltext">', $comment['time'], ' ', $txt['by'], ' ', $comment['poster']['link'], '</div>';
 		}
 
 		echo '
-	</div>';
+				</div>';
 	}
 	
 	echo '
-	<form action="', $context['form_url'], '" method="post">';
+				<form action="', $context['form_url'], '" method="post">';
 
 	if (!empty($context['talk_errors']))
 	{
 		echo '
-		<ul>
-			<li>', implode('</li>
-			<li>', $context['talk_errors']), '</li>
-		</ul>';
+					<ul>
+						<li>', implode('</li>
+						<li>', $context['talk_errors']), '</li>
+					</ul>';
 	}
 
 	echo '
-		<div style="text-align: center">
-			<textarea id="message" name="message" cols="55" rows="10" style="width: 95%">', isset($context['talk_message']) ? $context['talk_message'] : '', '</textarea><br />
-			<input type="submit" name="send" value="', $txt['add_comment'], '" />
+					<div style="text-align: center">
+						<textarea id="message" name="message" cols="55" rows="10" style="width: 95%">', isset($context['talk_message']) ? $context['talk_message'] : '', '</textarea><br />
+						<input type="submit" name="send" value="', $txt['add_comment'], '" />
+					</div>
+
+					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+					<input type="hidden" name="seqnum" value="', $context['form_sequence_number'], '" />
+				</form>';
+
+	echo '
+			</div></div>
 		</div>
-
-		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
-		<input type="hidden" name="seqnum" value="', $context['form_sequence_number'], '" />
-	</form>';
-}
-
-function template_recent_changes()
-{
-	global $context, $modSettings, $txt;
-
-	echo '
-	<form action="', $context['form_url'], '">
-		<ul class="reset recent_changes">';
-
-	foreach ($context['recent_changes'] as $item)
-	{
-		echo '
-			<li>
-				<span class="difflinks">
-					(', $item['previous'] ? '<a href="' . $item['diff_href'] . '">' . $txt['wiki_diff_short'] . '</a>' : $txt['wiki_diff_short'], ')
-					(<a href="' . $item['history_href'] . '">', $txt['wiki_history_short'], '</a>)
-				</span>
-				<span class="page">', $item['link'], '</span>
-				<span class="author">', $item['author']['link'], '</span>
-				<span class="date">', $item['date'], '</span>
-				<span class="comment">', $item['comment'], '</span>
-			</li>';
-	}
-
-	echo '
-		</ul>
-	</form>';
+		<span class="botslice"><span></span></span>
+	</div>';
 }
 
 function template_page_history()
@@ -330,9 +296,17 @@ function template_view_source()
 	global $context;
 
 	echo '
-	<textarea class="wiki_sourcebox" cols="20" rows="50">
-		', $context['page_source'], '
-	</textarea>';
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<textarea class="wiki_sourcebox" cols="20" rows="50">
+					', $context['page_source'], '
+				</textarea>
+			</div></div>
+		</div>
+		<span class="botslice"><span></span></span>
+	</div>';
 }
 
 /**
@@ -365,30 +339,38 @@ function template_edit_page()
 	}
 
 	echo '
-	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editpage" id="editpage" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
-		<div style="width: 95%; margin: auto">
-			<div id="bbcBox_message"></div>
-			<div id="smileyBox_message"></div>
-			', template_control_richedit($context['post_box_name'], 'smileyBox_message', 'bbcBox_message'), '
-			<div style="text-align: center">
-				<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
-				', template_control_richedit_buttons($context['post_box_name']), '
-			</div>
-			<div>
-				', $txt['edit_summary'], ': <br />
-				<input type="text" name="comment" value="', $context['comment'], '" size="65" /><br />';
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="editpage" id="editpage" onsubmit="submitonce(this);saveEntities();" enctype="multipart/form-data">
+					<div style="width: 95%; margin: auto">
+						<div id="bbcBox_message"></div>
+						<div id="smileyBox_message"></div>
+						', template_control_richedit($context['post_box_name'], 'smileyBox_message', 'bbcBox_message'), '
+						<div style="text-align: center">
+							<span class="smalltext"><br />', $txt['shortcuts'], '</span><br />
+							', template_control_richedit_buttons($context['post_box_name']), '
+						</div>
+						<div>
+							', $txt['edit_summary'], ': <br />
+							<input type="text" name="comment" value="', $context['comment'], '" size="65" /><br />';
 
-			if ($context['can_lock_page'])
-				echo '
-				<input type="checkbox" name="lock_page" value="1"', $context['page_info']->locked ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
+	if ($context['can_lock_page'])
+		echo '
+							<input type="checkbox" name="lock_page" value="1"', $context['page_info']->locked ? ' checked="checked"' : '', '/> ', $txt['lock_page'];
 
-			echo '
-			</div>
+	echo '
+						</div>
+					</div>
+
+					<input type="hidden" name="section" value="', $context['edit_section'], '" />
+					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+				</form>
+			</div></div>
 		</div>
-
-		<input type="hidden" name="section" value="', $context['edit_section'], '" />
-		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
-	</form>';
+		<span class="botslice"><span></span></span>
+	</div>';
 }
 
 function template_delete_page()
@@ -396,23 +378,31 @@ function template_delete_page()
 	global $context, $modSettings, $txt, $user_info;
 
 	echo '
-	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="deletepage" id="deletepage">
-		<div style="width: 95%; margin: auto">
-			<div>';
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="deletepage" id="deletepage">
+					<div style="width: 95%; margin: auto">
+						<div>';
 
-	if ($context['can_delete_permanent'])
-		echo '
-				<input type="checkbox" name="permanent_delete" value="1" /> ', $txt['delete_page_permanent'], '<br />';
-		
-	echo '
-			</div>
-			<div style="text-align: center">
-				<input class="button_submit" type="submit" name="delete" value="', $txt['delete_page_button'], '" />
-			</div>
+				if ($context['can_delete_permanent'])
+					echo '
+							<input type="checkbox" name="permanent_delete" value="1" /> ', $txt['delete_page_permanent'], '<br />';
+
+				echo '
+						</div>
+						<div style="text-align: center">
+							<input class="button_submit" type="submit" name="delete" value="', $txt['delete_page_button'], '" />
+						</div>
+					</div>
+
+					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+				</form>
+			</div></div>
 		</div>
-
-		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
-	</form>';	
+		<span class="botslice"><span></span></span>
+	</div>';
 }
 
 function template_restore_page()
@@ -420,15 +410,23 @@ function template_restore_page()
 	global $context, $modSettings, $txt, $user_info;
 
 	echo '
-	<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="restorepage" id="restorepage">
-		<div style="width: 95%; margin: auto">
-			<div style="text-align: center">
-				<input class="button_submit" type="submit" name="delete" value="', $txt['restore_page_button'], '" />
-			</div>
-		</div>
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="restorepage" id="restorepage">
+					<div style="width: 95%; margin: auto">
+						<div style="text-align: center">
+							<input class="button_submit" type="submit" name="delete" value="', $txt['restore_page_button'], '" />
+						</div>
+					</div>
 
-		<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
-	</form>';	
+					<input type="hidden" name="', $context['session_var'], '" value="', $context['session_id'], '" />
+				</form>
+			</div></div>
+		</div>
+		<span class="botslice"><span></span></span>
+	</div>';
 }
 
 function template_not_found()
@@ -436,11 +434,21 @@ function template_not_found()
 	global $context, $txt;
 
 	echo '
-		<p>', $txt['wiki_page_not_found'], '</p>';
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<p>', $txt['wiki_page_not_found'], '</p>';
 			
 	if (!empty($context['create_message']))
 		echo '
-		<p>', $context['create_message'], '</p>';
+				<p>', $context['create_message'], '</p>';
+
+	echo '
+			</div></div>
+		</div>
+		<span class="botslice"><span></span></span>
+	</div>';
 }
 
 function template_page_deleted()
@@ -448,23 +456,43 @@ function template_page_deleted()
 	global $context, $txt;
 
 	echo '
-		<p>', $txt['wiki_page_deleted'], '</p>';
-}
-
-
-function template_wikipage_below()
-{
-	global $context, $txt;
-
-		// temp
-	if ($context['sub_template']=='fatal_error')
-		return;
-	
-	echo '
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<p>', $txt['wiki_page_deleted'], '</p>
 			</div></div>
 		</div>
 		<span class="botslice"><span></span></span>
 	</div>';
+}
+
+function template_recent_changes()
+{
+	global $context, $modSettings, $txt;
+
+	echo '
+	<form action="', $context['form_url'], '">
+		<ul class="reset recent_changes">';
+
+	foreach ($context['recent_changes'] as $item)
+	{
+		echo '
+			<li>
+				<span class="difflinks">
+					(', $item['previous'] ? '<a href="' . $item['diff_href'] . '">' . $txt['wiki_diff_short'] . '</a>' : $txt['wiki_diff_short'], ')
+					(<a href="' . $item['history_href'] . '">', $txt['wiki_history_short'], '</a>)
+				</span>
+				<span class="page">', $item['link'], '</span>
+				<span class="author">', $item['author']['link'], '</span>
+				<span class="date">', $item['date'], '</span>
+				<span class="comment">', $item['comment'], '</span>
+			</li>';
+	}
+
+	echo '
+		</ul>
+	</form>';
 }
 
 ?>
