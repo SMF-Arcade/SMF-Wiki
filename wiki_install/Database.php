@@ -60,8 +60,8 @@ $permissions = array(
 // Tables array
 $tables = array(
 	// Namespaces
-	'wiki_namespace' => array(
-		'name' => 'wiki_namespace',
+	'namespace' => array(
+		'name' => 'namespace',
 		'columns' => array(
 			array(
 				'name' => 'namespace',
@@ -95,8 +95,8 @@ $tables = array(
 		)
 	),
 	// Page names
-	'wiki_pages' => array(
-		'name' => 'wiki_pages',
+	'pages' => array(
+		'name' => 'pages',
 		'columns' => array(
 			array(
 				'name' => 'id_page',
@@ -167,8 +167,8 @@ $tables = array(
 		)
 	),
 	// Page Content
-	'wiki_content' => array(
-		'name' => 'wiki_content',
+	'content' => array(
+		'name' => 'content',
 		'columns' => array(
 			array(
 				'name' => 'id_revision',
@@ -229,8 +229,8 @@ $tables = array(
 		)
 	),
 	// Wiki Category
-	'wiki_category' => array(
-		'name' => 'wiki_category',
+	'category' => array(
+		'name' => 'category',
 		'columns' => array(
 			array(
 				'name' => 'id_page',
@@ -261,8 +261,8 @@ $tables = array(
 		)
 	),	
 	// Files
-	'wiki_files' => array(
-		'name' => 'wiki_files',
+	'files' => array(
+		'name' => 'files',
 		'columns' => array(
 			array(
 				'name' => 'id_file',
@@ -345,7 +345,7 @@ $tables = array(
 );
 
 // Function to create page
-function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore')
+function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore', $prefix = '{db_prefix}wiki_')
 {
 	global $smcFunc, $wiki_version, $user_info, $modSettings;
 
@@ -353,8 +353,8 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 
 	$request = $smcFunc['db_query']('', '
 		SELECT info.id_page, con.content, con.comment
-		FROM {db_prefix}wiki_pages AS info
-			INNER JOIN {db_prefix}wiki_content AS con ON (con.id_revision = info.id_revision_current
+		FROM ' . $prefix . 'pages AS info
+			INNER JOIN ' . $prefix . 'content AS con ON (con.id_revision = info.id_revision_current
 				AND con.id_page = info.id_page)
 		WHERE info.title = {string:page}
 			AND info.namespace = {string:namespace}',
@@ -379,7 +379,7 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 	else
 	{
 		$smcFunc['db_insert']('insert',
-			'{db_prefix}wiki_pages',
+			$prefix . 'pages',
 			array(
 				'title' => 'string-255',
 				'namespace' => 'string-255',
@@ -393,11 +393,11 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 			array('id_page')
 		);
 
-		$id_page = $smcFunc['db_insert_id']('{db_prefix}wiki_pages', 'id_page');
+		$id_page = $smcFunc['db_insert_id']($prefix . 'pages', 'id_page');
 	}
 
 	$smcFunc['db_insert']('insert',
-		'{db_prefix}wiki_content',
+		$prefix . 'content',
 		array(
 			'id_page' => 'int',
 			'id_author' => 'int',
@@ -415,10 +415,10 @@ function createPage($namespace, $name, $body, $locked = true, $exists = 'ignore'
 		array('id_revision')
 	);
 
-	$id_revision = $smcFunc['db_insert_id']('{db_prefix}wiki_content', 'id_revision');
+	$id_revision = $smcFunc['db_insert_id']($prefix . 'content', 'id_revision');
 
 	$smcFunc['db_query']('' ,'
-		UPDATE {db_prefix}wiki_pages
+		UPDATE ' . $prefix . 'pages
 		SET id_revision_current = {int:revision}
 		WHERE id_page = {int:page}',
 		array(

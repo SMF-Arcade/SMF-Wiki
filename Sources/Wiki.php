@@ -20,7 +20,7 @@ function loadWiki($mode = '', $prefix = null)
 
 	// Set up wiki_prefix (for running multiple wikis)
 	$wiki_prefix = !empty($prefix) ? $prefix : $db_prefix . 'wiki_';
-	
+
 	require_once($sourcedir . '/Subs-Wiki.php');
 	
 	loadClassFile('Class-WikiPage.php');

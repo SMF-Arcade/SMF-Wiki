@@ -28,7 +28,7 @@ if (!defined('SMF'))
 
 require_once($sourcedir . '/Subs-Post.php');
 
-$prefix = !isset($_REQUEST['prefix']) ? '{db_prefix}wiki' : $_REQUEST['prefix'];
+$prefix = !isset($_REQUEST['prefix']) ? '{db_prefix}wiki_' : $_REQUEST['prefix'];
 
 $dbInstaller = new DatabaseInstaller($tables, array(), $addSettings, $permissions, $prefix);
 
@@ -73,7 +73,7 @@ if ($count == 0)
 
 // Step 6: Install default namespace
 $smcFunc['db_insert']('ignore',
-	'{db_prefix}wiki_namespace',
+	$prefix . 'namespace',
 	array(
 		'namespace' => 'string',
 		'ns_prefix' => 'string',
@@ -110,7 +110,7 @@ foreach ($specialNamespaces as $type => $data)
 {
 	$request = $smcFunc['db_query']('', '
 		SELECT namespace, ns_prefix, default_page, namespace_type
-		FROM {db_prefix}wiki_namespace
+		FROM ' . $prefix . 'namespace
 		WHERE namespace_type = {int:type}',
 		array(
 			'type' => $type,
@@ -121,7 +121,7 @@ foreach ($specialNamespaces as $type => $data)
 
 	if (!$row)
 		$smcFunc['db_insert']('replace',
-			'{db_prefix}wiki_namespace',
+			$prefix . 'namespace',
 			array(
 				'namespace' => 'string',
 				'ns_prefix' => 'string',
@@ -163,7 +163,7 @@ foreach ($defaultPages as $page)
 	$page['body'] = $smcFunc['htmlspecialchars']($page['body'], ENT_QUOTES);
 	preparsecode($page['body']);
 
-	createPage($page['namespace'], $page['name'], $page['body'], $page['locked']);
+	createPage($page['namespace'], $page['name'], $page['body'], $page['locked'], $prefix);
 }
 
 ?>

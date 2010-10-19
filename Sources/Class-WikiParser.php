@@ -247,10 +247,12 @@ class WikiParser
 	/**
 	 *
 	 */
-	function __construct(WikiPage $page, $parameters = array(), $parse_bbc = true)
+	function __construct(WikiPage $page, $parameters = array(), $parse_bbc = true, $is_template = false)
 	{
 		$this->page = $page;
-		$this->page->parser = $this;
+
+		if (!$is_template)
+			$this->page->parser = $this;
 		
 		$this->parameters = $parameters;
 		$this->parse_bbc = $parse_bbc;
@@ -1024,7 +1026,6 @@ class WikiElement_Parser
 	public function throwContent($type, $content, $unparsed = null, $additonal = array())
 	{
 		$i = count($this->content);
-
 		
 		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
 		{
@@ -1242,7 +1243,7 @@ class WikiElement_Parser
 					$template_params[$name] = WikiParser::toText($value);
 				}
 
-				$template_parser = new WikiParser($this->wikiparser->page, $template_params);
+				$template_parser = new WikiParser($this->wikiparser->page, $template_params, true, true);
 				$template_parser->parseTo($target, $raw_content);
 				unset($template_parser);
 			}

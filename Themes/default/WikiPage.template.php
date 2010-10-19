@@ -190,6 +190,7 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 				case WikiParser::END_PARAGRAPH:
 				case WikiParser::NEW_LINE:
 				case WikiParser::TEXT:
+				case WikiParser::NO_PARSE:
 					echo $content['content'];
 					break;
 				case WikiParser::ELEMENT:
@@ -199,7 +200,7 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 					echo '<span class="wiki_warning" title="' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '">' . $content['unparsed'] . '</span>';
 					break;
 				default:
-					fatal_error('unknown type used by parsed... check that all files are from same version');
+					fatal_error('unknown type ' . $content['type'] . ' used by parsed... check that all files are from same version');
 					break;
 			}
 		}
