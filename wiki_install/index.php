@@ -10,8 +10,7 @@ elseif (!defined('SMF'))
 if (!array_key_exists('db_add_column', $smcFunc))
 	db_extend('packages');
 
-// Temporary
-die('Installing database via SSI isn\'t supported due to bugs!!');
+include 'install_main.php';
 
 echo 'Project Tools !';
 

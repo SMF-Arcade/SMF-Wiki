@@ -28,19 +28,23 @@ if (!defined('SMF'))
 
 require_once($sourcedir . '/Subs-Post.php');
 
+$prefix = !isset($_REQUEST['prefix']) ? '{db_prefix}wiki' : $_REQUEST['prefix'];
+
+$dbInstaller = new DatabaseInstaller($tables, $columnRename, $addSettings, $permissions, $prefix);
+
 // Step 1: Do tables
-doTables($tables);
+$dbInstaller->doTables();
 
 // Step 2: Do Settings
-doSettings($addSettings);
+$dbInstaller->doSettings();
 
 // Step 3: Update admin features
 updateAdminFeatures('wiki', !empty($modSettings['wikiEnabled']));
 
-// Step 3: Do Permissions
-doPermission($permissions);
+// Step 4: Do Permissions
+$dbInstaller->doPermission();
 
-// Step 4: Install SMF Wiki Package server
+// Step 5: Install SMF Wiki Package server
 $request = $smcFunc['db_query']('', '
 	SELECT COUNT(*)
 	FROM {db_prefix}package_servers
@@ -67,7 +71,7 @@ if ($count == 0)
 		array()
 	);
 
-// Step 5: Install default namespace
+// Step 6: Install default namespace
 $smcFunc['db_insert']('ignore',
 	'{db_prefix}wiki_namespace',
 	array(
@@ -93,7 +97,7 @@ $smcFunc['db_insert']('ignore',
 	array('namespace')
 );
 
-// Step 6: Install other namespaces
+// Step 7: Install other namespaces
 $specialNamespaces = array(
 	1 => array('name' => 'Special', 'default_page' => 'List'),
 	2 => array('name' => 'File', 'default_page' => 'List'),
@@ -138,7 +142,7 @@ foreach ($specialNamespaces as $type => $data)
 	$smcFunc['db_free_result']($request);
 }
 
-// Step 7: Create and update default pages (incase they are not edited before)
+// Step 8: Create and update default pages (incase they are not edited before)
 $defaultPages = array(
 	array(
 		'namespace' => '',
