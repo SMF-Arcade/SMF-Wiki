@@ -931,7 +931,7 @@ class WikiParser
 				
 				if (substr($bSwitch, -2) == '__' && WikiExtension::isMagicword(substr($bSwitch, 0, -2)))
 				{
-					$magicWord = WikiExtension::getMagicword($magicword);
+					$magicWord = WikiExtension::getMagicword(substr($bSwitch, 0, -2));
 
 					call_user_func($magicWord['callback'], $this);
 
@@ -942,6 +942,7 @@ class WikiParser
 				else
 				{
 					$target->throwContent(WikiParser::TEXT, substr($text, $i, $bLen + 2));
+					$i += $bLen + 2;
 				}
 			}
 			// Else add it as text
