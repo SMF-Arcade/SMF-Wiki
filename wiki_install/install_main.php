@@ -30,7 +30,7 @@ require_once($sourcedir . '/Subs-Post.php');
 
 $prefix = !isset($_REQUEST['prefix']) ? '{db_prefix}wiki' : $_REQUEST['prefix'];
 
-$dbInstaller = new DatabaseInstaller($tables, $columnRename, $addSettings, $permissions, $prefix);
+$dbInstaller = new DatabaseInstaller($tables, array(), $addSettings, $permissions, $prefix);
 
 // Step 1: Do tables
 $dbInstaller->doTables();
