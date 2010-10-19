@@ -12,7 +12,7 @@ You should report all bugs to our Issue Tracker, feature request are also welcom
 [color=blue][b][size=12pt]Introduction[/size][/b][/color]
 Wiki for SMF 2.0 RC2. Uses BBC-syntax with added some wikicode such as Wiki Links.
 Any BBC-code from SMF works including most of those added by mod.
-Mods that adds Wiki Link type links might cause problems with this mod
+Mods that adds Wiki Link type links might cause problems with this mod.
 
 [color=blue][b][size=12pt]Please support development of this modification![/size][/b][/color]
 This modification is free but if you like this mod, please support it by making small donation.
