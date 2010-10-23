@@ -143,7 +143,7 @@ class WikiPage
 			'link' => wiki_get_url($category->url_name),
 			'namespace' => $category->namespace,
 			'page' => $category->page,
-			'title' => $category->title,
+			'title' => get_default_display_title($category->page),
 			'exists' => $category->exists,
 		);
 	}

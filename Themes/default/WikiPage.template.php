@@ -75,16 +75,17 @@ function template_view_page()
 		</ul>';
 	}
 	
-	if (!empty($context['page_info']->categories))
+	if (!empty($context['wiki_page']->categories))
 	{
 		echo '
-		<div class="windowbg">
+		<div class="wikicontent windowbg">
 			<span class="topslice"><span></span></span>
-			', $txt['wiki_categories'], ': ';
+			<div class="content">
+				', $txt['wiki_categories'], ': ';
 		
 		$first = true;
 		
-		foreach ($context['page_info']->categories as $category)
+		foreach ($context['wiki_page']->categories as $category)
 		{
 			// Make sure delimeter is only after first
 			if (!$first)
@@ -93,10 +94,11 @@ function template_view_page()
 				$first = false;
 				
 			echo '
-			<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['title'], '</a>';
+				<a href="', $category['link'], '"', !$category['exists'] ? 'class=" redlink"' : '', '>', $category['title'], '</a>';
 		}
 		
 		echo '
+			</div>
 			<span class="botslice"><span></span></span>
 		</div>';
 	}

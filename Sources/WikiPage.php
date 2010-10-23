@@ -11,6 +11,9 @@
 if (!defined('SMF'))
 	die('Hacking attempt...');
 
+/**
+ *
+ */
 function ViewPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -28,7 +31,7 @@ function ViewPage()
 	{
 		$context['robot_no_index'] = true;
 		$context['sub_template'] = 'page_deleted';
-		}
+	}
 	else
 	{
 		// Check if page has index tag
@@ -39,6 +42,9 @@ function ViewPage()
 	}
 }
 
+/**
+ *
+ */
 function DiffPage()
 {
 	global $smcFunc, $context, $modSettings, $txt, $user_info, $sourcedir;
@@ -60,58 +66,6 @@ function DiffPage()
 	
 	$context['diff'] = $context['wiki_page']->compareTo($context['wiki_parser_compare']);
 
-	/*$context['diff'] = array();
-
-	$old = 0;
-	$new = 0;
-
-	foreach ($diff as $l)
-	{
-		if (!is_array($l))
-		{
-			$old++;
-			$new++;
-
-			$context['diff'][] = array(
-				'',
-				$l,
-				$old,
-				$new,
-			);
-		}
-		else
-		{
-			if (!empty($l['d']))
-			{
-				foreach ($l['d'] as $ld)
-				{
-					$old++;
-
-					$context['diff'][] = array(
-						'd',
-						$ld,
-						$old,
-						'...',
-					);
-				}
-			}
-			if (!empty($l['i']))
-			{
-				foreach ($l['i'] as $li)
-				{
-					$new++;
-
-					$context['diff'][] = array(
-						'a',
-						$li,
-						'...',
-						$new,
-					);
-				}
-			}
-		}
-	}*/
-
 	$context['current_page_title'] = $context['current_page_title'];
 
 	// Template
@@ -119,6 +73,9 @@ function DiffPage()
 	$context['sub_template'] = 'view_page';
 }
 
+/**
+ *
+ */
 function CleanCache()
 {
 	global $context;
