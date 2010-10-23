@@ -192,8 +192,8 @@ class WikiPage
 	function compareTo(Wikipage $target)
 	{
 		return $this->__diff(
-			explode("\n", un_preparsecode($target->parser->getRawContent())),
-			explode("\n", un_preparsecode($this->parser->getRawContent()))
+			preg_split('@(\[|\]|=| |[\s, ]|<br />|\.|{|})@', ($target->parser->getRawContent()), null, PREG_SPLIT_DELIM_CAPTURE),
+			preg_split('@(\[|\]|=| |[\s, ]|<br />|\.|{|})@', ($this->parser->getRawContent()), null, PREG_SPLIT_DELIM_CAPTURE)
 		);
 	}
 

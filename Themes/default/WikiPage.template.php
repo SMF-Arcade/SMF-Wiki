@@ -34,35 +34,22 @@ function template_view_page()
 	if (isset($context['diff']))
 	{
 		echo '
-	<div class="tborder diff">
-		<div class="windowbg">';
+	<div class="wikidiff">';
 
-		foreach ($context['diff'] as $action)
+		foreach ($context['diff'] as $change)
 		{
-			$style = '';
-
-			if (trim($action[1]) == '')
-				$action[1] = '&nbsp;';
+			if (!is_array($change))
+				echo $change;
 			else
-				$action[1] = $action[1];
-
-			if (empty($action[0]))
-				$style = '';
-			elseif ($action[0] == 'a')
-				$style .= 'background-color: #DDFFDD';
-			elseif ($action[0] == 'd')
-				$style .= 'background-color: #FFDDDD';
-
-			echo '
-			<dl class="clearfix">
-				<dt>', $action[2], '</dt>
-				<dt>', $action[3], '</dt>
-				<dd class="windowbg2" style="', $style, '">', $action[1], '</dd>
-			</dl>';
+			{
+				if (!empty($change['d']))
+					echo '<del>', implode('', $change['d']), '</del>';
+				if (!empty($change['i']))
+					echo '<ins>', implode('', $change['i']), '</ins>';
+			}
 		}
 
 		echo '
-		</div>
 	</div>';
 	}
 

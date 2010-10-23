@@ -180,7 +180,7 @@ ul.wikihistory li span.comment, ul.recent_changes li span.comment
 	padding-left: 0.5em;
 }
 
-.diff
+.wikidiff
 {
 	margin: 5px;
 }
@@ -188,28 +188,15 @@ ul.wikihistory li span.comment, ul.recent_changes li span.comment
 {
 	margin: 0;
 }
-.diff dl
+.wikidiff del
 {
-	margin: 0;
-	padding: 0 0 0 0.2em;
+	text-decoration: none;
+	background-color: #FFDDDD;
 }
-.diff dt
+.wikidiff ins
 {
-	margin: 0;
-	float: left;
-	font-family: monospace;
-	width: 40px;
-}
-.diff dd
-{
-	margin: 0 0 0 80px;
-	padding: 0 0.2em;
-	border-left: 1px solid #A0A0A0;
-	font-family: monospace;
-	white-space: pre;
-}
-.diff div.windowbg2
-{
+	text-decoration: none;
+	background-color: #DDFFDD;
 }
 
 div.infobox

@@ -177,6 +177,18 @@ class WikiParser
 		return $return;
 	}
 
+
+	/**
+	 * Parser content into text for use in parameters etc.
+	 */
+	static function getUnparsed($content, $single_line = true)
+	{
+		$return = '';
+		foreach ($content as $c)
+			$return .= !empty($c['unparsed'])? $c['unparsed'] : $c['content'];
+		return $return;
+	}
+
 	/**
 	 * Convert content array to boolean
 	 * @param array $content content array to compare
@@ -221,6 +233,11 @@ class WikiParser
 	 * Unparsed content
 	 */
 	private $raw_content;
+
+	/**
+	 * Unparsed content
+	 */
+	private $raw_parser;
 
 	/**
 	 *
@@ -297,6 +314,46 @@ class WikiParser
 	public function getRawContent()
 	{
 		return $this->raw_content;
+	}
+
+	/**
+	 *
+	 */
+	public function getRawContentSection($section = null)
+	{
+		if ($this->parse_bbc && !$this->raw_parser instanceof WikiParser)
+		{
+			$this->raw_parser = new WikiParser($this->page, array(), false, true);
+			$this->raw_parser->parse($this->raw_content);
+			return $this->raw_parser->getRawContentSection($section);
+		}
+		elseif ($this->parse_bbc)
+			return $this->raw_parser->getRawContentSection($section);
+		else
+		{
+			if ($section == null)
+			{
+				$sections = array();
+				foreach ($this->sections as $sec)
+				{
+					$sections[] = array(
+						'title' => $sec['title'],
+						'level' => $sec['level'],
+						'content' => WikiParser::getUnparsed($sec['content'])
+					);
+				}
+
+				return $sections;
+			}
+			elseif (!isset($this->sections[$section]))
+				return false;
+			else
+				return array(
+					'title' => $this->sections[$section]['title'],
+					'level' => $this->sections[$section]['level'],
+					'content' => WikiParser::getUnparsed($this->sections[$section]['content'])
+				);
+		}
 	}
 
 	/**
@@ -437,7 +494,7 @@ class WikiParser
 				'id' => $this->html_id($html_id),
 				'level' => $additonal['level'],
 				'title' => $content,
-				'edit_url' => '#',
+				'edit_url' => wiki_get_url(array('page' => $this->page->url_name, 'sa' => 'edit', 'section' => count($this->sections))),
 				'content' => array(),
 			);
 			$this->content = &$this->sections[count($this->sections) - 1]['content'];
@@ -474,8 +531,8 @@ class WikiParser
 			$this->paragraphOpen = false;
 			$this->_hasContent = false;
 		}
-		elseif ($this->paragraphOpen == false && $this->blockNestingLevel == 0
-				&& ($type == WikiParser::TEXT || ($type == WikiParser::ELEMENT && !$content->is_block_level())))
+		elseif ($this->parse_bbc && ($this->paragraphOpen == false && $this->blockNestingLevel == 0
+				&& ($type == WikiParser::TEXT || ($type == WikiParser::ELEMENT && !$content->is_block_level()))))
 		{
 			$this->content[$i++] = array(
 				'type' => WikiParser::NEW_PARAGRAPH,
@@ -617,7 +674,7 @@ class WikiParser
 				continue;
 			}
 			// Skip <includeonly> if this is not template
-			elseif (!$is_template && substr($text, $i, 13) == '<includeonly>')
+			elseif ($this->parse_bbc && !$is_template && substr($text, $i, 13) == '<includeonly>')
 			{
 				$i += 13;
 				
@@ -628,20 +685,20 @@ class WikiParser
 					
 				continue;
 			}
-			elseif ($is_template && substr($text, $i, 13) == '<includeonly>')
+			elseif ($this->parse_bbc && $is_template && substr($text, $i, 13) == '<includeonly>')
 			{
 				$i += 13;
 				
 				continue;
 			}
-			elseif ($is_template && substr($text, $i, 14) == '</includeonly>')
+			elseif ($this->parse_bbc && $is_template && substr($text, $i, 14) == '</includeonly>')
 			{
 				$i += 14;
 				
 				continue;
 			}
 			// Skip <noinclude> if this is template
-			elseif ($is_template && substr($text, $i, 11) == '<noinclude>')
+			elseif ($this->parse_bbc && $is_template && substr($text, $i, 11) == '<noinclude>')
 			{
 				$i += 11;
 				
@@ -652,13 +709,13 @@ class WikiParser
 					
 				continue;
 			}
-			elseif (!$is_template && substr($text, $i, 11) == '<noinclude>')
+			elseif ($this->parse_bbc && !$is_template && substr($text, $i, 11) == '<noinclude>')
 			{
 				$i += 11;
 						    
 				continue;
 			}
-			elseif (!$is_template && substr($text, $i, 12) == '</noinclude>')
+			elseif ($this->parse_bbc && !$is_template && substr($text, $i, 12) == '</noinclude>')
 			{
 				$i += 12;
 				
@@ -696,7 +753,7 @@ class WikiParser
 				}
 				
 				// Tell element that it was closed
-				$target->throwContent(WikiParser::ELEMENT_CLOSE, '', str_repeat($curChar, $len));
+				$target->throwContent(WikiParser::ELEMENT_CLOSE, '', str_repeat($curChar, $matchLen));
 				$element = $target;
 				
 				// There's still opening tags left to search end for
@@ -781,13 +838,13 @@ class WikiParser
 				$i += $len;
 			}
 			// Parameter delimiter
-			elseif ($curChar == '|')
+			elseif ($this->parse_bbc && $curChar == '|')
 			{
 				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '|');
 				$i++;
 			}
 			// Function delimiter / variable value delimeter
-			elseif ($curChar == ':')
+			elseif ($this->parse_bbc && $curChar == ':')
 			{
 				$target->throwContent(WikiParser::ELEMENT_SEMI_COLON, ':');
 				$i++;
@@ -825,7 +882,7 @@ class WikiParser
 				continue;
 			}
 			// New paragraph (2 * new line)
-			elseif ($this->parse_bbc && $this->blockNestingLevel == 0 && $curChar == "\n" && $text[$i + 1] == "\n")
+			elseif ($this->parse_bbc && $this->parse_bbc && $this->blockNestingLevel == 0 && $curChar == "\n" && $text[$i + 1] == "\n")
 			{
 				$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
 
@@ -833,7 +890,7 @@ class WikiParser
 				
 				continue;
 			}
-			elseif ($curChar == "\n")
+			elseif ($this->parse_bbc && $curChar == "\n")
 			{
 				$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
 				$i++;
@@ -1110,7 +1167,7 @@ class WikiElement_Parser
 	{
 		$return = '';
 		foreach ($this->content as $c)
-			$return .= $c['unparsed'] !== null ? $c['unparsed'] : $c['content'];
+			$return .= !empty($c['unparsed'])? $c['unparsed'] : $c['content'];
 		return $return;
 	}
 	
@@ -1260,7 +1317,10 @@ class WikiElement_Parser
 			
 			$value = WikiExtension::getFunction($function);
 
-			call_user_func($value['callback'], $this->wikiparser, $params);
+			if (isset($value['callback']))
+				call_user_func($value['callback'], $this->wikiparser, $params);
+		   else
+				$target->throwContent(WikiParser::WARNING, 'function_not_found', $this->getUnparsed(), array($function));
 		}
 		// Template
 		elseif ($type == WikiElement_Parser::TEMPLATE)

@@ -39,18 +39,15 @@ function EditPage()
 		$body = $context['wiki_page']->parser->getRawContent();
 	else
 	{
-		// Reparse without bbc conversion or any fixes
-		$context['wiki_page']->parse_bbc = false;
-		$context['wiki_page']->parse();
-		
-		if (!isset($context['wiki_page']->sections[$_REQUEST['section']]))
+		$edit_section = $context['wiki_page']->parser->getRawContentSection((int) $_REQUEST['section']);
+
+		if (!$edit_section)
 			$body = $context['wiki_page']->parser->getRawContent();
 		else
 		{
 			$context['edit_section'] = $_REQUEST['section'];
-			$section = $context['wiki_page']->sections[$_REQUEST['section']];
 			
-			$body = str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />' . $section['html'];
+			$body = str_repeat('=', $edit_section['level']) . ' ' . $edit_section['title'] . ' ' . str_repeat('=', $edit_section['level']) . $edit_section['content'];
 		}
 	}
 
@@ -162,10 +159,9 @@ function EditPage2()
 		$body = $_POST['wiki_content'];
 	else
 	{
-		$context['wiki_page']->parse_bbc = false;
-		$context['wiki_page']->parse();
+		$sections = $context['wiki_page']->parser->getRawContentSection();
 		
-		if (!isset($context['wiki_page']->sections[$_REQUEST['section']]))
+		if (!isset($sections[$_REQUEST['section']]))
 			$body = $_POST['wiki_content'];
 		else
 		{
@@ -174,15 +170,15 @@ function EditPage2()
 			if (substr($_POST['wiki_content'], -6) != '<br />')
 				$_POST['wiki_content'] .= '<br />';
 					
-			foreach ($context['wiki_page']->sections as $id => $section)
+			foreach ($sections as $id => $section)
 			{
 				if (substr($section['html'], -6) != '<br />')
 					$section['html'] .= '<br />';
 				
 				if ($section['level'] == 1)
-					$body .= $section['html'];
+					$body .= $section['content'];
 				elseif ($id != $_REQUEST['section'])
-					$body .= str_repeat('=', $section['level']) . ' ' . $section['name'] . ' ' . str_repeat('=', $section['level']) . '<br />' . $section['html'];
+					$body .= str_repeat('=', $section['level']) . ' ' . $section['title'] . ' ' . str_repeat('=', $section['level']) . $section['content'];
 				else
 					$body .= $_POST['wiki_content'];
 			}
