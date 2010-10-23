@@ -125,8 +125,8 @@ function Wiki($standalone = false, $prefix = null)
 		'edit2' => array('WikiEditPage.php', 'EditPage2'),
 		'delete' => array('WikiEditPage.php', 'DeletePage'),
 		'delete2' => array('WikiEditPage.php', 'DeletePage2'),
-		'restore' => array('WikiEditPage.php', 'DeletePage'),
-		'restore2' => array('WikiEditPage.php', 'DeletePage2'),
+		'restore' => array('WikiEditPage.php', 'RestorePage'),
+		'restore2' => array('WikiEditPage.php', 'RestorePage2'),
 		'download' => array('WikiFiles.php', 'WikiFileView', true, true),
 		'purge' => array('WikiPage.php', 'CleanCache'),
 	);

@@ -404,7 +404,7 @@ function template_restore_page()
 				<form action="', $context['form_url'], '" method="post" accept-charset="', $context['character_set'], '" name="restorepage" id="restorepage">
 					<div style="width: 95%; margin: auto">
 						<div style="text-align: center">
-							<input class="button_submit" type="submit" name="delete" value="', $txt['restore_page_button'], '" />
+							<input class="button_submit" type="submit" name="restore" value="', $txt['restore_page_button'], '" />
 						</div>
 					</div>
 

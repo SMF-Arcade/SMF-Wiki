@@ -336,7 +336,7 @@ function RestorePage2()
 	
 	checkSession('post');
 	
-	restoreWikiPage($context['page_info']->id, !$delete_permanently);
+	restoreWikiPage($context['page_info']->id);
 	
 	redirectexit($context['current_page_url']);
 }
