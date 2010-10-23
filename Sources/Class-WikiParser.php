@@ -132,6 +132,8 @@ class WikiParser
 				case WikiParser::ELEMENT:
 					$return[] = $c;
 					break;
+				case WikiParser::WARNING:
+					$return[] = $c['unparsed'];
 				default:
 					die('__boolean_trim: Unknown part type ' . $c['type']);
 					break;
@@ -164,6 +166,8 @@ class WikiParser
 				case WikiParser::ELEMENT:
 					$return .= $c['content']->getHtml();
 					break;
+				case WikiParser::WARNING:
+					$return .= $c['unparsed'];
 				default:
 					die('toText: Unknown part type ' . $c['type']);
 					break;
@@ -352,7 +356,7 @@ class WikiParser
 	/**
 	 * Adds content to this page
 	 */
-	public function throwContent($type, $content, $unparsed = '', $additonal = array())
+	public function throwContent($type, $content = '', $unparsed = '', $additonal = array())
 	{
 		$i = count($this->content);
 		
