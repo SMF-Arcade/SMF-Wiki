@@ -205,7 +205,7 @@ function EditPage2()
 		'display_title' => $wikiParser->page->title,
 	);
 	$revisionOptions = array(
-		'file' => !empty($context['wiki_page']->file) ? $context['wiki_page']->file : 0,
+		'file' => !empty($context['wiki_page']->file) ? $context['wiki_page']->file['id'] : 0,
 		'body' => $body,
 		'comment' => $_POST['comment'],
 	);

@@ -172,6 +172,7 @@ class WikiPage
 			return false;
 
 		$this->file = array(
+			'id' => $id_file,
 			'name' => $this->url_name,
 			'local_name' => $row['localname'],
 			'mime_type' => $row['mime_type'],

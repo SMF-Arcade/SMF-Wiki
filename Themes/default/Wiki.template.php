@@ -70,6 +70,11 @@ function template_wiki_above()
 	<div class="wikiright">';
 
 	echo '
+		<div class="wikipage_top cat_bar">
+			<h3 class="catbg">
+			', $context['current_page_title'], '
+			</h3>
+		</div>
 		<div class="wikimenu buttonlist">
 			<ul>';
 
@@ -79,11 +84,6 @@ function template_wiki_above()
 
 	echo '
 			</ul>
-		</div>
-		<div class="wikipage_top cat_bar">
-			<h3 class="catbg">
-			', $context['current_page_title'], '
-			</h3>
 		</div>';
 }
 
