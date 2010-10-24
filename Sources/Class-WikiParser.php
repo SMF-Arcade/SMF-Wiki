@@ -598,24 +598,22 @@ class WikiParser
 	{
 		global $context;
 		
-		$text = str_replace(
+		$text = strtr(
+			$text,
 			array(
-				'&lt;includeonly&gt;', '&lt;/includeonly&gt;',
-				'&lt;noinclude&gt;', '&lt;/noinclude&gt;',
-				'&lt;nowiki&gt;', '&lt;/nowiki&gt;',
-				'[nobbc]', '[/nobbc]',
-				'[code' , '[/code]',
-				'[php]' , '[/php]',
-			),
-			array(
-				'<includeonly>', '</includeonly>',
-				'<noinclude>', '</noinclude>',
-				'<nowiki>[nobbc]', '[/nobbc]</nowiki>',
-				'<nowiki>[nobbc]', '[/nobbc]</nowiki>',
-				'<nowiki>[code', '[/code]</nowiki>',
-				'<nowiki>[php]', '[/php]</nowiki>',
-			),
-			$text
+				'&lt;includeonly&gt;' => '<includeonly>',
+				'&lt;/includeonly&gt;' => '<includeonly>',
+				'&lt;noinclude&gt;' => '<noinclude>',
+				'&lt;/noinclude&gt;' => '</noinclude>',
+				'&lt;nowiki&gt;' => '<nowiki>[nobbc]',
+				'&lt;/nowiki&gt;' => '[/nobbc]</nowiki>',
+				'[nobbc]' => '[nobbc]<nowiki>',
+				'[/nobbc]' => '[/nobbc]</nowiki>',
+				'[code' => '<nowiki>[code',
+				'[/code]' => '[/code]</nowiki>',
+				'[php]' => '<nowiki>[php]',
+				'[/php]' => '[/php]</nowiki>',
+			)
 		);
 		
 		// Parse bbc if asked to
@@ -670,7 +668,7 @@ class WikiParser
 	
 				if ($endPos > 0)
 				{
-					$target->throwContent(WikiParser::NO_PARSE, substr($text, $i, $endPos - $i));
+					$target->throwContent(WikiParser::NO_PARSE, str_replace("\n", '<br />', substr($text, $i, $endPos - $i)));
 					$i = $endPos + 9;
 				}
 				else
