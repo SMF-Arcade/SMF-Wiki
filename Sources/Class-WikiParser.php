@@ -47,7 +47,13 @@ class WikiParser
 	
 	// XML style tag
 	const TAG = 51;
-	
+
+	//
+	const LIST_OPEN = 52;
+	const LIST_CLOSE = 53;
+	const LIST_ITEM_OPEN = 54;
+	const LIST_ITEM_CLOSE = 55;
+
 	// Parser Warnings
 	const SEV_NOTICE = 1;
 	const SEV_WARNING = 2;
@@ -632,7 +638,6 @@ class WikiParser
 		$i = 0;
 		while ($i <= $textLen)
 		{
-			$charType = '';
 			$search = $searchBase;
 			$closeTag = '';
 
@@ -726,6 +731,17 @@ class WikiParser
 				break;
 
 			$curChar = isset($text[$i]) ? $text[$i] : "\n";
+
+			// Close list if prefix doesnt match
+			if ($curChar == "\n" && $target instanceof WikiList_Parser && !in_array($text[$i + 1], WikiList_Parser::$listTypes))
+			{
+				$element = $target;
+				$target = array_pop($stack);
+
+				// Tell elment that it's really complete and let it finalize.
+				$element->throwContentTo($target);
+				unset($element);
+			}
 
 			// Close char?
 			if ($curChar == $closeTag)
@@ -837,6 +853,71 @@ class WikiParser
 
 				$i += $len;
 			}
+			// Handle lists
+			elseif ($this->parse_bbc && (($i == 0 && in_array($curChar, WikiList_Parser::$listTypes)) || ($curChar == "\n" && in_array($text[$i + 1], WikiList_Parser::$listTypes))))
+			{
+				$prefixLen = strcspn($text, implode(WikiList_Parser::$listTypes), $i);
+				$prefix = substr($text, $i + 1, $prefixLen);
+
+				$type = substr($prefix, -1);
+
+				if ($target instanceof WikiList_Parser)
+				{
+					// Close previous and open new item
+					if ($prefix == $target->prefix)
+					{
+						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
+						$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>', $type);
+						$i += 2;
+					}
+					// Type of last level changed
+					elseif (strlen($target->prefix) == strlen($prefix))
+					{
+						// Close last item
+						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
+						
+						$element = $target;
+						$target = array_pop($stack);
+
+						// Tell elment that it's really complete and let it finalize.
+						$element->throwContentTo($target);
+						unset($element);
+
+						// Create new parser
+						$stack[] = $target;
+						$target = new WikiList_Parser($this, $type, $prefix);
+
+						$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+
+						$i += 2;
+					}
+					else
+					{
+						die();
+						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
+						$i++;
+
+						continue;
+					}
+				}
+				// New list starts
+				elseif ($prefixLen == 1)
+				{
+					$stack[] = $target;
+					$target = new WikiList_Parser($this, $type, $prefix);
+
+					$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+
+					$i += 2;
+				}
+				// It was invalid
+				else
+				{
+					$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
+					$i++;
+				}
+				
+			}
 			// Parameter delimiter
 			elseif ($this->parse_bbc && $curChar == '|')
 			{
@@ -897,7 +978,7 @@ class WikiParser
 				
 				continue;
 			}
-			// Start or end of tag 
+			// Start or end of html tag from parse bbc
 			elseif ($this->parse_bbc && $curChar == '<')
 			{
 				$tagnameLen = strcspn($text, ' >', $i + 1);
@@ -1086,16 +1167,6 @@ class WikiElement_Parser
 				3 => WikiElement_Parser::TEMPLATE_PARAM,
 			),
 		),
-		/*'#' => array(
-			'close' => "\n",
-			'min' => 1,
-			'max' => 1,
-			'names' => array(
-				1 => WikiElement_Parser::HASHTAG,
-			),
-			'no_param' => true,
-			'has_name' => true,
-		),*/
 	);
 	
 	public $char;
@@ -1123,7 +1194,7 @@ class WikiElement_Parser
 	/**
 	 * Adds content to this tag
 	 */
-	public function throwContent($type, $content, $unparsed = null, $additonal = array())
+	public function throwContent($type, $content = '', $unparsed = null, $additonal = array())
 	{
 		$i = count($this->content);
 		
@@ -1397,6 +1468,144 @@ class WikiElement_Parser
 			die('NOT IMPLEMENTED!' . $type);
 	}
 	
+	/**
+	 * Sets lenght of start tag to actual lenght if it wasn't expected lenght.
+	 * @param int $lenght Actual lenght of start tag
+	 */
+	public function modifyLen($lenght)
+	{
+		$this->len = $lenght;
+		$this->content[0]['unparsed'] = str_repeat($this->char, $lenght);
+	}
+}
+
+/**
+ *
+ */
+class WikiList_Parser
+{
+	static $listTypes = array('#', '*');
+	static $listTags = array('#' => 'ol', '*' => 'ul');
+
+	public $prefix;
+	public $type;
+
+	private $content;
+	private $wikiparser;
+
+	private $is_complete = true;
+
+	public function __construct(WikiParser $wikiparser, $type, $prefix = '')
+	{
+		$this->prefix = $prefix;
+		$this->type = $type;
+		$this->wikiparser = $wikiparser;
+
+		//$this->throwContent(WikiParser::ELEMENT_OPEN, '', str_repeat($char, $len));
+	}
+
+	/**
+	 * Adds content to this tag
+	 */
+	public function throwContent($type, $content = '', $unparsed = null, $additonal = array())
+	{
+		$i = count($this->content);
+
+		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
+		{
+			$this->content[$i - 1]['content'] .= $content;
+
+			// Does this part have "unparsed" content?
+			if (!empty($this->content[$i - 1]['unparsed']))
+				$this->content[$i - 1]['unparsed'] .= empty($unparsed) ? $content : $unparsed;
+			// Copy parsed as unparsed if we have but there is none. Done to save memory!
+			elseif (empty($this->content[$i - 1]['unparsed']) && !empty($unparsed))
+				$this->content[$i - 1]['unparsed'] = $this->content[$i - 1]['content'] . $unparsed;
+
+			return;
+		}
+
+		// At least two lines is required for element to be complete
+		//$this->is_complete = $type == WikiParser::LIST_ITEM_OPEN;
+
+		$this->content[$i] = array(
+			'type' => $type,
+			'content' => $content,
+			'unparsed' => $unparsed,
+			'additional' => $additonal,
+		);
+	}
+
+	/**
+	 *
+	 */
+	public function throwContentArray($array)
+	{
+		foreach ($array as $cont)
+			$this->throwContent($cont['type'], $cont['content'], $cont['unparsed'], $cont['additional']);
+	}
+
+	/**
+	 * Return original unparsed content
+	 */
+	public function getUnparsed()
+	{
+		$return = '';
+		foreach ($this->content as $c)
+			$return .= !empty($c['unparsed'])? $c['unparsed'] : $c['content'];
+		return $return;
+	}
+
+	/**
+	 * Adds content to upper level element.
+	 */
+	public function throwContentTo($target)
+	{
+		global $context;
+
+		// If this is incomplete throw as original
+		if (!$this->is_complete)
+		{
+			foreach ($this->content as $c)
+			{
+				if ($c['type'] == WikiParser::LIST_ITEM_OPEN)
+					$target->throwContent(WikiParser::TEXT, $c['unparsed']);
+				elseif ($c['type'] == WikiParser::LIST_ITEM_CLOSE || $c['type'] == WikiParser::LIST_OPEN || $c['type'] == WikiParser::LIST_CLOSE)
+					continue;
+				else
+					$target->throwContent(
+						$c['type'],
+						$c['content'],
+						$c['unparsed'],
+						$c['additional']
+					);
+			}
+
+			return;
+		}
+
+		$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_OPEN);
+		$target->throwContent(WikiParser::LIST_OPEN, '<' . WikiList_Parser::$listTags[$this->type] . '>', $this->type);
+
+		foreach ($this->content as $c)
+		{
+			/*if ($c['type'] == WikiParser::LIST_ITEM_OPEN)
+				$target->throwContent(WikiParser::TEXT, $c['unparsed']);
+			elseif ($c['type'] == WikiParser::LIST_ITEM_CLOSE || $c['type'] == WikiParser::LIST_OPEN || $c['type'] == WikiParser::LIST_CLOSE)
+				continue;
+			else*/
+				$target->throwContent(
+					$c['type'],
+					$c['content'],
+					$c['unparsed'],
+					$c['additional']
+				);
+		}
+
+		$target->throwContent(WikiParser::LIST_CLOSE, '</' . WikiList_Parser::$listTags[$this->type] . '>', '');
+		$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_CLOSE);
+	}
+
 	/**
 	 * Sets lenght of start tag to actual lenght if it wasn't expected lenght.
 	 * @param int $lenght Actual lenght of start tag

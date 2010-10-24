@@ -162,6 +162,10 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 				case WikiParser::NEW_LINE:
 				case WikiParser::TEXT:
 				case WikiParser::NO_PARSE:
+				case WikiParser::LIST_OPEN:
+				case WikiParser::LIST_CLOSE:
+				case WikiParser::LIST_ITEM_OPEN:
+				case WikiParser::LIST_ITEM_CLOSE:
 					echo $content['content'];
 					break;
 				case WikiParser::ELEMENT:
