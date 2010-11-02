@@ -22,7 +22,7 @@
 	<version>{version}</version>
 	<type>modification</type>
 
-	<install for="2.0 RC3">
+	<install for="2.0 RC4">
 		<readme parsebbc="true">readme.txt</readme>
 
 		<!-- Run Installer -->
