@@ -200,7 +200,7 @@ function EditPage2()
 	$context['page_info']->title = get_default_display_title($_REQUEST['page'], $context['namespace']['id']);
 	$wikiParser = new WikiParser($context['page_info']);
 	$wikiParser->parse($body);
-	
+
 	$pageOptions = array(
 		'display_title' => $wikiParser->page->title,
 	);
@@ -221,8 +221,8 @@ function EditPage2()
 	// Categories
 	$rows = array();
 	
-	if (!empty($context['wiki_page']->categories))
-		foreach ($context['wiki_page']->categories as $cat)
+	if (!empty($context['page_info']->categories))
+		foreach ($context['page_info']->categories as $cat)
 			$rows[$cat['title']] = array($context['page_info']->id, $cat['title']);
 	
 	// Remove categories first
