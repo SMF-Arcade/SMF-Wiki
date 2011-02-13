@@ -759,8 +759,6 @@ class WikiParser
 			
 			$curChar = isset($text[$i]) ? $text[$i] : "\n";
 			
-			die($curChar);
-			
 			// CONTENT PARSE
 
 			// New Section
@@ -913,9 +911,7 @@ class WikiParser
 			}
 			// Handle lists
 			elseif ($this->parse_bbc && $is_new_line && in_array($curChar, WikiList_Parser::$listTypes))
-			{
-				global $user_info;
-				
+			{				
 				// Default only one character
 				$maxLen = 1;
 				
@@ -1015,38 +1011,7 @@ class WikiParser
 						
 						$i += $prefixLen;
 						continue;
-						fatal_error('Parse Failed' . $x);
-					}/*
-					// Type of last level changed
-					elseif (strlen($target->prefix) == strlen($prefix))
-					{
-						// Close last item
-						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
-						
-						$element = $target;
-						$target = array_pop($stack);
-
-						// Tell elment that it's really complete and let it finalize.
-						$element->throwContentTo($target);
-						unset($element);
-
-						// Create new parser
-						$stack[] = $target;
-						$target = new WikiList_Parser($this, $type, $prefix);
-
-						$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
-
-						$i += 2;
 					}
-					else
-					{
-						fatal_error('WikiParser error');
-						die();
-						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
-						$i++;
-
-						continue;
-					}*/
 				}
 				// New list starts
 				elseif ($prefixLen == 1)
