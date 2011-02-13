@@ -70,7 +70,7 @@
 		<operation>
 			<search position="after"><![CDATA[	);
 
-	// Are we getting info for the help section.]]></search>
+	// Anyone who would like to add a core feature?]]></search>
 			<add><![CDATA[		// wiki = wiki
 		'wiki' => array(
 			'url' => 'action=admin;area=wiki',

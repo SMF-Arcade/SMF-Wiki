@@ -649,14 +649,18 @@ class WikiParser
 				$search .= '&=_';
 			}
 
-			// Skip to next might be special tag
-			$skip = strcspn($text, $search, $i);
-
-			// Normal text line
-			if ($skip > 0)
+			// Never skip first character
+			if ($i > 0)
 			{
-				$target->throwContent(WikiParser::TEXT, substr($text, $i, $skip));
-				$i += $skip;
+				// Skip to next might be special tag
+				$skip = strcspn($text, $search, $i);
+	
+				// Normal text line
+				if ($skip > 0)
+				{
+					$target->throwContent(WikiParser::TEXT, substr($text, $i, $skip));
+					$i += $skip;
+				}
 			}
 			
 			// nowiki tag
@@ -728,10 +732,22 @@ class WikiParser
 			if ($i >= $textLen)
 				break;
 
-			$curChar = isset($text[$i]) ? $text[$i] : "\n";
+			$is_new_line = $i === 0 || $text[$i] === "\n";
+			$is_new_paragraph = $i === 0 || ($text[$i] === "\n" && $text[$i + 1] === "\n");
+
+			if ($i > 0)
+			{
+				// Advance
+				if ($is_new_paragraph)
+					$i += 2;
+				elseif ($is_new_line)
+					$i += 1;
+			}
+				
+			// WHITESPACE PARSE
 
 			// Close list if prefix doesnt match
-			if ($curChar == "\n" && $target instanceof WikiList_Parser && !in_array($text[$i + 1], WikiList_Parser::$listTypes))
+			if ($is_new_line && $target instanceof WikiList_Parser && !in_array($text[$i], WikiList_Parser::$listTypes))
 			{
 				$element = $target;
 				$target = array_pop($stack);
@@ -740,7 +756,51 @@ class WikiParser
 				$element->throwContentTo($target);
 				unset($element);
 			}
+			
+			$curChar = isset($text[$i]) ? $text[$i] : "\n";
+			
+			die($curChar);
+			
+			// CONTENT PARSE
 
+			// New Section
+			if ($is_new_paragraph && $curChar == '=')
+			{
+				$len = strcspn($text, "\n", $i);
+			
+				if ($len !== false)
+					$header = substr($text, $i, $len);
+				else
+					$header = substr($text, $i);
+
+				$c = strspn($header, '=');
+				$c2 = strspn(strrev($header), '=');
+
+				if ($c == $c2)
+				{
+					$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => $c));
+					$i += $len;
+				}
+				else
+				{
+					$target->throwContent(WikiParser::TEXT, '=');
+					$i += 1;
+				}
+				
+				continue;
+			}
+			// New paragraph (2 * new line)
+			elseif ($is_new_paragraph)
+			{
+				if ($i > 0)
+					$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
+			}
+			elseif ($is_new_line)
+			{
+				if ($i > 0)
+					$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
+			}
+			
 			// Close char?
 			if ($curChar == $closeTag)
 			{
@@ -852,11 +912,20 @@ class WikiParser
 				$i += $len;
 			}
 			// Handle lists
-			elseif ($this->parse_bbc && (($i == 0 && in_array($curChar, WikiList_Parser::$listTypes)) || ($curChar == "\n" && in_array($text[$i + 1], WikiList_Parser::$listTypes))))
+			elseif ($this->parse_bbc && $is_new_line && in_array($curChar, WikiList_Parser::$listTypes))
 			{
-				$prefixLen = strcspn($text, implode(WikiList_Parser::$listTypes), $i);
-				$prefix = substr($text, $i + 1, $prefixLen);
-
+				global $user_info;
+				
+				// Default only one character
+				$maxLen = 1;
+				
+				// If list open can start new level
+				if ($target instanceof WikiList_Parser)
+					$maxLen = strlen($target->prefix) + 1;
+				
+				$prefixLen = strspn($text, implode(WikiList_Parser::$listTypes), $i, $maxLen);
+				
+				$prefix = substr($text, $i, $prefixLen);
 				$type = substr($prefix, -1);
 
 				if ($target instanceof WikiList_Parser)
@@ -866,8 +935,88 @@ class WikiParser
 					{
 						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
 						$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>', $type);
-						$i += 2;
+						$i += $prefixLen;
 					}
+					// New level possibly
+					elseif (strlen($target->prefix) < $prefixLen)
+					{
+						$current = $target->prefix;
+						$new = $prefix;
+						
+						$x = 0;
+						while (isset($current[$x]) && isset($new[$x]) && $current[$x] == $new[$x])
+							$x++;
+							
+						// New level
+						if ($x == strlen($current))
+						{
+							// Create new parser
+							$stack[] = $target;
+							$target = new WikiList_Parser($this, $type, $prefix);
+							$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+							
+							$i += $prefixLen;
+						}
+						// Invalid, abandon the ship!
+						else
+						{
+							while ($target instanceof WikiList_Parser)
+							{
+								$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+								$element = $target;
+								$target = array_pop($stack);
+								$element->throwContentTo($target);
+								unset($element);
+							}
+							
+							$i += $prefixLen;
+							$target->throwContent(WikiParser::TEXT, $prefix);
+						}
+						
+						continue;
+						/*if ($user_info['is_admin'])
+							var_dump(array($x, $current, $new));
+							
+						// Nothing in common, close last list
+						if ($x === 0)
+						{
+							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+							$element = $target;
+							$target = array_pop($stack);
+						}*/
+					}
+					else
+					{
+						$current = $target->prefix;
+						$new = $prefix;
+						
+						$x = 0;
+						while (isset($current[$x]) && isset($new[$x]) && $current[$x] == $new[$x])
+							$x++;
+							
+						$toClose = strlen($current) - $x;
+						
+						if ($user_info['is_admin'])
+							var_dump(array($toClose, $x, $current, $new));
+							
+						while ($x > 0 && $target instanceof WikiList_Parser)
+						{
+							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+							$element = $target;
+							$target = array_pop($stack);
+							$element->throwContentTo($target);
+							unset($element);
+							
+							$x--;
+						}
+						
+						if ($target instanceof WikiList_Parser)
+							$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+						
+						$i += $prefixLen;
+						continue;
+						fatal_error('Parse Failed' . $x);
+					}/*
 					// Type of last level changed
 					elseif (strlen($target->prefix) == strlen($prefix))
 					{
@@ -891,12 +1040,13 @@ class WikiParser
 					}
 					else
 					{
+						fatal_error('WikiParser error');
 						die();
 						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
 						$i++;
 
 						continue;
-					}
+					}*/
 				}
 				// New list starts
 				elseif ($prefixLen == 1)
@@ -906,15 +1056,14 @@ class WikiParser
 
 					$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
 
-					$i += 2;
+					$i += $prefixLen;
 				}
 				// It was invalid
 				else
 				{
-					$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
+					$target->throwContent(WikiParser::TEXT, $curChar);
 					$i++;
 				}
-				
 			}
 			// Parameter delimiter
 			elseif ($this->parse_bbc && $curChar == '|')
@@ -933,48 +1082,6 @@ class WikiParser
 			{
 				$target->throwContent(WikiParser::ELEMENT_PARAM_NAME, '=');
 				$i++;
-			}
-			// New Section
-			elseif (($i == 0 || $text[$i - 1] == "\n") && $curChar == '=')
-			{
-				$len = strcspn($text, "\n", $i);
-			
-				if ($len !== false)
-					$header = substr($text, $i, $len);
-				else
-					$header = substr($text, $i);
-
-				$c = strspn($header, '=');
-				$c2 = strspn(strrev($header), '=');
-
-				if ($c == $c2)
-				{
-					$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => $c));
-					$i += $len;
-				}
-				else
-				{
-					$target->throwContent(WikiParser::TEXT, '=');
-					$i += 1;
-				}
-				
-				continue;
-			}
-			// New paragraph (2 * new line)
-			elseif ($this->parse_bbc && $this->parse_bbc && $this->blockNestingLevel == 0 && $curChar == "\n" && $text[$i + 1] == "\n")
-			{
-				$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
-
-				$i += 2;
-				
-				continue;
-			}
-			elseif ($this->parse_bbc && $curChar == "\n")
-			{
-				$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
-				$i++;
-				
-				continue;
 			}
 			// Start or end of html tag from parse bbc
 			elseif ($this->parse_bbc && $curChar == '<')

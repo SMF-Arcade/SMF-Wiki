@@ -39,6 +39,6 @@
 		<replaces filename="Sources/Wiki.php" from="$wiki_version = '0.1';" to="$wiki_version = '{VERSION}';" />
 		
 		<!-- Define outputs -->
-		<output type="zip">{NAME}_{VERSION}</output>
+		<output type="zip">{NAME}_{VERSION}_t</output>
 	</build>
 </builds>
