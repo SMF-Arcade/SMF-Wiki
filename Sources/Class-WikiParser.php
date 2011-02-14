@@ -991,9 +991,6 @@ class WikiParser
 							$x++;
 							
 						$toClose = strlen($current) - $x;
-						
-						if ($user_info['is_admin'])
-							var_dump(array($toClose, $x, $current, $new));
 							
 						while ($x > 0 && $target instanceof WikiList_Parser)
 						{
