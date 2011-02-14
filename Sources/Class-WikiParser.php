@@ -731,18 +731,16 @@ class WikiParser
 			
 			if ($i >= $textLen)
 				break;
+			
+			$whitespace = 0;
+			
+			if ($text[$i] === "\n")
+				$whitespace = strspn($text, "\n", $i);
 
-			$is_new_line = $i === 0 || $text[$i] === "\n";
-			$is_new_paragraph = $i === 0 || ($text[$i] === "\n" && $text[$i + 1] === "\n");
-
-			if ($i > 0)
-			{
-				// Advance
-				if ($is_new_paragraph)
-					$i += 2;
-				elseif ($is_new_line)
-					$i += 1;
-			}
+			$is_new_line = $i === 0 || $whitespace >= 1;
+			$is_new_paragraph = $i === 0 || $whitespace >= 2;
+			
+			$i += $whitespace;
 				
 			// WHITESPACE PARSE
 
@@ -762,7 +760,7 @@ class WikiParser
 			// CONTENT PARSE
 
 			// New Section
-			if ($is_new_paragraph && $curChar == '=')
+			if ($is_new_line && $curChar == '=')
 			{
 				$len = strcspn($text, "\n", $i);
 			
@@ -911,7 +909,7 @@ class WikiParser
 			}
 			// Handle lists
 			elseif ($this->parse_bbc && $is_new_line && in_array($curChar, WikiList_Parser::$listTypes))
-			{				
+			{
 				// Default only one character
 				$maxLen = 1;
 				
