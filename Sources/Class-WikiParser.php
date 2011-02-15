@@ -747,12 +747,15 @@ class WikiParser
 			// Close list if prefix doesnt match
 			if ($is_new_line && $target instanceof WikiList_Parser && !in_array($text[$i], WikiList_Parser::$listTypes))
 			{
-				$element = $target;
-				$target = array_pop($stack);
-
-				// Tell elment that it's really complete and let it finalize.
-				$element->throwContentTo($target);
-				unset($element);
+				// Close all lists
+				while ($target instanceof WikiList_Parser)
+				{
+					$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+					$element = $target;
+					$target = array_pop($stack);
+					$element->throwContentTo($target);
+					unset($element);
+				}
 			}
 			
 			$curChar = isset($text[$i]) ? $text[$i] : "\n";
@@ -785,12 +788,13 @@ class WikiParser
 				
 				continue;
 			}
-			// New paragraph (2 * new line)
+			// New paragraph
 			elseif ($is_new_paragraph)
 			{
 				if ($i > 0)
 					$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
 			}
+			// New line
 			elseif ($is_new_line)
 			{
 				if ($i > 0)
@@ -968,16 +972,6 @@ class WikiParser
 						}
 						
 						continue;
-						/*if ($user_info['is_admin'])
-							var_dump(array($x, $current, $new));
-							
-						// Nothing in common, close last list
-						if ($x === 0)
-						{
-							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
-							$element = $target;
-							$target = array_pop($stack);
-						}*/
 					}
 					else
 					{
@@ -990,7 +984,7 @@ class WikiParser
 							
 						$toClose = strlen($current) - $x;
 							
-						while ($x > 0 && $target instanceof WikiList_Parser)
+						while ($toClose > 0 && $target instanceof WikiList_Parser)
 						{
 							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
 							$element = $target;
@@ -998,11 +992,14 @@ class WikiParser
 							$element->throwContentTo($target);
 							unset($element);
 							
-							$x--;
+							$toClose--;
 						}
 						
 						if ($target instanceof WikiList_Parser)
+						{
+							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>');
 							$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+						}
 						
 						$i += $prefixLen;
 						continue;
