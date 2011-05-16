@@ -26,9 +26,10 @@
 		<readme parsebbc="true">readme.txt</readme>
 
 		<!-- Run Installer -->
-		<code>wiki_install/Database.php</code>
-		<code>wiki_install/Subs-Install.php</code>
-		<database>wiki_install/install_main.php</database>
+		<code>Sources/Madjoki/Install/Database.php</code>
+		<code>Sources/Wiki/Install/Database.php</code>
+		<code>Sources/Wiki/Install/Install.php</code>
+		<database>wiki_install.php</database>
 		
 		<require-dir name="Sources/Wiki" destination="$sourcedir" />
 
