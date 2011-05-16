@@ -18,7 +18,7 @@
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 	<!-- This information needs to be the same as that in the package-info.xml. -->
 	<id>Niko:SMFWiki</id>
-	<version>{version}</version>
+	<version>0.3</version>
 
 	<!-- Board directory -->
 	<file name="$boarddir/index.php">
@@ -63,21 +63,6 @@
 			<search position="before"><![CDATA[		array('ModifyCacheSettings', 'area=serversettings;sa=cache'),]]></search>
 			<add><![CDATA[
 		array('WikiAdminSettings', 'area=wiki;sa=settings'),]]></add>
-		</operation>
-	</file>
-
-	<file name="$sourcedir/ManageSettings.php">
-		<operation>
-			<search position="after"><![CDATA[	);
-
-	// Anyone who would like to add a core feature?]]></search>
-			<add><![CDATA[		// wiki = wiki
-		'wiki' => array(
-			'url' => 'action=admin;area=wiki',
-			'settings' => array(
-				'wikiEnabled' => 1,
-			),
-		),]]></add>
 		</operation>
 	</file>
 

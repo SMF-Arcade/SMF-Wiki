@@ -10,8 +10,7 @@ elseif (!defined('SMF'))
 if (!array_key_exists('db_add_column', $smcFunc))
 	db_extend('packages');
 
-include 'Database.php';
-include 'Subs-Install.php';
-include 'install_main.php';
+$prefix = !isset($_REQUEST['prefix']) ? '{db_prefix}wiki_' : $_REQUEST['prefix'];
+Wiki_Install::install($prefix);
 
 ?>

@@ -19,7 +19,7 @@
 <package-info xmlns="http://www.simplemachines.org/xml/package-info" xmlns:smf="http://www.simplemachines.org/">
 	<id>Niko:SMFWiki</id>
 	<name>SMF Wiki</name>
-	<version>{version}</version>
+	<version>0.3</version>
 	<type>modification</type>
 
 	<install for="2.0 RC5">
@@ -29,6 +29,8 @@
 		<code>wiki_install/Database.php</code>
 		<code>wiki_install/Subs-Install.php</code>
 		<database>wiki_install/install_main.php</database>
+		
+		<require-dir name="Sources/Wiki" destination="$sourcedir" />
 
 		<!-- These files goes to Sources directory -->
 		<require-file name="Sources/Class-WikiPage.php" destination="$sourcedir" />

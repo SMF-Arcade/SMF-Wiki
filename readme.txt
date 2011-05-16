@@ -1,5 +1,5 @@
 [hr]
-[center][color=red][size=16pt][b]SMF Wiki {version}[/b][/size][/color]
+[center][color=red][size=16pt][b]SMF Wiki 0.3[/b][/size][/color]
 [/center]
 [hr]
 [center][url=http://smfwiki.net]Official website[/url] | [url=http://smfwiki.net/forum/index.php?project=6]Issue Tracker[/url][/center]

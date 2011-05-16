@@ -4,7 +4,7 @@
 	<property name="repository" value="smfwiki" override="true" />
 	<property name="branch" value="trunk" override="true" />
     <property name="package" value="${phing.project.name}" override="true" />
-	<property name="version" value="0.2" override="yes" />
+	<property name="version" value="0.3" override="yes" />
 	
     <property name="builddir" value="./temp" override="true" />
 	<property name="docdir" value="./temp" override="true" />
