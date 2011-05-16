@@ -37,13 +37,7 @@
 		<mkdir dir="${build_output}" />
     </target>
 	
-    <target name="build" depends="prepare">
-		<copy todir="${builddir}/wiki_install" >
-			<fileset dir="./wiki_install/">
-				<include name="**" />
-			</fileset>
-		</copy>
-		
+    <target name="build" depends="prepare">	
 		<copy todir="${builddir}/Sources" >
 			<fileset dir="./Sources/">
 				<include name="**" />

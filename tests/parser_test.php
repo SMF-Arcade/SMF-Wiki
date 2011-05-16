@@ -1,7 +1,7 @@
 <?php
 
 $db_show_debug=true;
-require_once('./SSI.php');
+require_once('../SSI.php');
 require_once($sourcedir . '/Wiki.php');
 
 loadWiki();
