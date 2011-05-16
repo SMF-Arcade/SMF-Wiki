@@ -65,6 +65,7 @@ class Wiki_Install
 			Madjoki_Install_Helper::updateAdminFeatures(self::$adminFeature, true);
 			
 		$db = new Wiki_Install_Database($prefix);
+		$db->DoTables();
 			
 		Madjoki_Install_Helper::doSettings(self::$settings);
 		Madjoki_Install_Helper::doPermission(self::$permissions);
