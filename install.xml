@@ -18,35 +18,10 @@
 <modification xmlns="http://www.simplemachines.org/xml/modification" xmlns:smf="http://www.simplemachines.org/">
 	<!-- This information needs to be the same as that in the package-info.xml. -->
 	<id>Niko:SMFWiki</id>
-	<version>{version}</version>
-
-	<!-- Board directory -->
-	<file name="$boarddir/index.php">
-		<operation>
-			<search position="before"><![CDATA[		'im' => array('PersonalMessage.php', 'MessageMain'),]]></search>
-			<add><![CDATA[
-		'wiki' => array('Wiki.php', 'Wiki'),]]></add>
-		</operation>
-	</file>
+	<version>0.2</version>
 
 	<!-- Source files -->
 	<file name="$sourcedir/Admin.php">
-		<operation>
-			<search position="after"><![CDATA['current_theme' => array(]]></search>
-			<add><![CDATA[
-				'wiki' => array(
-					'label' => $txt['admin_wiki'],
-					'file' => 'WikiAdmin.php',
-					'function' => 'WikiAdmin',
-					'enabled' => !empty($modSettings['wikiEnabled']),
-					'subsections' => array(
-						'main' => array($txt['admin_wiki_information']),
-						'settings' => array($txt['admin_wiki_settings']),
-					),
-				),
-				]]></add>
-		</operation>
-
 		<operation>
 			<search position="before"><![CDATA[	$language_files = array(]]></search>
 			<add><![CDATA[
@@ -65,52 +40,7 @@
 		array('WikiAdminSettings', 'area=wiki;sa=settings'),]]></add>
 		</operation>
 	</file>
-
-	<file name="$sourcedir/ManageSettings.php">
-		<operation>
-			<search position="after"><![CDATA[	);
-
-	// Anyone who would like to add a core feature?]]></search>
-			<add><![CDATA[		// wiki = wiki
-		'wiki' => array(
-			'url' => 'action=admin;area=wiki',
-			'settings' => array(
-				'wikiEnabled' => 1,
-			),
-		),]]></add>
-		</operation>
-	</file>
-
-	<file name="$sourcedir/ManagePermissions.php">
-		<operation>
-			<search position="before"><![CDATA[			'profile_remote_avatar' => array(false, 'profile', 'use_avatar'),]]></search>
-
-			<add><![CDATA[
-			'wiki_access' => array(false, 'wiki', 'wiki'),
-			'wiki_edit' => array(false, 'wiki', 'wiki'),
-			'wiki_upload' => array(false, 'wiki', 'wiki'),
-			'wiki_delete' => array(false, 'wiki', 'administrate'),
-			'wiki_admin' => array(false, 'wiki', 'administrate'),]]></add>
-		</operation>
-	</file>
-
-	<file name="$sourcedir/Subs.php">
-		<operation>
-			<search position="before"><![CDATA[	$context['allow_calendar'] = allowedTo('calendar_view') && !empty($modSettings['cal_enabled']);]]></search>
-			<add><![CDATA[	$context['allow_wiki'] = !empty($modSettings['wikiEnabled']) && allowedTo('wiki_access');]]></add>
-		</operation>
-
-		<operation>
-			<search position="after"><![CDATA[			'search' => array(]]></search>
-			<add><![CDATA[			'wiki' => array(
-				'title' => $txt['wiki'],
-				'href' => $scripturl . '?action=wiki',
-				'show' => $context['allow_wiki'] && empty($modSettings['wikiStandalone']),
-				'sub_buttons' => array(),
-			),]]></add>
-		</operation>
-	</file>
-
+	
 	<file name="$sourcedir/Subs-Db-mysql.php">
 		<operation>
 			<search position="replace"><![CDATA[strpos($db_string, '{db_prefix}') !== false]]></search>

@@ -8,12 +8,13 @@
 	
     <property name="builddir" value="./temp" override="true" />
 	<property name="docdir" value="./temp" override="true" />
+	<property name="outdir" value="./dist" override="true" />
 	
 	<property file="./build.properties.default" />
 	<property file="${user.home}/build/build.properties" override="true" />
 	<property file="./build.properties" override="true" />
 	
-    <target name="svnrev">
+   <!-- <target name="svnrev">
         <echo msg="Reading SVN Last Revision..." />
 		
 		<svnlastrevision
@@ -24,7 +25,7 @@
 		<available file="${build_output}/${package}-${version}-rev${svn.lastrevision}.tar.gz" property="already_build" />
 		
 		<fail if="already_build" message="Revision ${svn.lastrevision} Already build!" />
-    </target>
+    </target>-->
 
     <target name="prepare">
 		<echo msg="Removing directory ${builddir}" />
@@ -67,7 +68,7 @@
     <target name="dist" depends="build">
         <echo msg="Creating archive..." />
 
-        <tar destfile="${build_output}/${package}-${version}.tar.gz" compression="gzip">
+        <tar destfile="${outdir}/${package}-${version}.tar.gz" compression="gzip">
             <fileset dir="${builddir}">
                 <include name="**" />
             </fileset>
@@ -76,7 +77,7 @@
 		<delete dir="${builddir}" />
     </target>
 	
-    <target name="svn" depends="svnrev,build">
+   <!-- <target name="svn" depends="svnrev,build">
         <echo msg="Creating archive..." />
 
         <tar destfile="${build_output}/${package}-${version}-rev${svn.lastrevision}.tar.gz" compression="gzip">
@@ -86,7 +87,7 @@
         </tar>
 		
 		<delete dir="${builddir}" />
-    </target>
+    </target> -->
 	
     <target name="documentation" depends="build">
 		<delete dir="${doc_output}" />
@@ -102,7 +103,7 @@
 		</phpdoc>
     </target>
 	
-	<target name="ftp-svn" depends="svn">
+	<!--<target name="ftp-svn" depends="svn">
 		<ftpdeploy 
 			host="${ftp.host}" 
 			port="${ftp.port}"
@@ -114,5 +115,5 @@
 				<include name="${package}-${version}-rev${svn.lastrevision}.tar.gz" />
 			</fileset>
 		</ftpdeploy>
-	</target>
+	</target>-->
 </project>

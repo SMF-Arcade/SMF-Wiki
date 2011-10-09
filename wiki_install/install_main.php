@@ -166,4 +166,13 @@ foreach ($defaultPages as $page)
 	createPage($page['namespace'], $page['name'], $page['body'], $page['locked'], $prefix);
 }
 
+// Hooks
+add_integration_function('integrate_pre_include', '$sourcedir/WikiHooks.php');
+add_integration_function('integrate_actions', 'Wiki_actions');
+add_integration_function('integrate_core_features', 'Wiki_core_features');
+add_integration_function('integrate_load_permissions', 'Wiki_load_permissions');
+add_integration_function('integrate_menu_buttons', 'Wiki_menu_buttons');
+add_integration_function('integrate_admin_areas', 'Wiki_admin_areas');
+
+
 ?>

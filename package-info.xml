@@ -19,10 +19,10 @@
 <package-info xmlns="http://www.simplemachines.org/xml/package-info" xmlns:smf="http://www.simplemachines.org/">
 	<id>Niko:SMFWiki</id>
 	<name>SMF Wiki</name>
-	<version>{version}</version>
+	<version>0.2</version>
 	<type>modification</type>
 
-	<install for="2.0 RC5">
+	<install for="2.0, 2.0.1">
 		<readme parsebbc="true">readme.txt</readme>
 
 		<!-- Run Installer -->
@@ -43,6 +43,7 @@
 		<require-file name="Sources/WikiPage.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiSpecialPages.php" destination="$sourcedir" />
 		<require-file name="Sources/WikiTalkPage.php" destination="$sourcedir" />
+		<require-file name="Sources/WikiHooks.php" destination="$sourcedir" />
 
 		<!-- These files goest to Theme directory -->
 		<require-file name="Themes/default/Wiki.template.php" destination="$themedir" />
@@ -83,6 +84,7 @@
 		<remove-file name="$sourcedir/WikiParser.php" />
 		<remove-file name="$sourcedir/WikiSpecialPages.php" />
 		<remove-file name="$sourcedir/WikiTalkPage.php" />
+		<remove-file name="$sourcedir/WikiHooks.php" />
 		
 		<!-- Templates -->
 		<remove-file name="$themedir/Wiki.template.php" />
@@ -95,5 +97,7 @@
 
 		<!-- Languages -->
 		<remove-file name="$languagedir/Wiki.english.php" />
+		
+		<code>wiki_install/remove_hooks.php</code>
 	</uninstall>
 </package-info>
