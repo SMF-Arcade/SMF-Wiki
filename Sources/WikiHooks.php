@@ -90,7 +90,7 @@ function Wiki_admin_areas(&$admin_areas)
 {
 	global $context, $modSettings, $scripturl, $txt;
 	
-	wiki_array_insert($admin_areas, 'members',
+	wiki_array_insert($admin_areas['config']['areas'], 'modsettings',
 		array(
 			'wiki' => array(
 				'label' => $txt['admin_wiki'],
