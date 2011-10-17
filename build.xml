@@ -11,14 +11,9 @@
 	<property name="docdir" value="./temp" />
 	
     <target name="prepare">
-		<echo msg="Removing directory ${builddir}" />
 		<delete dir="${builddir}" />
-        
-		<echo msg="Making directory ${builddir}" />
         <mkdir dir="${builddir}" />
-		
-		<echo msg="Making directory ${build_output}" />
-		<mkdir dir="${build_output}" />
+		<mkdir dir="${outdir}" />
     </target>
 	
     <target name="build" depends="prepare">	

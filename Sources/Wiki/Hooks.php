@@ -92,7 +92,7 @@ class Wiki_Hooks
 	{
 		global $modSettings;
 		
-		if (empty($modSettings['projectEnabled']))
+		if (empty($modSettings['wikiEnabled']))
 			return;
 		
 		self::registerAutoload();
@@ -107,11 +107,10 @@ class Wiki_Hooks
 	{
 		global $modSettings;
 		
-		if (empty($modSettings['projectEnabled']))
+		if (empty($modSettings['wikiEnabled']))
 			return;
 		
-		$actionArray['projects'] = array('ProjectTools/Main.php', array('ProjectTools_Main', 'Main'));
-		$actionArray['projectadmin'] = array('ProjectTools/UserAdmin/UserAdmin.php', array('ProjectTools_UserAdmin', 'Main'));
+		$actionArray['wiki'] = array('Wiki.php', 'Wiki');
 	}
 	
 	/**
@@ -121,121 +120,60 @@ class Wiki_Hooks
 	{
 		global $modSettings, $context, $txt, $scripturl;
 		
-		$context['allow_project'] = !empty($modSettings['projectEnabled']) && allowedTo('project_access');
+		$context['allow_wiki'] = !empty($modSettings['wikiEnabled']) && allowedTo('wiki_access');
 		
-		if (empty($modSettings['projectEnabled']))
+		if (empty($modSettings['wikiEnabled']))
 			return;
-		
-		if ($context['current_action'] == 'projectadmin')
-			$context['current_action'] = 'projects';
 		
 		self::array_insert($menu_buttons, 'search', array(
-			'projects' => array(
-				'title' => $txt['projects'],
-				'href' => ProjectTools::get_url(),
-				'show' => $context['allow_project'],
-				'active_button' => false,
-				'sub_buttons' => array(
-					'admin' => array(
-						'title' => $txt['projects_admin'],
-						'href' => ProjectTools::get_admin_url(ProjectTools_Project::getCurrent() ? array('project' => ProjectTools_Project::getCurrent()->id) : array()),
-						'show' => allowedTo('project_admin'), // TODO: Allow is users is project admin
-					),
-				),
-			)), 'before'
+			'wiki' => array(
+				'title' => $txt['wiki'],
+				'href' => $scripturl . '?action=wiki',
+				'show' => $context['allow_wiki'] && empty($modSettings['wikiStandalone']),
+				'sub_buttons' => array(),
+			), 'after'
 		);
-	}
-	
-	/**
-	 *
-	 */
-	static public function load_theme()
-	{
-		global $modSettings, $context, $txt;
-		
-		if (empty($modSettings['projectEnabled']))
-			return;
-		
-		loadLanguage('Project');
-	
-		// Load status texts
-		foreach ($context['issue_status'] as $id => $status)
-		{
-			if (isset($txt['issue_status_' . $status['name']]))
-				$status['text'] = $txt['issue_status_' . $status['name']];
-	
-			$context['issue_status'][$id] = $status;
-		}
-	
-		// Apply translated names to trackers
-		foreach ($context['issue_trackers'] as $id => $tracker)
-		{
-			if (!isset($txt['issue_type_' . $tracker['short']]) || !isset($txt['issue_type_plural_' . $tracker['short']]))
-				continue;
-			
-			$tracker['name'] = $txt['issue_type_' . $tracker['short']];
-			$tracker['plural'] = $txt['issue_type_plural_' . $tracker['short']];
-			
-			$context['issue_trackers'][$id] = $tracker;
-		}
-		
-		$context['issues_per_page'] = !empty($modSettings['issuesPerPage']) ? $modSettings['issuesPerPage'] : 25;
-		$context['comments_per_page'] = !empty($modSettings['commentsPerPage']) ? $modSettings['commentsPerPage'] : 20;	
-
-		loadIssue();
 	}
 	
 	/**
 	 * SMF Hook integrate_admin_areas
 	 *
-	 * Adds Project Tools group in admin.
+	 * Adds Wiki to admin.
 	 */
 	public static function admin_areas(&$admin_areas)
 	{
 		global $txt, $modSettings;
 		
-		if (empty($modSettings['projectEnabled']))
+		if (empty($modSettings['wikiEnabled']))
 			return;
 		
-		/*self::array_insert($admin_areas, 'forum',
+		self::array_insert($admin_areas['config']['areas'], 'current_theme',
 			array(
-				'project' => array(
-					'title' => $txt['project_tools'],
-					'permission' => array('project_admin'),
-					'areas' => array(
-						'projectsadmin' => array(
-							'label' => $txt['project_general'],
-							'function' => create_function('', 'ProjectTools_Admin::Main();'),
-							'enabled' => !empty($modSettings['projectEnabled']),
-							'permission' => array('project_admin'),
-							'subsections' => array(
-								'main' => array($txt['project_general_main']),
-								'settings' => array($txt['project_general_settings']),
-								'maintenance' => array($txt['project_general_maintenance']),
-								'extensions' => array($txt['project_general_extensions'])
-							),
-						),
-						'manageprojects' => array(
-							'label' => $txt['manage_projects'],
-							'function' => create_function('', 'ProjectTools_Admin_Projects::Main();'),
-							'enabled' => !empty($modSettings['projectEnabled']),
-							'permission' => array('project_admin'),
-							'subsections' => array(
-								'list' => array($txt['modify_projects']),
-								'new' => array($txt['new_project']),
-							),
-						),
-						'projectpermissions' => array(
-							'label' => $txt['manage_project_permissions'],
-							'function' => create_function('', 'ProjectTools_Admin_Permissions::Main();'),
-							'enabled' => !empty($modSettings['projectEnabled']),
-							'permission' => array('project_admin'),
-							'subsections' => array(),
-						),
+				'wiki' => array(
+					'label' => $txt['admin_wiki'],
+					'file' => 'WikiAdmin.php',
+					'function' => 'WikiAdmin',
+					'enabled' => !empty($modSettings['wikiEnabled']),
+					'subsections' => array(
+						'main' => array($txt['admin_wiki_information']),
+						'settings' => array($txt['admin_wiki_settings']),
 					),
 				),
 			)
 		);*/
+	}
+	
+	public static function load_permissions(&$permissionGroups, &$permissionList, &$leftPermissionGroups, &$hiddenPermissions, &$relabelPermissions)
+	{
+		global $context;
+		
+		$permissionList['membergroup'] += array(
+			'wiki_access' => array(false, 'wiki', 'wiki'),
+			'wiki_edit' => array(false, 'wiki', 'wiki'),
+			'wiki_upload' => array(false, 'wiki', 'wiki'),
+			'wiki_delete' => array(false, 'wiki', 'administrate'),
+			'wiki_admin' => array(false, 'wiki', 'administrate'),
+		);
 	}
 	
 	/**

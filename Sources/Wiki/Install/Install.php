@@ -44,12 +44,11 @@ class Wiki_Install
 	static protected $hooks = array(
 		'integrate_pre_include' => '$sourcedir/Wiki/Hooks.php',
 		'integrate_pre_load' => 'Wiki_Hooks::pre_load',
-		'integrate_actions' => 'ProjectTools_Hooks::actions',
-		'integrate_admin_areas' => 'ProjectTools_Hooks::admin_areas',
-		'integrate_core_features' => 'ProjectTools_Hooks::core_features',
-		'integrate_load_theme' => 'ProjectTools_Hooks::load_theme',
+		'integrate_actions' => 'Wiki_Hooks::actions',
+		'integrate_admin_areas' => 'Wiki_Hooks::admin_areas',
+		'integrate_core_features' => 'Wiki_Hooks::core_features',
 		'integrate_profile_areas' => 'ProjectTools_Hooks::profile_areas',
-		'integrate_menu_buttons' => 'ProjectTools_Hooks::menu_buttons',
+		'integrate_menu_buttons' => 'Wiki_Hooks::menu_buttons',
 	);
 	
 	/**
