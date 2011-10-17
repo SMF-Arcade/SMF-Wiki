@@ -10,11 +10,28 @@
 	<property name="outdir" value="./dist" />
 	<property name="docdir" value="./temp" />
 	
+	<resolvepath propertyName="libmadjoki.path" file="./Sources/Madjoki/" />
+	
     <target name="prepare">
 		<delete dir="${builddir}" />
         <mkdir dir="${builddir}" />
 		<mkdir dir="${outdir}" />
     </target>
+
+	<target name="libmadjoki">
+		<phing phingfile="build.xml" dir="${libmadjoki.path}" target="dist">
+			<property name="outdir" value="${outdir}" />
+		</phing>
+	</target>
+	
+	<target name="libmadjokigit">
+		<gitlog repository="${libmadjoki.path}" format="format:%h" outputProperty="libmadjoki.git.hash" maxCount="1" />
+		
+		<phing phingfile="build.xml" dir="${libmadjoki.path}" target="git">
+			<property name="outdir" value="${outdir}" />
+			<property name="githash" value="${libmadjoki.git.hash}" />
+		</phing>
+	</target>
 	
     <target name="build" depends="prepare">	
 		<copy todir="${builddir}/Sources" >
@@ -37,7 +54,7 @@
 		</copy>	
     </target>
 
-    <target name="dist" depends="build">
+    <target name="dist" depends="libmadjoki,build">
         <echo msg="Creating archive..." />
 
         <tar destfile="${outdir}/${package}-${version}.tar.gz" compression="gzip">
@@ -49,7 +66,7 @@
 		<delete dir="${builddir}" />
     </target>
 	
-    <target name="git" depends="build">
+    <target name="git" depends="libmadjokigit,build">
         <echo msg="Creating archive..." />
 
         <tar destfile="${outdir}/${package}-${version}-${githash}.tar.gz" compression="gzip">
