@@ -378,7 +378,7 @@ function Wiki($standalone = false, $prefix = null)
 
 		foreach ($grp['items'] as $subid => $item)
 		{
-			if ($item['page'] == $context['current_page_name'])
+			if (!empty($item['page']) && $item['page'] == $context['current_page_name'])
 				$context['wiki_navigation'][$id]['items'][$subid]['selected'] = true;
 		}
 	}

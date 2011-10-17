@@ -131,7 +131,7 @@ class Wiki_Hooks
 				'href' => $scripturl . '?action=wiki',
 				'show' => $context['allow_wiki'] && empty($modSettings['wikiStandalone']),
 				'sub_buttons' => array(),
-			), 'after'
+			)), 'after'
 		);
 	}
 	
@@ -160,7 +160,7 @@ class Wiki_Hooks
 					),
 				),
 			)
-		);*/
+		);
 	}
 	
 	public static function load_permissions(&$permissionGroups, &$permissionList, &$leftPermissionGroups, &$hiddenPermissions, &$relabelPermissions)

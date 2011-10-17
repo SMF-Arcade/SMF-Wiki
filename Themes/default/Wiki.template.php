@@ -1,6 +1,34 @@
 <?php
 // Version: 0.2; Wiki
 
+function wiki_render(array $content)
+{
+	switch ($content['type'])
+	{
+		case WikiParser::NEW_PARAGRAPH:
+		case WikiParser::END_PARAGRAPH:
+		case WikiParser::NEW_LINE:
+		case WikiParser::TEXT:
+		case WikiParser::NO_PARSE:
+		case WikiParser::LIST_OPEN:
+		case WikiParser::LIST_CLOSE:
+		case WikiParser::LIST_ITEM_OPEN:
+		case WikiParser::LIST_ITEM_CLOSE:
+		case WikiParser::ELEMENT_SEMI_COLON:
+			echo $content['content'];
+			break;
+		case WikiParser::ELEMENT:
+			echo $content['content']->getHtml();
+			break;
+		case WikiParser::WARNING:
+			echo '<span class="wiki_warning" title="' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '">' . $content['unparsed'] . '</span>';
+			break;
+		default:
+			fatal_error('unknown type ' . $content['type'] . ' used by parsed... check that all files are from same version');
+			break;
+	}
+}
+
 function template_wiki_above()
 {
 	global $context, $modSettings, $txt, $user_info;
@@ -16,10 +44,15 @@ function template_wiki_above()
 		<div class="cat_bar">
 			<h3 class="catbg', !empty($group['selected']) ? ' selected' : '', '">';
 
-		if (!empty($group['url']))
+		if (!empty($group['wiki_title']))
+		{
+			foreach ($group['wiki_title']['wiki'] as $item)
+				wiki_render($item);
+		}
+		elseif (!empty($group['title']) && !empty($group['url']))
 			echo '
 				<a href="', $group['url'], '">', $group['title'], '</a>';
-		else
+		elseif (!empty($group['title']))
 			echo '
 				', $group['title'];
 
@@ -44,12 +77,24 @@ function template_wiki_above()
 
 			foreach ($group['items'] as $item)
 			{
-				if (!empty($item['url']))
-					echo '
-				<li', $item['selected'] ? ' class="selected"' : '', '><a href="', $item['url'], '">', $item['title'], '</a></li>';
+				if (!empty($item['wiki']))
+				{
+					echo '<li>';
+					
+					foreach ($item['wiki'] as $item)
+						wiki_render($item);
+					
+					echo '</li>';
+				}
 				else
-					echo '
-				<li>', $item['title'], '</li>';
+				{
+					if (!empty($item['url']))
+						echo '
+					<li', $item['selected'] ? ' class="selected"' : '', '><a href="', $item['url'], '">', $item['title'], '</a></li>';
+					else
+						echo '
+					<li>', $item['title'], '</li>';
+				}
 			}
 
 			echo '

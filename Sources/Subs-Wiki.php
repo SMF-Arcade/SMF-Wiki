@@ -454,67 +454,62 @@ function loadWikiMenu()
 	$cacheInfo = wiki_get_page_content($page_info, $context['namespace_internal'], $page_info->current_revision);
 	$wikiPage = $cacheInfo['data'];
 	unset($cacheInfo);
+	
+	$menuStack = array();
+	$current_menu = array();
+	$current_item = array();
+	$level = 0;
+	$in_item = false;
 
-	$menu = preg_split('~<br( /)?' . '>~', $wikiPage->parser->getRawContent());
-
-	$current_menu = false;
-
-	foreach ($menu as $item)
+	foreach ($wikiPage->parser->sections[0]['content'] as $item)
 	{
-		$item = trim($item);
-
-		if (substr($item, 0, 2) == '**' && substr($item, 2, 1) != '*')
-		{
-			$subItem = true;
-			$item = trim(substr($item, 2));
-		}
-		elseif (substr($item, 0, 1) == '*' && substr($item, 1, 1) != '*')
-		{
-			$subItem = false;
-			$item = trim(substr($item, 1));
-		}
-		else
+		if ($level == 0 && $item['type'] != WikiParser::LIST_OPEN)
 			continue;
-
-		if (strpos($item, '|') !== false)
+		
+		elseif ($item['type'] == WikiParser::LIST_OPEN)
 		{
-			list ($page, $title) = explode('|', $item, 2);
-
-			if (substr($page, 4) != 'http')
-				$url = wiki_get_url($page);
+			$level++;
+			
+			if (!empty($current_item))
+				$current_menu['wiki_title'] = $current_item;
+			if (!empty($current_menu))
+				$menuStack[] = $current_menu;
+			
+			$current_menu = array();
+		}
+		elseif ($item['type'] == WikiParser::LIST_CLOSE)
+		{
+			$level--;
+			
+			if (!empty($menuStack))
+			{
+				
+				$current_menu1 = $current_menu;
+				$current_menu = array_pop($menuStack);
+				$current_menu['items'] = $current_menu1;
+				unset($current_menu1);
+			}
 			else
-				$url = $page;
+			{
+				$return[] = $current_menu;
+				$current_menu = array();
+			}
 		}
-		else
+		elseif ($item['type'] == WikiParser::LIST_ITEM_OPEN)
 		{
-			$url = '';
-			$title = $item;
-			$page = $item;
+			$current_item = array();
+			$in_item = true;
 		}
-
-		if (substr($title, 0, 2) == '__' || substr($title, -2, 2) == '__')
-			$title = isset($txt['wiki_' . substr($title, 2, -2)]) ? $txt['wiki_' . substr($title, 2, -2)] : $title;
-
-		if (!$subItem)
+		elseif ($in_item && $item['type'] == WikiParser::LIST_ITEM_CLOSE)
 		{
-			$return[] = array(
-				'page' => $page,
-				'url' => $url,
-				'title' => $title,
-				'items' => array(),
-				'selected' => false,
-			);
-
-			$current_menu = &$return[count($return) - 1];
+			if (!empty($current_item))
+				$current_menu[] = $current_item;
+			$current_item = array();
+			$in_item = false;
 		}
-		else
+		elseif ($in_item)
 		{
-			$current_menu['items'][] = array(
-				'page' => $page,
-				'url' => $url,
-				'title' => $title,
-				'selected' => false,
-			);
+			$current_item['wiki'][] = $item;
 		}
 	}
 

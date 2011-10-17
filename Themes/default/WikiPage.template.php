@@ -155,30 +155,7 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 
 		foreach ($section['content'] as $content)
 		{
-			switch ($content['type'])
-			{
-				case WikiParser::NEW_PARAGRAPH:
-				case WikiParser::END_PARAGRAPH:
-				case WikiParser::NEW_LINE:
-				case WikiParser::TEXT:
-				case WikiParser::NO_PARSE:
-				case WikiParser::LIST_OPEN:
-				case WikiParser::LIST_CLOSE:
-				case WikiParser::LIST_ITEM_OPEN:
-				case WikiParser::LIST_ITEM_CLOSE:
-				case WikiParser::ELEMENT_SEMI_COLON:
-					echo $content['content'];
-					break;
-				case WikiParser::ELEMENT:
-					echo $content['content']->getHtml();
-					break;
-				case WikiParser::WARNING:
-					echo '<span class="wiki_warning" title="' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '">' . $content['unparsed'] . '</span>';
-					break;
-				default:
-					fatal_error('unknown type ' . $content['type'] . ' used by parsed... check that all files are from same version');
-					break;
-			}
+			wiki_render($content);
 		}
 		
 		if ($section['level'] == 1 && empty($options['no_toc']) && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->parser->tableOfContents))

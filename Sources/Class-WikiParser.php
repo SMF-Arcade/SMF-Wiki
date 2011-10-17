@@ -10,7 +10,10 @@
 
 /**
  * Class that parsers wiki page
- * Basic Usage: $parser = new WikiParser($page); $parser->parse($my_content);
+ * 
+ * Basic Usage:
+ * 	$parser = new WikiParser($page);
+ * 	$parser->parse($my_content);
  */
 class WikiParser
 {
@@ -430,7 +433,7 @@ class WikiParser
 
 		if ($type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN)
 		{
-			if ($this->blockNestingLevel == 0 && $this->paragraphOpen == false)
+			if ($this->blockNestingLevel == 0 && $this->paragraphOpen)
 				$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
 
 			$this->blockNestingLevel++;
@@ -593,6 +596,9 @@ class WikiParser
 	
 	/**
 	 * Main parser function
+	 *
+	 * @todo Parse BBC here
+	 * @todo Refactor so this doesn't contain parser specific code
 	 */
 	private function __parse($target, $text, $is_template = false)
 	{
@@ -745,7 +751,7 @@ class WikiParser
 			// WHITESPACE PARSE
 
 			// Close list if prefix doesnt match
-			if ($is_new_line && $target instanceof WikiList_Parser && !in_array($text[$i], WikiList_Parser::$listTypes))
+			if ($is_new_line && $target instanceof WikiList_Parser && (!in_array($text[$i], WikiList_Parser::$listTypes) || $is_new_paragraph))
 			{
 				// Close all lists
 				while ($target instanceof WikiList_Parser)
@@ -791,11 +797,14 @@ class WikiParser
 			// New paragraph
 			elseif ($is_new_paragraph)
 			{
-				if ($i > 0)
+				if ($this->paragraphOpen)
+				{
 					$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
+					$this->paragraphOpen = false;
+				}
 			}
 			// New line
-			elseif ($is_new_line)
+			elseif ($is_new_line && !$target instanceof WikiList_Parser)
 			{
 				if ($i > 0)
 					$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
@@ -1185,6 +1194,9 @@ class WikiParser
 		// Empty stack
 		while (!empty($stack))
 		{
+			if ($target instanceof WikiList_Parser)
+				$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+			
 			$element = $target;
 			$target = array_pop($stack);
 			
