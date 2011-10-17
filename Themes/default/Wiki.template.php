@@ -59,7 +59,7 @@ function template_wiki_above()
 		if ($is_first)
 		{
 			echo '
-			<span class="floatright"><a href="', wiki_get_url('SMFWiki:Sidebar'), '">', $txt['edit'], '</span>';
+			<span class="floatright"><a href="', wiki_get_url('SMFWiki:Sidebar'), '">', $txt['edit'], '</a></span>';
 
 			$is_first = false;
 		}
@@ -70,6 +70,7 @@ function template_wiki_above()
 		
 		if (!empty($group['items']))
 		{
+		
 			echo '
 		<div class="windowbg2">
 			<span class="topslice"><span></span></span>
@@ -86,7 +87,7 @@ function template_wiki_above()
 					
 					echo '</li>';
 				}
-				else
+				elseif (!empty($item['title']))
 				{
 					if (!empty($item['url']))
 						echo '

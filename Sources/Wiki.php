@@ -3,7 +3,7 @@
  * Main functions
  *
  * @package core
- * @version 0.2
+ * @version 0.3
  * @license http://download.smfwiki.net/license.php SMF Wiki license
  * @since 0.1
  */
@@ -28,7 +28,7 @@ function loadWiki($mode = '', $prefix = null)
 	loadClassFile('WikiExt-Base.php');
 	
 	// Wiki Version
-	$wiki_version = '0.2';
+	$wiki_version = '0.3';
 
 	// Load namespaces
 	loadNamespace();
@@ -75,28 +75,6 @@ function loadWiki($mode = '', $prefix = null)
 		WikiExtension::registerSpecialPage('RecentChanges', $txt['wiki_recent_changes'], 'WikiHistory.php', 'WikiRecentChanges');
 		WikiExtension::registerSpecialPage('SpecialPages', $txt['wiki_special_pages'], 'WikiSpecialPages.php', 'WikiListOfSpecialPages');
 		WikiExtension::registerSpecialPage('Upload', $txt['wiki_upload_file'], 'WikiFiles.php', 'WikiFileUpload');
-
-		// Load Navigation
-		$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
-
-		// Add toolbox to navigation menu
-		$context['wiki_navigation'][] = array(
-			'title' => $txt['wiki_toolbox'],
-			'items' => array(
-				array(
-					'title' => $txt['wiki_recent_changes'],
-					'page' => wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
-					'url' => wiki_get_url(wiki_get_url_name('RecentChanges', $context['namespace_special']['id'])),
-					'selected' => false,
-				),
-				array(
-					'title' => $txt['wiki_upload_file'],
-					'page' => wiki_get_url_name('Upload', $context['namespace_special']['id']),
-					'url' => wiki_get_url(wiki_get_url_name('Upload', $context['namespace_special']['id'])),
-					'selected' => false,
-				)
-			),
-		);
 	}
 	// Admin Mode
 	elseif ($mode == 'admin')
@@ -214,6 +192,28 @@ function Wiki($standalone = false, $prefix = null)
 
 	// Load page info
 	loadWikiPage();
+	
+	// Load Navigation
+	$context['wiki_navigation'] = cache_quick_get('wiki-navigation', 'Subs-Wiki.php', 'loadWikiMenu', array());
+
+	// Add toolbox to navigation menu
+	$context['wiki_navigation'][] = array(
+		'title' => $txt['wiki_toolbox'],
+		'items' => array(
+			array(
+				'title' => $txt['wiki_recent_changes'],
+				'page' => wiki_get_url_name('RecentChanges', $context['namespace_special']['id']),
+				'url' => wiki_get_url(wiki_get_url_name('RecentChanges', $context['namespace_special']['id'])),
+				'selected' => false,
+			),
+			array(
+				'title' => $txt['wiki_upload_file'],
+				'page' => wiki_get_url_name('Upload', $context['namespace_special']['id']),
+				'url' => wiki_get_url(wiki_get_url_name('Upload', $context['namespace_special']['id'])),
+				'selected' => false,
+			)
+		),
+	);
 
 	// Requested subaction?
 	$subaction = isset($_REQUEST['sa']) && isset($subActions[$_REQUEST['sa']]) ? $_REQUEST['sa'] : 'view';

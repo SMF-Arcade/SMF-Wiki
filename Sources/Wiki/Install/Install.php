@@ -165,7 +165,7 @@ class Wiki_Install
 			array(
 				'namespace' => 'SMFWiki',
 				'name' => 'Sidebar',
-				'body' => '* __navigation__' . "\n" . '** Main_Page|__main_page__',
+				'body' => '* __navigation__' . "\n" . '** [[Main_Page|__main_page__]]',
 				'locked' => true,
 			),
 		);

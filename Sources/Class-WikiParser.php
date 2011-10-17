@@ -1830,6 +1830,8 @@ class WikiLink extends WikiElement
 
 			if (!$this->link_info->exists)
 				$class[] = 'redlink';
+			if ($this->link_info->url_name == $context['current_page_name'])
+				$class[] = 'current_page';
 
 			$this->html .= '<a href="' . wiki_get_url($this->link) . '"' . (!empty($class) ? ' class="'. implode(' ', $class) . '"' : '') . '>' . $this->linkText . '</a>';
 		}
