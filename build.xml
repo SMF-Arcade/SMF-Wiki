@@ -6,9 +6,9 @@
     <property name="package" value="${phing.project.name}" override="true" />
 	<property name="version" value="0.3" override="yes" />
 	
-	<property name="builddir" value="./temp" />
-	<property name="outdir" value="./dist" />
-	<property name="docdir" value="./temp" />
+	<property name="builddir" value="./.temp" />
+	<property name="outdir" value="./.dist" />
+	<property name="docdir" value="./.temp" />
 	
 	<resolvepath propertyName="libmadjoki.path" file="./Sources/Madjoki/" />
 	
@@ -34,22 +34,13 @@
 	</target>
 	
     <target name="build" depends="prepare">	
-		<copy todir="${builddir}/Sources" >
-			<fileset dir="./Sources/">
-				<include name="**" />
-			</fileset>
-		</copy>
-
-		<copy todir="${builddir}/Themes" >
-			<fileset dir="./Themes/">
-				<include name="**" />
-			</fileset>
-		</copy>
-		
 		<copy todir="${builddir}" >
 			<fileset dir="./">
-				<include name="*" />
+				<include name="**" />
 				<exclude name="build.*" />
+				<exclude name=".*" />
+				<exclude name=".*/**" />
+				<exclude name="Sources/Madjoki/**" />
 			</fileset>
 		</copy>	
     </target>

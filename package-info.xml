@@ -26,7 +26,6 @@
 		<readme parsebbc="true">readme.txt</readme>
 
 		<!-- Run Installer -->
-		<code>Sources/Madjoki/Install/Database.php</code>
 		<code>Sources/Wiki/Install/Database.php</code>
 		<code>Sources/Wiki/Install/Install.php</code>
 		<database>wiki_install.php</database>
