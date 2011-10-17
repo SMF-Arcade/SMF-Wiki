@@ -47,7 +47,6 @@ class Wiki_Install
 		'integrate_actions' => 'Wiki_Hooks::actions',
 		'integrate_admin_areas' => 'Wiki_Hooks::admin_areas',
 		'integrate_core_features' => 'Wiki_Hooks::core_features',
-		'integrate_profile_areas' => 'ProjectTools_Hooks::profile_areas',
 		'integrate_menu_buttons' => 'Wiki_Hooks::menu_buttons',
 	);
 	
