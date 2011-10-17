@@ -166,6 +166,7 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 				case WikiParser::LIST_CLOSE:
 				case WikiParser::LIST_ITEM_OPEN:
 				case WikiParser::LIST_ITEM_CLOSE:
+				case WikiParser::ELEMENT_SEMI_COLON:
 					echo $content['content'];
 					break;
 				case WikiParser::ELEMENT:
