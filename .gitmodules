@@ -1,0 +1,3 @@
+[submodule "Sources/Madjoki"]
+	path = Sources/Madjoki
+	url = git@github.com:nikop/libmadjoki.git
