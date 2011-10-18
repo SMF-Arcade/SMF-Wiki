@@ -212,12 +212,10 @@ class WikiParser
 		if (count($content) != 1 || $content[0]['type'] != WikiParser::ELEMENT)
 		{
 			$result = WikiParser::toText($content);
-			echo '/bool';
 			return !empty($result);
 		}
 		else
 		{
-			echo '/bool';
 			return $content[0]['content']->toBoolean();
 		}
 		
