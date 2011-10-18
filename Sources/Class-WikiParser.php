@@ -142,7 +142,8 @@ class WikiParser
 					$return[] = $c;
 					break;
 				case WikiParser::WARNING:
-					$return[] = $c['unparsed'];
+					$return[] = $c;
+					break;
 				default:
 					die('__boolean_trim: Unknown part type ' . $c['type']);
 					break;
@@ -177,6 +178,7 @@ class WikiParser
 					break;
 				case WikiParser::WARNING:
 					$return .= $c['unparsed'];
+					break;
 				default:
 					die('toText: Unknown part type ' . $c['type']);
 					break;
@@ -216,6 +218,7 @@ class WikiParser
 		{
 			return $content[0]['content']->toBoolean();
 		}
+		
 	}
 
 	/**
@@ -1393,12 +1396,16 @@ class WikiElement_Parser
 						{
 							$type = WikiElement_Parser::FUNC;
 							$param++;
+							$param_name = $param;
+							$has_name = false;
 							$found_semicolon = true;
 						}
 						elseif (WikiExtension::variableExists($page))
 						{
 							$type = WikiElement_Parser::VARIABLE;
 							$param++;
+							$param_name = $param;
+							$has_name = false;
 							$found_semicolon = true;
 						}
 						else
@@ -1420,7 +1427,7 @@ class WikiElement_Parser
 		// Template might not actually be actual template but function or variable
 		if ($type == WikiElement_Parser::TEMPLATE)
 		{
-			 $page = WikiParser::toText($params[0]);
+			$page = WikiParser::toText($params[0]);
 
 			 if ($page[0] == '#')
 				$type = WikiElement_Parser::FUNC;
@@ -1468,7 +1475,7 @@ class WikiElement_Parser
 			if (isset($value['callback']))
 				call_user_func($value['callback'], $this->wikiparser, $params);
 		   else
-				$target->throwContent(WikiParser::WARNING, 'function_not_found', $this->getUnparsed(), array($function));
+				$target->throwContent(WikiParser::WARNING, 'unknown_function', $this->getUnparsed(), array($function));
 		}
 		// Template
 		elseif ($type == WikiElement_Parser::TEMPLATE)
