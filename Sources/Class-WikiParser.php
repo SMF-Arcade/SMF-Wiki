@@ -209,11 +209,13 @@ class WikiParser
 	{
 		$content = WikiParser::__boolean_trim($content);
 		
-		if (count($content) != 1 || $content[0]['type'] != WikiParser::ELEMENT)
+		if (count($content) != 1 || ($content[0]['type'] != WikiParser::ELEMENT && $content[0]['type'] != WikiParser::WARNING))
 		{
 			$result = WikiParser::toText($content);
 			return !empty($result);
 		}
+		elseif ($content[0]['type'] == WikiParser::WARNING)
+			return false;
 		else
 		{
 			return $content[0]['content']->toBoolean();
@@ -1064,15 +1066,15 @@ class WikiParser
 					if (WikiParser::$blockTags[$tag] === false)
 					{
 						$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_OPEN);
-						$target->throwContent(WikiParser::NO_PARSE, substr($text, $i, $tagLen + 1));
+						$target->throwContent(WikiParser::NO_PARSE, substr($text, $i, $tagnameLen + 1));
+						$i += $tagnameLen + 1;
 					}
 					else
 					{
 						$target->throwContent(WikiParser::NO_PARSE, substr($text, $i, $tagLen + 1));
 						$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_CLOSE);
+						$i += $tagLen + 1;
 					}
-					
-					$i += $tagLen + 1;
 					
 					continue;
 				}
