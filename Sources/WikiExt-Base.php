@@ -101,9 +101,11 @@ class WikiExtension
 	 */
 	static function isMagicword($magicword)
 	{
+		global $txt;
+		
 		$magicword = strtolower($magicword);
 
-		return isset(WikiExtension::$magicwords[$magicword]);
+		return isset(WikiExtension::$magicwords[$magicword]) || isset($txt['wiki_' . $magicword]);
 	}
 
 	/**
@@ -113,10 +115,12 @@ class WikiExtension
 	 */
 	static function getMagicword($magicword)
 	{
+		global $txt;
+		
 		$magicword = strtolower($magicword);
 
 		if (!isset(WikiExtension::$magicwords[$magicword]))
-			return false;
+			return isset($txt['wiki_' . $magicword]) ? array('txt' => $txt['wiki_' . $magicword]) : false;
 
 		return WikiExtension::$magicwords[$magicword];
 	}

@@ -628,7 +628,7 @@ class WikiParser
 			
 		$text = str_replace(array("\r\n", "\r", '<br />', '<br>', '<br/>'), "\n", $text);
 
-		$searchBase = "<[{#\n";
+		$searchBase = "<[{#\n_";
 
 		$textLen = strlen($text);
 
@@ -652,7 +652,7 @@ class WikiParser
 			}
 			else
 			{
-				$search .= '&=_';
+				$search .= '&=';
 			}
 
 			// Never skip first character
@@ -1164,14 +1164,17 @@ class WikiParser
 			elseif ($this->parse_bbc && $curChar == '_' && $text[$i + 1] == '_')
 			{
 				// Find next space or new line
-				$bLen = strcspn($text, " \n", $i + 2);
+				$bLen = strcspn($text, " \n" . ($target instanceof WikiElement_Parser ? $target->rule['close'] : ''), $i + 2);
 				$bSwitch = substr($text, $i + 2, $bLen);
 				
 				if (substr($bSwitch, -2) == '__' && WikiExtension::isMagicword(substr($bSwitch, 0, -2)))
 				{
 					$magicWord = WikiExtension::getMagicword(substr($bSwitch, 0, -2));
 
-					call_user_func($magicWord['callback'], $this);
+					if (isset($magicWord['callback']))
+						call_user_func($magicWord['callback'], $this);
+					else
+						$target->throwContent(WikiParser::TEXT, $magicWord['txt']);
 
 					$i += $bLen + 2;
 					
