@@ -1,5 +1,5 @@
 <?php
-// Version 0.1; Wiki
+// Version 0.3; Wiki
 
 $txt['wiki'] = 'Wiki';
 $txt['wiki_view'] = 'view';
@@ -62,6 +62,10 @@ $txt['file_description'] = 'Description';
 // Recent Changes
 $txt['wiki_recent_changes'] = 'Recent Changes';
 $txt['wiki_recent_changes_title'] = '%s - Recent Changes';
+$txt['wiki_comment'] = 'Comment';
+$txt['wiki_page'] = 'Page';
+$txt['wiki_edited_by'] = 'Edited by';
+$txt['wiki_date'] = 'Date';
 
 // Special pages
 $txt['wiki_special_pages'] = 'Special Pages';

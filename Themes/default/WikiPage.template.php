@@ -444,25 +444,38 @@ function template_recent_changes()
 
 	echo '
 	<form action="', $context['form_url'], '">
-		<ul class="reset recent_changes">';
+		<table class="recent_changes table_grid" cellspacing="0">
+			<thead>
+				<tr class="catbg">
+					<th scope="col" class="first_th" width="8%">&nbsp;</th>
+					<th width="22%">', $txt['wiki_page'], '</th>
+					<th width="10%">', $txt['wiki_edited_by'], '</th>
+					<th width="20%">', $txt['wiki_date'], '</th>
+					<th scope="col" class="last_th" width="40%">', $txt['wiki_comment'], '</th>
+				</tr>
+			</thead>
+			<tbody>';
 
 	foreach ($context['recent_changes'] as $item)
 	{
 		echo '
-			<li>
-				<span class="difflinks">
-					(', $item['previous'] ? '<a href="' . $item['diff_href'] . '">' . $txt['wiki_diff_short'] . '</a>' : $txt['wiki_diff_short'], ')
-					(<a href="' . $item['history_href'] . '">', $txt['wiki_history_short'], '</a>)
-				</span>
-				<span class="page">', $item['link'], '</span>
-				<span class="author">', $item['author']['link'], '</span>
-				<span class="date">', $item['date'], '</span>
-				<span class="comment">', $item['comment'], '</span>
-			</li>';
+				<tr>
+					<td class="windowbg">
+						<span class="difflinks">
+							(', $item['previous'] ? '<a href="' . $item['diff_href'] . '">' . $txt['wiki_diff_short'] . '</a>' : $txt['wiki_diff_short'], ')
+							(<a href="' . $item['history_href'] . '">', $txt['wiki_history_short'], '</a>)
+						</span>
+					</td>
+					<td class="windowbg">', $item['link'], '</td>
+					<td class="windowbg">', $item['author']['link'], '</td>
+					<td class="windowbg">', $item['date'], '</td>
+					<td class="windowbg">', $item['comment'], '</td>
+				</tr>';
 	}
 
 	echo '
-		</ul>
+			</tbody>
+		</table>
 	</form>';
 }
 

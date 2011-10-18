@@ -3,6 +3,8 @@
 
 function wiki_render(array $content)
 {
+	global $txt;
+	
 	switch ($content['type'])
 	{
 		case WikiParser::NEW_PARAGRAPH:
@@ -21,7 +23,7 @@ function wiki_render(array $content)
 			echo $content['content']->getHtml();
 			break;
 		case WikiParser::WARNING:
-			echo '<span class="wiki_warning" title="' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '">' . $content['unparsed'] . '</span>';
+			echo '<span class="wiki_warning" title="' . $content['unparsed'] . '">' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '</span>';
 			break;
 		default:
 			fatal_error('unknown type ' . $content['type'] . ' used by parsed... check that all files are from same version');

@@ -234,11 +234,11 @@ class WikiExtension_Core extends WikiExtensionBase
 	 */
 	static function function_if(WikiParser $wikiparser, $parameters)
 	{
-		$result = WikiParser::toBoolean(array_shift($parameters));
-		$true_cond = array_shift($parameters);
-		if (!empty($parameters))
-			$false_cond = array_shift($parameters);
-
+		$result = WikiParser::toBoolean($parameters[0]);
+		$true_cond = $parameters[1];
+		if (!empty($parameters[2]))
+			$false_cond = $parameters[2];
+			
 		$wikiparser->throwContentArray($result ? $true_cond : (isset($false_cond) ? $false_cond : array()));
 	}
 
