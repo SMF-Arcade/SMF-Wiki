@@ -1,5 +1,11 @@
 <?php
-// Version: 0.2; WikiFiles
+/**
+ * 
+ *
+ * @package SMFWiki
+ * @version 0.3
+ * @license http://download.smfwiki.net/license.php SMF Wiki license
+ */
 
 function template_wiki_file_upload()
 {

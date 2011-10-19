@@ -1,9 +1,10 @@
 <?php
 /**
- * Wiki install
- * 
- * @package Wiki
- * @subpackage Install
+ * Wiki Installer
+ *
+ * @package SMFWiki
+ * @version 0.3
+ * @license http://download.smfwiki.net/license.php SMF Wiki license
  */
 
 // If SSI.php is in the same place as this file, and SMF isn't defined, this is being run standalone.

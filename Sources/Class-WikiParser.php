@@ -159,11 +159,14 @@ class WikiParser
 	static function toText($content, $single_line = true)
 	{
 		$return = '';
+		
 		foreach ($content as $c)
 		{
 			switch ($c['type'])
 			{
 				case WikiParser::ELEMENT_SEMI_COLON:
+				case WikiParser::CONTROL_BLOCK_LEVEL_OPEN:
+				case WikiParser::NO_PARSE:
 				case WikiParser::TEXT:
 					$return .= $c['content'];
 					break;
@@ -419,7 +422,7 @@ class WikiParser
 	/**
 	 * Parser page into another WikiParser (used for templates)
 	 */
-	public function parseTo(WikiParser $target, $text, $is_template = true)
+	public function parseTo($target, $text, $is_template = true)
 	{
 		$this->__parse($target, $text, $is_template);
 	}
@@ -1475,7 +1478,7 @@ class WikiElement_Parser
 			$value = WikiExtension::getFunction($function);
 
 			if (isset($value['callback']))
-				call_user_func($value['callback'], $this->wikiparser, $params);
+				call_user_func($value['callback'], $target, $params);
 		   else
 				$target->throwContent(WikiParser::WARNING, 'unknown_function', $this->getUnparsed(), array($function));
 		}
@@ -1546,7 +1549,7 @@ class WikiElement_Parser
 			elseif ($value === false && count($params) == 1)
 				$this->wikiparser->page->variables[$variable] = WikiParser::toText($params[0]);
 			elseif ($value !== false)
-				$target->throwContent(WikiParser::ELEMENT, new WikiVariable($this->wikiparser, $value['callback'], $params), $unparsed);
+				$target->throwContent(WikiParser::ELEMENT, new WikiVariable($target, $value['callback'], $params), $unparsed);
 			else
 				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
 		}
@@ -1914,7 +1917,7 @@ class WikiVariable extends WikiElement
 	var $params;
 	var $value;
 
-	function __construct(Wikiparser $wikiparser, $callback, $params)
+	function __construct($wikiparser, $callback, $params)
 	{
 		$this->wikiparser = $wikiparser;
 		$this->callback = $callback;
@@ -1940,6 +1943,11 @@ class WikiVariable extends WikiElement
 		$value = $this->getValue();
 
 		return is_string($value) ? $value : '';
+	}
+	
+	function toBoolean()
+	{
+		return !empty($this->value);
 	}
 
 	/**

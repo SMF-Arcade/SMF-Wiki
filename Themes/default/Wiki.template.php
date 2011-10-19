@@ -1,5 +1,11 @@
 <?php
-// Version: 0.2; Wiki
+/**
+ * 
+ *
+ * @package SMFWiki
+ * @version 0.3
+ * @license http://download.smfwiki.net/license.php SMF Wiki license
+ */
 
 function wiki_render(array $content)
 {
@@ -93,7 +99,7 @@ function template_wiki_above()
 				{
 					if (!empty($item['url']))
 						echo '
-					<li', $item['selected'] ? ' class="selected"' : '', '><a href="', $item['url'], '">', $item['title'], '</a></li>';
+					<li><a href="', $item['url'], '"', $item['selected'] ? ' class="current_page"' : '', '>', $item['title'], '</a></li>';
 					else
 						echo '
 					<li>', $item['title'], '</li>';

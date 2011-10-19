@@ -1,5 +1,11 @@
 <?php
-// Version: 0.2; WikiPage
+/**
+ * 
+ *
+ * @package SMFWiki
+ * @version 0.3
+ * @license http://download.smfwiki.net/license.php SMF Wiki license
+ */
 
 function output_toc($baseurl, $blevel, $toc)
 {

@@ -204,7 +204,7 @@ class WikiExtension_Core extends WikiExtensionBase
 	 * @param <type> $parameters
 	 * @return <type>
 	 */
-	static function variable_WikiVersion(WikiParser $wikiparser, $parameters)
+	static function variable_WikiVersion($wikiparser, $parameters)
 	{
 		global $wiki_version;
 
@@ -232,13 +232,12 @@ class WikiExtension_Core extends WikiExtensionBase
 	 * @param WikiParser $wikiparser
 	 * @param <type> $parameters
 	 */
-	static function function_if(WikiParser $wikiparser, $parameters)
+	static function function_if($wikiparser, $parameters)
 	{
 		$result = WikiParser::toBoolean($parameters[0]);
 		$true_cond = $parameters[1];
 		if (!empty($parameters[2]))
 			$false_cond = $parameters[2];
-			
 		$wikiparser->throwContentArray($result ? $true_cond : (isset($false_cond) ? $false_cond : array()));
 	}
 

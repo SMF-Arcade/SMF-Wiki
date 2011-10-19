@@ -70,7 +70,6 @@ $txt['wiki_date'] = 'Date';
 // Special pages
 $txt['wiki_special_pages'] = 'Special Pages';
 
-
 // Admin
 $txt['wiki_settings'] = 'Wiki Settings';
 $txt['wiki_admin_title'] = 'Wiki';

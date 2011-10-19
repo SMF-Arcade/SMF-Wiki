@@ -319,25 +319,23 @@ function Wiki($standalone = false, $prefix = null)
 		// Don't index pages with invalid subaction
 		if (!empty($_REQUEST['sa']) && $subaction != $_REQUEST['sa'])
 			$context['robot_no_index'] = true;
-		else
+
+		foreach ($context['wikimenu'] as $id => $menu_item)
 		{
-			foreach ($context['wikimenu'] as $id => $menu_item)
+			if (!$menu_item['show'])
 			{
-				if (!$menu_item['show'])
+				if ($menu_item['selected'])
 				{
-					if ($menu_item['selected'])
-					{
-						$context['wikimenu'][$id]['selected'] = false;
-						
-						// Use view action then
-						$subaction = 'view';
-						$context['wikimenu'][$subaction]['selected'] = true;
-					}
+					$context['wikimenu'][$id]['selected'] = false;
 					
-					unset($context['wikimenu'][$id]);
-						
-					continue;
+					// Use view action then
+					$subaction = 'view';
+					$context['wikimenu'][$subaction]['selected'] = true;
 				}
+				
+				unset($context['wikimenu'][$id]);
+					
+				continue;
 			}
 		}
 		
