@@ -485,4 +485,26 @@ function template_recent_changes()
 	</form>';
 }
 
+/**
+ *
+ */
+function template_create_page()
+{
+	global $txt;
+
+	echo '
+	<div class="wikicontent windowbg2 clearright">
+		<span class="topslice"><span></span></span>
+		<div class="content">
+			<div class="post"><div class="inner">
+				<form action="', wiki_get_url(array('sa' => 'edit')), '" method="post">
+					', $txt['wiki_page_identifer'], ': <input type="text" name="page" size="100" />
+					<input type="submit" class="button_submit" value="', $txt['wiki_create_page_continue'], '" />
+				</form>
+			</div></div>
+		</div>
+		<span class="botslice"><span></span></span>
+	</div>';
+}
+
 ?>

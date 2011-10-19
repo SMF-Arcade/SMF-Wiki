@@ -17,13 +17,20 @@ $txt['wiki_navigation'] = 'Navigation';
 $txt['edit'] = 'Edit';
 $txt['wiki_main_page'] = 'Main Page';
 $txt['wiki_toolbox'] = 'Toolbox';
+$txt['wiki_create_page_title'] = 'Create Page';
+
+$txt['wiki_create_page'] = 'You can %1$screate this page%2$s.';
+
 
 // View Page
 $txt['wiki_edit_section'] = 'edit';
 $txt['wiki_categories'] = 'Categories';
 $txt['wiki_pages_in_category'] = 'Pages in category &quot;%s&quot;';
 
-$txt['wiki_create_page'] = 'You can %1$screate this page%2$s.';
+// Create Page
+$txt['wiki_page_identifer'] = 'Page URL';
+$txt['wiki_page_identifer_desc'] = '(For example: %s<strong>Page</strong>)';
+$txt['wiki_create_page_continue'] = 'Continue';
 
 // View Source code
 $txt['view_source'] = 'Source code for page: %s';

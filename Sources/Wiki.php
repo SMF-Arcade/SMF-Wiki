@@ -74,6 +74,7 @@ function loadWiki($mode = '', $prefix = null)
 		// Special Pages
 		WikiExtension::registerSpecialPage('RecentChanges', $txt['wiki_recent_changes'], 'WikiHistory.php', 'WikiRecentChanges');
 		WikiExtension::registerSpecialPage('SpecialPages', $txt['wiki_special_pages'], 'WikiSpecialPages.php', 'WikiListOfSpecialPages');
+		WikiExtension::registerSpecialPage('CreatePage', $txt['wiki_create_page_title'], 'WikiEditPage.php', 'CreateNewPage');
 		WikiExtension::registerSpecialPage('Upload', $txt['wiki_upload_file'], 'WikiFiles.php', 'WikiFileUpload');
 	}
 	// Admin Mode

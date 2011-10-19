@@ -10,5 +10,5 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
-	
+
 ?>

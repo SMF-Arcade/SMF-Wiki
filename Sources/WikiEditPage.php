@@ -10,6 +10,19 @@
 
 if (!defined('SMF'))
 	die('Hacking attempt...');
+	
+/**
+ *
+ */
+function CreateNewPage()
+{
+	global $context;
+	
+	// Template
+	loadTemplate('WikiPage');
+	
+	$context['sub_template'] = 'create_page';	
+}
 
 /**
  *
@@ -95,9 +108,10 @@ function EditPage()
 
 	// Template
 	loadTemplate('WikiPage');
+	
+	$context['sub_template'] = 'edit_page';
 	$context['page_title'] = sprintf($txt['edit_page'], $context['current_page_title']);
 	$context['current_page_title'] = sprintf($txt['edit_page'], $context['current_page_title']);
-	$context['sub_template'] = 'edit_page';
 }
 
 /**
@@ -109,7 +123,7 @@ function EditPage2()
 
 	isAllowedTo('wiki_edit');
 
-	if (empty($context['can_edit_page']))
+	if (!$create && empty($context['can_edit_page']))
 		fatal_lang_error('cannot_wiki_edit_current_page', false);
 
 	require_once($sourcedir . '/Subs-Editor.php');

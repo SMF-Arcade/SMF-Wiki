@@ -752,6 +752,9 @@ class WikiParser
 			$is_new_paragraph = $i === 0 || $whitespace >= 2;
 			
 			$i += $whitespace;
+			
+			if ($i >= $textLen)
+				break;
 				
 			// WHITESPACE PARSE
 
