@@ -47,9 +47,6 @@ class WikiParser
 	
 	// Behaviour Switch
 	const BEHAVIOUR_SWITCH = 50;
-	
-	// XML style tag
-	const TAG = 51;
 
 	//
 	const LIST_OPEN = 52;
@@ -1096,8 +1093,9 @@ class WikiParser
 				$tagLen = strcspn($tagCode, ' ');
 				$tagName = strtolower(substr($tagCode, 0, $tagLen));
 				
-				if (isset(WikiParser::$xmlTags[$tagName]))
+				if (WikiExtension::isXMLTag($tagName))
 				{
+					$tag = WikiExtension::getXMLTag($tagName);
 					// Last > tag
 					$endPos += 4;
 					
@@ -1151,12 +1149,14 @@ class WikiParser
 					
 					if ($endTagPos !== false)
 					{
-						$tagContent = substr($text, $i + 2 + strlen($tagName));
-						
+						$tagContent = substr($text, $endPos, $endTagPos - $endPos);
 						$endPos = $endTagPos + strlen($endTag);
 					}
 					
-					$target->throwContent(WikiParser::TAG, new WikiTag($target, $tagName, $attributes, $tagContent), substr($text, $i, $endPos - $i));
+					$target->throwContent(WikiParser::ELEMENT,
+						new $tag['class']($target, $tagName, $attributes, $tagContent),
+						substr($text, $i, $endPos - $i)
+					);
 						
 					$i = $endPos;
 					

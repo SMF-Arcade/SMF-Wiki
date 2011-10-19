@@ -15,6 +15,7 @@ class WikiExtension
 {
 	static protected $variables = array();
 	static protected $functions = array();
+	static protected $xmlTags = array();
 	static protected $magicwords = array();
 	static protected $specialPages = array();
 
@@ -69,7 +70,8 @@ class WikiExtension
 	}
 
 	/**
-	 * Returns variable from extension(s)
+	 * 
+	 * 
 	 * @param string $variable
 	 * @return mixed String if variable exists. False if not
 	 */
@@ -91,6 +93,48 @@ class WikiExtension
 	static function addFunction($function, $callback)
 	{
 		WikiExtension::$functions[$function] = array('callback' => $callback);
+	}
+	
+	/**
+	 * Check if XML Tag exists
+	 * 
+	 * @param string $tag
+	 * @return boolean True if XML Tag exists
+	 */
+	static function isXMLTag($tag)
+	{
+		$tag = strtolower($tag);
+
+		return isset(WikiExtension::$xmlTags[$tag]);
+	}
+
+	/**
+	 *
+	 * 
+	 * @param string $variable
+	 * @return mixed String if variable exists. False if not
+	 */
+	static function getXMLTag($tag)
+	{
+		$tag = strtolower($tag);
+
+		if (!isset(WikiExtension::$xmlTags[$tag]))
+			return false;
+
+		return WikiExtension::$xmlTags[$tag];
+	}
+
+	/**
+	 *
+	 * @param <type> $variable
+	 * @param <type> $callback
+	 */
+	static function addXMLTag($tag, $class)
+	{
+		if (!is_subclass_of($class, 'Wiki_Element_XMLTag'))
+			trigger_error('XMLTag must be subclass of Wiki_Element_XMLTag', E_USER_ERROR);
+			
+		WikiExtension::$xmlTags[$tag] = array('class' => $class);
 	}
 
 	/**
@@ -195,6 +239,10 @@ class WikiExtension_Core extends WikiExtensionBase
 
 		WikiExtension::addMagicword('index', array('WikiExtension_Core', 'magicword_index'));
 		WikiExtension::addMagicword('noindex', array('WikiExtension_Core', 'magicword_noindex'));
+		
+		//global $sourcedir;
+		//require_once($sourcedir . '/Wiki/Element/Test.php');
+		WikiExtension::addXMLTag('test', 'Wiki_Element_Test');
 	}
 
 	/**
