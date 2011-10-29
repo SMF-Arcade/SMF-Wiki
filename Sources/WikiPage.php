@@ -61,7 +61,7 @@ function DiffPage()
 	$context['wiki_parser_compare'] = cache_quick_get(
 		'wiki-page-' .  $context['page_info']->id . '-rev' . (int) $_REQUEST['old_revision'],
 		'Subs-Wiki.php', 'wiki_get_page_content',
-		array($context['page_info'], $context['namespace'], (int) $_REQUEST['old_revision'])
+		array($context['page_info'], (int) $_REQUEST['old_revision'])
 	);
 	
 	$context['diff'] = $context['wiki_page']->compareTo($context['wiki_parser_compare']);

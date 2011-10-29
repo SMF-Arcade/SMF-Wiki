@@ -344,7 +344,7 @@ function loadWikiPage()
 	$context['wiki_page'] = cache_quick_get(
 		'wiki-page-' .  $context['page_info']->id . '-rev' . $revision,
 		'Subs-Wiki.php', 'wiki_get_page_content',
-		array($context['page_info'], $context['namespace'], $revision)
+		array($context['page_info'], $revision)
 	);
 
 	$context['page_info']->file = &$context['wiki_page']->file;
@@ -396,10 +396,8 @@ function wiki_get_page_raw_content(WikiPage $page_info, $revision = null)
 
 /**
  * Returns page content
- * @todo $namespace, $include removal?
- * @todo Add default value for $revision as current_revision
  */
-function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $include = false)
+function wiki_get_page_content(WikiPage $page_info, $revision = -1, $type = 'parsed')
 {
 	global $smcFunc;
 
@@ -410,7 +408,7 @@ function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $incl
 			AND id_revision = {raw:revision}',
 		array(
 			'page' => $page_info->id,
-			'revision' => $revision,
+			'revision' => $revision == - 1 ? $page_info->current_revision : $revision,
 		)
 	);
 
@@ -418,9 +416,20 @@ function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $incl
 		fatal_lang_error('wiki_invalid_revision');
 	$smcFunc['db_free_result']($request);
 	
-	$wiki_parser = new Wiki_Parser($page_info);
-	list ($page_info->content, $page_info->toc) = $wiki_parser->parse($row['content']);
-	unset($wiki_parser); // No longer needed
+	if ($type == 'parsed')
+	{
+		$wiki_parser = new Wiki_Parser($page_info);
+		list ($page_info->content, $page_info->toc) = $wiki_parser->parse($row['content']);
+		unset($wiki_parser); // No longer needed
+	}
+	elseif ($type == 'raw')
+	{
+		return array(
+			'data' => $row,
+			'expires' => time() + 3600,
+			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
+		);
+	}
 
 	if (!empty($row['id_file']))
 		$page_info->addFile($row['id_file']);
@@ -452,7 +461,7 @@ function loadWikiMenu()
 			'refresh_eval' => 'return isset($_REQUEST[\'sa\']) && $_REQUEST[\'sa\'] == \'purge\';',
 		);
 
-	$cacheInfo = wiki_get_page_content($page_info, $context['namespace_internal'], $page_info->current_revision);
+	$cacheInfo = wiki_get_page_content($page_info, $page_info->current_revision);
 	$wikiPage = $cacheInfo['data'];
 	unset($cacheInfo);
 	

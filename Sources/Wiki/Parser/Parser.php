@@ -62,7 +62,6 @@ class Wiki_Parser
 		$sc = new Wiki_Parser_SectionContainer($this);
 		$sc->addNew(1, $this->page->title, 'wikitop'); // add: id = wikitop
 		
-		//$this->raw_content = $text;
 		$this->__parse($sc, $text);
 		
 		// Finalize parsing (remove parser references)
@@ -70,14 +69,6 @@ class Wiki_Parser
 		
 		return array($sc, $this->__parseTableOfContent($sc));
 	}
-
-	/**
-	 *
-	 */
-	/*public function getRawContent()
-	{
-		return $this->raw_content;
-	}*/
 
 	/**
 	 *

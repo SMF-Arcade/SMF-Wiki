@@ -49,7 +49,10 @@ function EditPage()
 	if (!isset($context['wiki_page']) || !$context['wiki_page'] instanceof WikiPage)
 		$body = '';
 	elseif (empty($_REQUEST['section']))
-		$body = $context['wiki_page']->parser->getRawContent();
+	{
+		$body = wiki_get_page_content($context['wiki_page'], -1, 'raw');
+		$body = $body['data']['content'];
+	}
 	else
 	{
 		$edit_section = $context['wiki_page']->parser->getRawContentSection((int) $_REQUEST['section']);
