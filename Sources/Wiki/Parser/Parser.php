@@ -9,6 +9,13 @@
 class Wiki_Parser
 {
 	/**
+	 *
+	 */
+	public static $subParsers = array(
+		'Wiki_Parser_Bracket',
+	);
+	
+	/**
 	 * Page variable containing WikiPage class.
 	 */
 	public $page;
@@ -27,12 +34,7 @@ class Wiki_Parser
 	 *
 	 */
 	public $pageOptions = array();
-
-	/**
-	 *
-	 */
-	public $tableOfContents;
-
+	
 	/**
 	 * Contains used html ids to prevent duplicates
 	 */
@@ -210,7 +212,19 @@ class Wiki_Parser
 			
 		$text = str_replace(array("\r\n", "\r", '<br />', '<br>', '<br/>'), "\n", $text);
 
-		$searchBase = "<[{#\n_";
+		//$searchBase = "<[{#\n_";
+		$searchBase = "\n";
+		
+		$subParserMap = array();
+		
+		foreach (self::$subParsers as $subparser)
+		{
+			foreach (call_user_func(array($subparser, 'getStartChars')) as $chr)
+			{
+				$searchBase .= $chr;
+				$subParserMap[$chr][] = $subparser;
+			}
+		}
 
 		$textLen = strlen($text);
 		
@@ -220,12 +234,11 @@ class Wiki_Parser
 		while ($i <= $textLen)
 		{
 			$search = $searchBase;
-			$closeTag = '';
 
-			if ($target instanceof WikiElement_Parser)
+			if ($target instanceof Wiki_Parser_SubParser)
 			{
-				$search .= $target->rule['close'] . (empty($target->rule['no_param']) ? '|=' : '') . ($target->rule['close'] == '}' ? ':' : '');
-				$closeTag = $target->rule['close'];
+				$closeChar = $target->getCloseChar();
+				$search .= $closeChar . implode('', array_keys($target->getWantedChars()));
 			}
 			else
 			{
@@ -427,120 +440,37 @@ class Wiki_Parser
 					$target->throwContent(Wiki_Parser_Core::NEW_LINE, '<br />', "\n");
 			}
 			
-			if (false)
+			// Subparsers?
+			if (!empty($subParserMap[$curChar]))
 			{
-				
-			}
-			/*
-			// Close char?
-			if ($curChar == $closeTag)
-			{
-				$maxLen = $target->len;
-				$len = strspn($text, $curChar, $i, $maxLen);
+				foreach ($subParserMap[$curChar] as $subparser)
+				{
+					$parse_start = call_user_func_array(array($subparser, 'parseStart'), array($this, $curChar, &$text, &$i));
 					
-				$rule = $target->rule;
-
-				if ($len > $rule['max'])
-					$matchLen = $rule['max'];
-				else
-				{
-					$matchLen = $len;
-
-					while ($matchLen > 0 && !isset($target->rule['names'][$matchLen]))
-						$matchLen--;
-				}
-
-				if ($matchLen <= 0)
-				{
-					$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));
-					$i += $len;
-					continue;
-				}
-				
-				// Tell element that it was closed
-				$target->throwContent(Wiki_Parser_Core::ELEMENT_CLOSE, '', str_repeat($curChar, $matchLen));
-				$element = $target;
-				
-				// There's still opening tags left to search end for
-				if ($matchLen < $element->len)
-				{
-					$open = $element->len - $matchLen;
-					$element->modifyLen($matchLen);
-					
-					// Nested tag?
-					if ($open >= $element->rule['min'])
-					{
-						$target = new WikiElement_Parser($this, $curChar, $open);
-						$target->throwContent(Wiki_Parser_Core::ELEMENT_OPEN, str_repeat($element->char, $open));
-					}
-					// or just unnecassary character?
-					else
-					{
-						$target = array_pop($stack);
-						$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($element->char, $open));
-					}
-				}
-				else
-					$target = array_pop($stack);
-				
-				// Tell elment that it's really complete and let it finalize.
-				$element->throwContentTo($target);
-				
-				// Not sure if necassary but let's do it anyway.
-				unset($element);
-				
-				$i += $matchLen;
-			}
-			// Start character for WikiElement
-			elseif ($this->parse_bbc && isset(WikiElement_Parser::$rules[$curChar]))
-			{
-				$rule = WikiElement_Parser::$rules[$curChar];
-				
-				$len = strspn($text, $curChar, $i);
-
-				if ($len >= $rule['min'])
-				{
-					// Hash tag is special case
-					if (!empty($target->rule['has_name']))
-					{
-						$nameLen = strcspn($text, ' ', $i);
-						
-						if (strpos($text, " ", $i) !== false && strpos($text, "\n", $i) !== false)
-						{
-							$item_name = strtolower(substr($text, $i + 1, $nameLen - 1));
-							
-							// If no such has tag exists 
-							if (!isset(Wiki_Parser_Core::$hashTags[$item_name]))
-							{
-								$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));							
-							}
-							else
-							{
-								$stack[] = $target;
-								
-								$target = new WikiElement_Parser($this, $curChar, $len);
-								$target->throwContent(Wiki_Parser_Core::ELEMENT_NAME, $item_name);
-
-								$i += $nameLen;
-							}
-						}
-						else
-						{
-							$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));						
-						}
-					}
-					else
+					if ($parse_start)
 					{
 						$stack[] = $target;
-						$target = new WikiElement_Parser($this, $curChar, $len);
+						$target = $parse_start;
+						continue 2;
 					}
+					unset($parse_start);
 				}
-				else
+			}
+			
+			// Close char?
+			if ($target instanceof Wiki_Parser_SubParser && $curChar == $closeChar)
+			{
+				if ($res = $target->checkEnd($this, $stack, $curChar, $text, $i))
 				{
-					$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));
+					unset($target);
+					$target = $res;
+					continue;
 				}
-
-				$i += $len;
+			}
+			/*// Start character for WikiElement
+			elseif ($this->parse_bbc && isset(WikiElement_Parser::$rules[$curChar]))
+			{
+				
 			}
 			// Handle lists
 			elseif ($this->parse_bbc && $is_new_line && in_array($curChar, WikiList_Parser::$listTypes))

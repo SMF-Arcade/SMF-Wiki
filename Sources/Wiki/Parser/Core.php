@@ -29,12 +29,12 @@ class Wiki_Parser_Core
 	
 	// Rules for WikiElement (such as Wikilinks etc.)
 	const ELEMENT = 40;
-	const ELEMENT_OPEN = 41;
+	/*const ELEMENT_OPEN = 41;
 	const ELEMENT_NAME = 42;
 	const ELEMENT_PARAM_NAME = 43;
 	const ELEMENT_NEW_PARAM = 44;
 	const ELEMENT_SEMI_COLON = 45;
-	const ELEMENT_CLOSE = 49;
+	const ELEMENT_CLOSE = 49;*/
 	
 	// Behaviour Switch
 	const BEHAVIOUR_SWITCH = 50;

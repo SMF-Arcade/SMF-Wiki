@@ -13,10 +13,29 @@
  */
 class WikiExtension
 {
+	/**
+	 *
+	 */
 	static protected $variables = array();
+	
+	/**
+	 *
+	 */
 	static protected $functions = array();
+	
+	/**
+	 *
+	 */
 	static protected $xmlTags = array();
+	
+	/**
+	 *
+	 */
 	static protected $magicwords = array();
+	
+	/**
+	 *
+	 */
 	static protected $specialPages = array();
 
 	/**
