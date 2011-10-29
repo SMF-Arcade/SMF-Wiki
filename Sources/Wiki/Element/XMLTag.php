@@ -14,7 +14,7 @@
 abstract class Wiki_Element_XMLTag extends Wiki_Element
 {
 	/**
-	 *
+	 * @var 
 	 */
 	protected $target;
 	

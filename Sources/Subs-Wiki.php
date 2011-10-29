@@ -463,10 +463,10 @@ function loadWikiMenu()
 
 	foreach ($wikiPage->parser->sections[0]['content'] as $item)
 	{
-		if ($level == 0 && $item['type'] != WikiParser::LIST_OPEN)
+		if ($level == 0 && $item['type'] != Wiki_Parser_Core::LIST_OPEN)
 			continue;
 		
-		elseif ($item['type'] == WikiParser::LIST_OPEN)
+		elseif ($item['type'] == Wiki_Parser_Core::LIST_OPEN)
 		{
 			$level++;
 			
@@ -477,7 +477,7 @@ function loadWikiMenu()
 			
 			$current_menu = array();
 		}
-		elseif ($item['type'] == WikiParser::LIST_CLOSE)
+		elseif ($item['type'] == Wiki_Parser_Core::LIST_CLOSE)
 		{
 			$level--;
 			
@@ -495,12 +495,12 @@ function loadWikiMenu()
 				$current_menu = array();
 			}
 		}
-		elseif ($item['type'] == WikiParser::LIST_ITEM_OPEN)
+		elseif ($item['type'] == Wiki_Parser_Core::LIST_ITEM_OPEN)
 		{
 			$current_item = array();
 			$in_item = true;
 		}
-		elseif ($in_item && $item['type'] == WikiParser::LIST_ITEM_CLOSE)
+		elseif ($in_item && $item['type'] == Wiki_Parser_Core::LIST_ITEM_CLOSE)
 		{
 			if (!empty($current_item))
 				$current_menu[] = $current_item;

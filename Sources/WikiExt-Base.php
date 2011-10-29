@@ -270,7 +270,7 @@ class WikiExtension_Core extends WikiExtensionBase
 		if (empty($parameters))
 			return $wikiparser->page->title;
 		else
-			$wikiparser->page->title = WikiParser::toText(array_shift($parameters));
+			$wikiparser->page->title = Wiki_Parser_Core::toText(array_shift($parameters));
 
 		return true;
 	}
@@ -282,7 +282,7 @@ class WikiExtension_Core extends WikiExtensionBase
 	 */
 	static function function_if($wikiparser, $parameters)
 	{
-		$result = WikiParser::toBoolean($parameters[0]);
+		$result = Wiki_Parser_Core::toBoolean($parameters[0]);
 		$true_cond = $parameters[1];
 		if (!empty($parameters[2]))
 			$false_cond = $parameters[2];

@@ -17,74 +17,6 @@
  */
 class WikiParser
 {
-	// General
-	const TEXT = 1;
-	const NEW_LINE = 2;
-	const COMMENT = 3;
-	const HTML_COMMENT = 4;
-	const WARNING = 5;
-
-	const SECTION_HEADER = 11;
-	const NEW_PARAGRAPH = 12;
-	const END_PARAGRAPH = 13;
-	const END_PAGE = 14;
-	
-	// Parsing rules
-	const NO_PARSE = 21;
-
-	// Block level rules (for managing paragraphs)
-	const CONTROL_BLOCK_LEVEL_OPEN = 38;
-	const CONTROL_BLOCK_LEVEL_CLOSE = 39;
-	
-	// Rules for WikiElement (such as Wikilinks etc.)
-	const ELEMENT = 40;
-	const ELEMENT_OPEN = 41;
-	const ELEMENT_NAME = 42;
-	const ELEMENT_PARAM_NAME = 43;
-	const ELEMENT_NEW_PARAM = 44;
-	const ELEMENT_SEMI_COLON = 45;
-	const ELEMENT_CLOSE = 49;
-	
-	// Behaviour Switch
-	const BEHAVIOUR_SWITCH = 50;
-
-	//
-	const LIST_OPEN = 52;
-	const LIST_CLOSE = 53;
-	const LIST_ITEM_OPEN = 54;
-	const LIST_ITEM_CLOSE = 55;
-
-	// Parser Warnings
-	const SEV_NOTICE = 1;
-	const SEV_WARNING = 2;
-	const SEV_ERROR = 3;
-	
-	/**
-	 * Defines Block level tags.
-	 * This is used for managing paragraphs
-	 */
-	static public $blockTags = array(
-		// DIV
-		'<div>' => false,
-		'</div>' => true,
-		// UL
-		'<ul>' => false,
-		'</ul>' => true,
-		// CODE
-		'<code>' => false,
-		'</code>' => true,
-		// Marguee
-		'<marquee>' => false,
-		'</marquee>' => true,
-		// HR
-		'<hr />' => true,
-		// Quote
-		'<blockquote>' => false,
-		'</blockquote>' => true,
-		'<table>' => false,
-		'</table>' => true,
-	);
-	
 	/**
 	 *
 	 */
@@ -92,137 +24,6 @@ class WikiParser
 		'test' => array(),
 	);
 	
-	/**
-	 *
-	 */
-	static public $xmlTags = array(
-		'test' => array(),
-	);
-	
-	/**
-	 * Makes html id for section
-	 */
-	static function html_id($name)
-	{
-		global $smcFunc;
-		
-		$name = str_replace(array('%3A', '+', '%'), array(':', '_', '.'), urlencode(un_htmlspecialchars($name)));
-		
-		while($name[0] == '.')
-			$name = substr($name, 1);
-		return $name;
-	}
-
-
-	/**
-	 * Prepares content array for boolean conversion
-	 * @param array $content
-	 * @return array
-	 */
-	static protected function __boolean_trim($content)
-	{
-		$return = array();
-		foreach ($content as $c)
-		{
-			switch ($c['type'])
-			{
-				case WikiParser::ELEMENT_SEMI_COLON:
-				case WikiParser::TEXT:
-					$c['content'] = trim($c['content']);
-					if ($c['content'] !== '')
-						$return[] = $c;
-					break;
-				case WikiParser::NEW_LINE:
-				case WikiParser::NEW_PARAGRAPH:
-					break;
-				case WikiParser::ELEMENT:
-					$return[] = $c;
-					break;
-				case WikiParser::WARNING:
-					$return[] = $c;
-					break;
-				default:
-					die('__boolean_trim: Unknown part type ' . $c['type']);
-					break;
-			}
-		}
-
-		return $return;
-	}
-	
-	/**
-	 * Parser content into text for use in parameters etc.
-	 */
-	static function toText($content, $single_line = true)
-	{
-		$return = '';
-		
-		foreach ($content as $c)
-		{
-			switch ($c['type'])
-			{
-				case WikiParser::ELEMENT_SEMI_COLON:
-				case WikiParser::CONTROL_BLOCK_LEVEL_OPEN:
-				case WikiParser::NO_PARSE:
-				case WikiParser::TEXT:
-					$return .= $c['content'];
-					break;
-				case WikiParser::NEW_LINE:
-					$return .= $single_line ? ' ' : '<br />';
-					break;
-				case WikiParser::NEW_PARAGRAPH:
-					$return .= $single_line ? ' ' : '<br /><br />';
-					break;
-				case WikiParser::ELEMENT:
-					$return .= $c['content']->getHtml();
-					break;
-				case WikiParser::WARNING:
-					$return .= $c['unparsed'];
-					break;
-				default:
-					die('toText: Unknown part type ' . $c['type']);
-					break;
-			}
-		}
-		
-		return $return;
-	}
-
-
-	/**
-	 * Parser content into text for use in parameters etc.
-	 */
-	static function getUnparsed($content, $single_line = true)
-	{
-		$return = '';
-		foreach ($content as $c)
-			$return .= !empty($c['unparsed'])? $c['unparsed'] : $c['content'];
-		return $return;
-	}
-
-	/**
-	 * Convert content array to boolean
-	 * @param array $content content array to compare
-	 * @return boolean Result
-	 */
-	static function toBoolean($content)
-	{
-		$content = WikiParser::__boolean_trim($content);
-		
-		if (count($content) != 1 || ($content[0]['type'] != WikiParser::ELEMENT && $content[0]['type'] != WikiParser::WARNING))
-		{
-			$result = WikiParser::toText($content);
-			return !empty($result);
-		}
-		elseif ($content[0]['type'] == WikiParser::WARNING)
-			return false;
-		else
-		{
-			return $content[0]['content']->toBoolean();
-		}
-		
-	}
-
 	/**
 	 * Page variable containing WikiPage class.
 	 */
@@ -353,7 +154,7 @@ class WikiParser
 					$sections[] = array(
 						'title' => $sec['title'],
 						'level' => $sec['level'],
-						'content' => WikiParser::getUnparsed($sec['content'])
+						'content' => Wiki_Parser_Core::getUnparsed($sec['content'])
 					);
 				}
 
@@ -365,7 +166,7 @@ class WikiParser
 				return array(
 					'title' => $this->sections[$section]['title'],
 					'level' => $this->sections[$section]['level'],
-					'content' => WikiParser::getUnparsed($this->sections[$section]['content'])
+					'content' => Wiki_Parser_Core::getUnparsed($this->sections[$section]['content'])
 				);
 		}
 	}
@@ -436,22 +237,22 @@ class WikiParser
 			throw new Exception('Invalid type given for throwContent()', EXPECTION_INVALID_TYPE);
 		}*/
 
-		if ($type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN)
+		if ($type == Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_OPEN)
 		{
 			if ($this->blockNestingLevel == 0 && $this->paragraphOpen)
-				$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
+				$this->throwContent(Wiki_Parser_Core::END_PARAGRAPH, '</p>');
 
 			$this->blockNestingLevel++;
 			$this->_hasContent = false;
 
 			return;
 		}
-		elseif ($type == WikiParser::CONTROL_BLOCK_LEVEL_CLOSE)
+		elseif ($type == Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_CLOSE)
 		{
 			$this->blockNestingLevel--;
 			$this->_hasContent = false;
 
-			while (isset($this->content[$i - 1]) && in_array($this->content[$i - 1]['type'], array(WikiParser::NEW_LINE)))
+			while (isset($this->content[$i - 1]) && in_array($this->content[$i - 1]['type'], array(Wiki_Parser_Core::NEW_LINE)))
 			{
 				unset($this->content[$i - 1]);
 				$i--;
@@ -464,7 +265,7 @@ class WikiParser
 		if ($this->lineStart == null)
 			$this->lineStart = $i;
 		
-		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
+		if ($i > 0 && $type == Wiki_Parser_Core::TEXT && $this->content[$i - 1]['type'] == Wiki_Parser_Core::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
 		{
 			$this->content[$i - 1]['content'] .= $content;
 			
@@ -478,30 +279,30 @@ class WikiParser
 			return;
 		}
 		
-		if ($type == WikiParser::SECTION_HEADER || $type == WikiParser::END_PAGE)
+		if ($type == Wiki_Parser_Core::SECTION_HEADER || $type == Wiki_Parser_Core::END_PAGE)
 		{
-			while (isset($this->content[$i - 1]) && in_array($this->content[$i - 1]['type'], array(WikiParser::NEW_LINE)))
+			while (isset($this->content[$i - 1]) && in_array($this->content[$i - 1]['type'], array(Wiki_Parser_Core::NEW_LINE)))
 			{
 				unset($this->content[$i - 1]);
 				$i--;
 			}
 
 			if ($this->blockNestingLevel == 0 && $this->paragraphOpen == true)
-				$this->throwContent(WikiParser::END_PARAGRAPH, '</p>');
+				$this->throwContent(Wiki_Parser_Core::END_PARAGRAPH, '</p>');
 			$this->paragraphOpen = false;
 
 			unset($this->content);
 
-			if ($type == WikiParser::END_PAGE)
+			if ($type == Wiki_Parser_Core::END_PAGE)
 				return;
 			
-			$html_id = WikiParser::html_id($content);
+			$html_id = Wiki_Parser_Core::html_id($content);
 
 			$i2 = 1;
 
 			// Make sure html_id is unique in page context
 			while (in_array($html_id, $this->_htmlIDs))
-				$html_id = WikiParser::html_id($content . '_'. $i2++);
+				$html_id = Wiki_Parser_Core::html_id($content . '_'. $i2++);
 			$this->_htmlIDs[] = $html_id;
 
 			$this->sections[] = array(
@@ -517,7 +318,7 @@ class WikiParser
 
 			return;
 		}
-		elseif ($type == WikiParser::NEW_LINE || $type == WikiParser::NEW_PARAGRAPH || $type == WikiParser::CONTROL_BLOCK_LEVEL_OPEN || $type == WikiParser::CONTROL_BLOCK_LEVEL_CLOSE)
+		elseif ($type == Wiki_Parser_Core::NEW_LINE || $type == Wiki_Parser_Core::NEW_PARAGRAPH || $type == Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_OPEN || $type == Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_CLOSE)
 		{
 			if (!empty($this->lineStart))
 			{
@@ -525,7 +326,7 @@ class WikiParser
 				$this->lineStart = null;
 			}
 
-			if ($type == WikiParser::NEW_LINE)
+			if ($type == Wiki_Parser_Core::NEW_LINE)
 			{
 				// Let's not start with new line
 				if (empty($this->content) || !$this->_hasContent)
@@ -533,12 +334,12 @@ class WikiParser
 			}
 		}
 
-		if ($type == WikiParser::NEW_PARAGRAPH)
+		if ($type == Wiki_Parser_Core::NEW_PARAGRAPH)
 		{
 			if (!$this->_hasContent || $this->paragraphOpen != false || $this->blockNestingLevel != 0)
 				return;
 		}
-		elseif ($type == WikiParser::END_PARAGRAPH)
+		elseif ($type == Wiki_Parser_Core::END_PARAGRAPH)
 		{
 			if ($this->paragraphOpen != true)
 				return;
@@ -546,10 +347,10 @@ class WikiParser
 			$this->_hasContent = false;
 		}
 		elseif ($this->parse_bbc && ($this->paragraphOpen == false && $this->blockNestingLevel == 0
-				&& ($type == WikiParser::TEXT || ($type == WikiParser::ELEMENT && !$content->is_block_level()))))
+				&& ($type == Wiki_Parser_Core::TEXT || ($type == Wiki_Parser_Core::ELEMENT && !$content->is_block_level()))))
 		{
 			$this->content[$i++] = array(
-				'type' => WikiParser::NEW_PARAGRAPH,
+				'type' => Wiki_Parser_Core::NEW_PARAGRAPH,
 				'content' => '<p>',
 				'unparsed' => '',
 				'additional' => array(),
@@ -565,7 +366,7 @@ class WikiParser
 			'additional' => $additonal,
 		);
 
-		if ($type == WikiParser::TEXT || $type == WikiParser::ELEMENT)
+		if ($type == Wiki_Parser_Core::TEXT || $type == Wiki_Parser_Core::ELEMENT)
 			$this->_hasContent = true;
 	}
 
@@ -595,7 +396,7 @@ class WikiParser
 	 */
 	private function trimContent()
 	{
-		while ($this->content[count($this->content) - 1]['type'] == WikiParser::NEW_LINE)
+		while ($this->content[count($this->content) - 1]['type'] == Wiki_Parser_Core::NEW_LINE)
 			unset($this->content[count($this->content)]);
 	}
 	
@@ -636,11 +437,6 @@ class WikiParser
 		$searchBase = "<[{#\n_";
 
 		$textLen = strlen($text);
-
-		$blockLevelNesting = 0;
-
-		$can_open_paragraph = true;
-		$is_paragraph = true;
 		
 		$stack = array();
 		
@@ -669,7 +465,7 @@ class WikiParser
 				// Normal text line
 				if ($skip > 0)
 				{
-					$target->throwContent(WikiParser::TEXT, substr($text, $i, $skip));
+					$target->throwContent(Wiki_Parser_Core::TEXT, substr($text, $i, $skip));
 					$i += $skip;
 				}
 			}
@@ -683,11 +479,11 @@ class WikiParser
 	
 				if ($endPos > 0)
 				{
-					$target->throwContent(WikiParser::NO_PARSE, str_replace("\n", '<br />', substr($text, $i, $endPos - $i)));
+					$target->throwContent(Wiki_Parser_Core::NO_PARSE, str_replace("\n", '<br />', substr($text, $i, $endPos - $i)));
 					$i = $endPos + 9;
 				}
 				else
-					$target->throwContent(WikiParser::TEXT, '&lt;nowiki&gt;');
+					$target->throwContent(Wiki_Parser_Core::TEXT, '&lt;nowiki&gt;');
 				
 				continue;
 			}
@@ -764,7 +560,7 @@ class WikiParser
 				// Close all lists
 				while ($target instanceof WikiList_Parser)
 				{
-					$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+					$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', '');
 					$element = $target;
 					$target = array_pop($stack);
 					$element->throwContentTo($target);
@@ -791,12 +587,12 @@ class WikiParser
 
 				if ($c == $c2)
 				{
-					$target->throwContent(WikiParser::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => $c));
+					$target->throwContent(Wiki_Parser_Core::SECTION_HEADER, trim(substr($header, $c, -$c2)), $header, array('level' => $c));
 					$i += $len;
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, '=');
+					$target->throwContent(Wiki_Parser_Core::TEXT, '=');
 					$i += 1;
 				}
 				
@@ -807,7 +603,7 @@ class WikiParser
 			{
 				if ($this->paragraphOpen)
 				{
-					$target->throwContent(WikiParser::END_PARAGRAPH, '</p>', "\n\n");
+					$target->throwContent(Wiki_Parser_Core::END_PARAGRAPH, '</p>', "\n\n");
 					$this->paragraphOpen = false;
 				}
 			}
@@ -815,7 +611,7 @@ class WikiParser
 			elseif ($is_new_line && !$target instanceof WikiList_Parser)
 			{
 				if ($i > 0)
-					$target->throwContent(WikiParser::NEW_LINE, '<br />', "\n");
+					$target->throwContent(Wiki_Parser_Core::NEW_LINE, '<br />', "\n");
 			}
 			
 			// Close char?
@@ -838,13 +634,13 @@ class WikiParser
 
 				if ($matchLen <= 0)
 				{
-					$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));
+					$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));
 					$i += $len;
 					continue;
 				}
 				
 				// Tell element that it was closed
-				$target->throwContent(WikiParser::ELEMENT_CLOSE, '', str_repeat($curChar, $matchLen));
+				$target->throwContent(Wiki_Parser_Core::ELEMENT_CLOSE, '', str_repeat($curChar, $matchLen));
 				$element = $target;
 				
 				// There's still opening tags left to search end for
@@ -857,13 +653,13 @@ class WikiParser
 					if ($open >= $element->rule['min'])
 					{
 						$target = new WikiElement_Parser($this, $curChar, $open);
-						$target->throwContent(WikiParser::ELEMENT_OPEN, str_repeat($element->char, $open));
+						$target->throwContent(Wiki_Parser_Core::ELEMENT_OPEN, str_repeat($element->char, $open));
 					}
 					// or just unnecassary character?
 					else
 					{
 						$target = array_pop($stack);
-						$target->throwContent(WikiParser::TEXT, str_repeat($element->char, $open));
+						$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($element->char, $open));
 					}
 				}
 				else
@@ -896,23 +692,23 @@ class WikiParser
 							$item_name = strtolower(substr($text, $i + 1, $nameLen - 1));
 							
 							// If no such has tag exists 
-							if (!isset(WikiParser::$hashTags[$item_name]))
+							if (!isset(Wiki_Parser_Core::$hashTags[$item_name]))
 							{
-								$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));							
+								$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));							
 							}
 							else
 							{
 								$stack[] = $target;
 								
 								$target = new WikiElement_Parser($this, $curChar, $len);
-								$target->throwContent(WikiParser::ELEMENT_NAME, $item_name);
+								$target->throwContent(Wiki_Parser_Core::ELEMENT_NAME, $item_name);
 
 								$i += $nameLen;
 							}
 						}
 						else
 						{
-							$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));						
+							$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));						
 						}
 					}
 					else
@@ -923,7 +719,7 @@ class WikiParser
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, str_repeat($curChar, $len));
+					$target->throwContent(Wiki_Parser_Core::TEXT, str_repeat($curChar, $len));
 				}
 
 				$i += $len;
@@ -948,8 +744,8 @@ class WikiParser
 					// Close previous and open new item
 					if ($prefix == $target->prefix)
 					{
-						$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', "\n");
-						$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>', $type);
+						$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', "\n");
+						$target->throwContent(Wiki_Parser_Core::LIST_ITEM_OPEN, '<li>', $type);
 						$i += $prefixLen;
 					}
 					// New level possibly
@@ -968,7 +764,7 @@ class WikiParser
 							// Create new parser
 							$stack[] = $target;
 							$target = new WikiList_Parser($this, $type, $prefix);
-							$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+							$target->throwContent(Wiki_Parser_Core::LIST_ITEM_OPEN, '<li>');
 							
 							$i += $prefixLen;
 						}
@@ -977,7 +773,7 @@ class WikiParser
 						{
 							while ($target instanceof WikiList_Parser)
 							{
-								$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+								$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', '');
 								$element = $target;
 								$target = array_pop($stack);
 								$element->throwContentTo($target);
@@ -985,7 +781,7 @@ class WikiParser
 							}
 							
 							$i += $prefixLen;
-							$target->throwContent(WikiParser::TEXT, $prefix);
+							$target->throwContent(Wiki_Parser_Core::TEXT, $prefix);
 						}
 						
 						continue;
@@ -1003,7 +799,7 @@ class WikiParser
 							
 						while ($toClose > 0 && $target instanceof WikiList_Parser)
 						{
-							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+							$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', '');
 							$element = $target;
 							$target = array_pop($stack);
 							$element->throwContentTo($target);
@@ -1014,8 +810,8 @@ class WikiParser
 						
 						if ($target instanceof WikiList_Parser)
 						{
-							$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>');
-							$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+							$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>');
+							$target->throwContent(Wiki_Parser_Core::LIST_ITEM_OPEN, '<li>');
 						}
 						
 						$i += $prefixLen;
@@ -1028,33 +824,33 @@ class WikiParser
 					$stack[] = $target;
 					$target = new WikiList_Parser($this, $type, $prefix);
 
-					$target->throwContent(WikiParser::LIST_ITEM_OPEN, '<li>');
+					$target->throwContent(Wiki_Parser_Core::LIST_ITEM_OPEN, '<li>');
 
 					$i += $prefixLen;
 				}
 				// It was invalid
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, $curChar);
+					$target->throwContent(Wiki_Parser_Core::TEXT, $curChar);
 					$i++;
 				}
 			}
 			// Parameter delimiter
 			elseif ($this->parse_bbc && $curChar == '|')
 			{
-				$target->throwContent(WikiParser::ELEMENT_NEW_PARAM, '|');
+				$target->throwContent(Wiki_Parser_Core::ELEMENT_NEW_PARAM, '|');
 				$i++;
 			}
 			// Function delimiter / variable value delimeter
 			elseif ($this->parse_bbc && $curChar == ':')
 			{
-				$target->throwContent(WikiParser::ELEMENT_SEMI_COLON, ':');
+				$target->throwContent(Wiki_Parser_Core::ELEMENT_SEMI_COLON, ':');
 				$i++;
 			}
 			// Function delimiter / variable value delimeter
 			elseif ($target instanceof WikiElement_Parser && empty($target->rule['no_param']) && $curChar == '=')
 			{
-				$target->throwContent(WikiParser::ELEMENT_PARAM_NAME, '=');
+				$target->throwContent(Wiki_Parser_Core::ELEMENT_PARAM_NAME, '=');
 				$i++;
 			}
 			// Start or end of html tag from parse bbc
@@ -1064,18 +860,18 @@ class WikiParser
 				$tagLen = strcspn($text, '>', $i + 1) + 1;
 				$tag = '<' . substr($text, $i + 1, $tagnameLen) . '>';
 
-				if (isset(WikiParser::$blockTags[$tag]))
+				if (isset(Wiki_Parser_Core::$blockTags[$tag]))
 				{
-					if (WikiParser::$blockTags[$tag] === false)
+					if (Wiki_Parser_Core::$blockTags[$tag] === false)
 					{
-						$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_OPEN);
-						$target->throwContent(WikiParser::NO_PARSE, substr($text, $i, $tagnameLen + 1));
+						$target->throwContent(Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_OPEN);
+						$target->throwContent(Wiki_Parser_Core::NO_PARSE, substr($text, $i, $tagnameLen + 1));
 						$i += $tagnameLen + 1;
 					}
 					else
 					{
-						$target->throwContent(WikiParser::NO_PARSE, substr($text, $i, $tagLen + 1));
-						$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_CLOSE);
+						$target->throwContent(Wiki_Parser_Core::NO_PARSE, substr($text, $i, $tagLen + 1));
+						$target->throwContent(Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_CLOSE);
 						$i += $tagLen + 1;
 					}
 					
@@ -1083,7 +879,7 @@ class WikiParser
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, $curChar);
+					$target->throwContent(Wiki_Parser_Core::TEXT, $curChar);
 					$i++;
 				}
 			}
@@ -1156,7 +952,7 @@ class WikiParser
 						$endPos = $endTagPos + strlen($endTag);
 					}
 					
-					$target->throwContent(WikiParser::ELEMENT,
+					$target->throwContent(Wiki_Parser_Core::ELEMENT,
 						new $tag['class']($target, $tagName, $attributes, $tagContent),
 						substr($text, $i, $endPos - $i)
 					);
@@ -1167,7 +963,7 @@ class WikiParser
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, '&lt;');
+					$target->throwContent(Wiki_Parser_Core::TEXT, '&lt;');
 					$i += 4;
 				}
 			}
@@ -1185,7 +981,7 @@ class WikiParser
 					if (isset($magicWord['callback']))
 						call_user_func($magicWord['callback'], $this);
 					else
-						$target->throwContent(WikiParser::TEXT, $magicWord['txt']);
+						$target->throwContent(Wiki_Parser_Core::TEXT, $magicWord['txt']);
 
 					$i += $bLen + 2;
 					
@@ -1193,14 +989,14 @@ class WikiParser
 				}
 				else
 				{
-					$target->throwContent(WikiParser::TEXT, substr($text, $i, $bLen + 2));
+					$target->throwContent(Wiki_Parser_Core::TEXT, substr($text, $i, $bLen + 2));
 					$i += $bLen + 2;
 				}
 			}
 			// Else add it as text
 			else
 			{
-				$target->throwContent(WikiParser::TEXT, $curChar);
+				$target->throwContent(Wiki_Parser_Core::TEXT, $curChar);
 				$i++;
 			}
 		}
@@ -1209,7 +1005,7 @@ class WikiParser
 		while (!empty($stack))
 		{
 			if ($target instanceof WikiList_Parser)
-				$target->throwContent(WikiParser::LIST_ITEM_CLOSE, '</li>', '');
+				$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', '');
 			
 			$element = $target;
 			$target = array_pop($stack);
@@ -1221,7 +1017,7 @@ class WikiParser
 		}
 
 		if (!$is_template)
-			$this->throwContent(WikiParser::END_PAGE, '');
+			$this->throwContent(Wiki_Parser_Core::END_PAGE, '');
 	}
 }
 
@@ -1276,7 +1072,7 @@ class WikiElement_Parser
 		$this->is_complete = false;
 		$this->wikiparser = $wikiparser;
 		
-		$this->throwContent(WikiParser::ELEMENT_OPEN, '', str_repeat($char, $len));
+		$this->throwContent(Wiki_Parser_Core::ELEMENT_OPEN, '', str_repeat($char, $len));
 	}
 	
 	/**
@@ -1286,7 +1082,7 @@ class WikiElement_Parser
 	{
 		$i = count($this->content);
 		
-		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
+		if ($i > 0 && $type == Wiki_Parser_Core::TEXT && $this->content[$i - 1]['type'] == Wiki_Parser_Core::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
 		{
 			$this->content[$i - 1]['content'] .= $content;
 			
@@ -1300,7 +1096,7 @@ class WikiElement_Parser
 			return;
 		}
 		
-		$this->is_complete = $type == WikiParser::ELEMENT_CLOSE;
+		$this->is_complete = $type == Wiki_Parser_Core::ELEMENT_CLOSE;
 		
 		$this->content[$i] = array(
 			'type' => $type,
@@ -1342,8 +1138,8 @@ class WikiElement_Parser
 		{
 			foreach ($this->content as $c)
 			{
-				if ($c['type'] == WikiParser::ELEMENT_OPEN)
-					$target->throwContent(WikiParser::TEXT, $c['unparsed']);			
+				if ($c['type'] == Wiki_Parser_Core::ELEMENT_OPEN)
+					$target->throwContent(Wiki_Parser_Core::TEXT, $c['unparsed']);			
 				else
 					$target->throwContent(
 						$c['type'],
@@ -1370,14 +1166,14 @@ class WikiElement_Parser
 		{
 			switch ($c['type'])
 			{
-				case WikiParser::ELEMENT_OPEN:
-				case WikiParser::ELEMENT_CLOSE:
+				case Wiki_Parser_Core::ELEMENT_OPEN:
+				case Wiki_Parser_Core::ELEMENT_CLOSE:
 					break;
 
-				case WikiParser::ELEMENT_PARAM_NAME:
+				case Wiki_Parser_Core::ELEMENT_PARAM_NAME:
 					if (!$has_name)
 					{
-						$param_name = WikiParser::toText($params[$param]);
+						$param_name = Wiki_Parser_Core::toText($params[$param]);
 						unset($params[$param]);
 						$params[$param_name] = array();
 						$has_name = true;
@@ -1388,17 +1184,17 @@ class WikiElement_Parser
 					}
 					break;
 
-				case WikiParser::ELEMENT_NEW_PARAM:
+				case Wiki_Parser_Core::ELEMENT_NEW_PARAM:
 					$param++;
 					$param_name = $param;
 					$has_name = false;
 					break;
 
-				case WikiParser::ELEMENT_SEMI_COLON:
+				case Wiki_Parser_Core::ELEMENT_SEMI_COLON:
 					// {{DISPLAYTITLE:My Display Title}}
 					if (!$found_semicolon && $this->rule['close'] == '}' && $this->len == 2 && $param == 0 && isset($params[0]))
 					{
-						$page = WikiParser::toText($params[0]);
+						$page = Wiki_Parser_Core::toText($params[0]);
 
 						if ($page[0] == '#' || WikiExtension::isFunction($page))
 						{
@@ -1418,7 +1214,7 @@ class WikiElement_Parser
 						}
 						else
 						{
-							$c['type'] = WikiParser::TEXT;
+							$c['type'] = Wiki_Parser_Core::TEXT;
 							$params[$param_name][] = $c;
 						}
 					}
@@ -1435,7 +1231,7 @@ class WikiElement_Parser
 		// Template might not actually be actual template but function or variable
 		if ($type == WikiElement_Parser::TEMPLATE)
 		{
-			$page = WikiParser::toText($params[0]);
+			$page = Wiki_Parser_Core::toText($params[0]);
 
 			 if ($page[0] == '#')
 				$type = WikiElement_Parser::FUNC;
@@ -1448,7 +1244,7 @@ class WikiElement_Parser
 		// Wikilink
 		if ($type == WikiElement_Parser::WIKILINK)
 		{
-			$parsedPage = WikiParser::toText(array_shift($params));
+			$parsedPage = Wiki_Parser_Core::toText(array_shift($params));
 			$force_link = false;
 
 			if ($parsedPage[0] == ':')
@@ -1466,13 +1262,13 @@ class WikiElement_Parser
 			}
 			else
 			{
-				$target->throwContent(WikiParser::ELEMENT, new WikiLink($this->wikiparser, $link_info, $params), $this->getUnparsed());
+				$target->throwContent(Wiki_Parser_Core::ELEMENT, new WikiLink($this->wikiparser, $link_info, $params), $this->getUnparsed());
 			}
 		}
 		// Function
 		elseif ($type == WikiElement_Parser::FUNC)
 		{
-			$function = WikiParser::toText(array_shift($params));
+			$function = Wiki_Parser_Core::toText(array_shift($params));
 			$unparsed = $this->getUnparsed();
 
 			if ($function[0] == '#')
@@ -1483,12 +1279,12 @@ class WikiElement_Parser
 			if (isset($value['callback']))
 				call_user_func($value['callback'], $target, $params);
 		   else
-				$target->throwContent(WikiParser::WARNING, 'unknown_function', $this->getUnparsed(), array($function));
+				$target->throwContent(Wiki_Parser_Core::WARNING, 'unknown_function', $this->getUnparsed(), array($function));
 		}
 		// Template
 		elseif ($type == WikiElement_Parser::TEMPLATE)
 		{
-			$page = WikiParser::toText(array_shift($params));
+			$page = Wiki_Parser_Core::toText(array_shift($params));
 
 			if (strpos($page, ':') === false)
 				$namespace = 'Template';
@@ -1506,12 +1302,12 @@ class WikiElement_Parser
 				unset($template_parser);
 			}
 			else
-				$target->throwContent(WikiParser::WARNING, 'template_not_found', $this->getUnparsed(), array(wiki_get_url_name($page, $namespace)));
+				$target->throwContent(Wiki_Parser_Core::WARNING, 'template_not_found', $this->getUnparsed(), array(wiki_get_url_name($page, $namespace)));
 		}
 		// Template parameter
 		elseif ($type == WikiElement_Parser::TEMPLATE_PARAM)
 		{
-			$variable = WikiParser::toText(array_shift($params), true);
+			$variable = Wiki_Parser_Core::toText(array_shift($params), true);
 			$unparsed = $this->getUnparsed();
 
 			// Get variable
@@ -1525,36 +1321,36 @@ class WikiElement_Parser
 					$value = $this->wikiparser->parameters[$variable];
 
 					if ($value === false)
-						$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
+						$target->throwContent(Wiki_Parser_Core::WARNING, 'unknown_variable', $unparsed, array($variable));
 					elseif (is_string($value))
-						$target->throwContent(WikiParser::TEXT, $value, $unparsed);
+						$target->throwContent(Wiki_Parser_Core::TEXT, $value, $unparsed);
 					else
 						$target->throwContentArray($value);
 
 				}
 				else
-					$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
+					$target->throwContent(Wiki_Parser_Core::WARNING, 'unknown_variable', $unparsed, array($variable));
 			}
 			else
-				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed, array($variable));
+				$target->throwContent(Wiki_Parser_Core::WARNING, 'unknown_variable', $unparsed, array($variable));
 		}
 		// Variable
 		elseif ($type == WikiElement_Parser::VARIABLE)
 		{
-			$variable = WikiParser::toText(array_shift($params), true);
+			$variable = Wiki_Parser_Core::toText(array_shift($params), true);
 			$unparsed = $this->getUnparsed();
 			
 			// Get variable
 			$value = WikiExtension::getVariable($variable);
 
 			if ($value === false && count($params) !== 0)
-				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
+				$target->throwContent(Wiki_Parser_Core::WARNING, 'unknown_variable', $unparsed);
 			elseif ($value === false && count($params) == 1)
-				$this->wikiparser->page->variables[$variable] = WikiParser::toText($params[0]);
+				$this->wikiparser->page->variables[$variable] = Wiki_Parser_Core::toText($params[0]);
 			elseif ($value !== false)
-				$target->throwContent(WikiParser::ELEMENT, new WikiVariable($target, $value['callback'], $params), $unparsed);
+				$target->throwContent(Wiki_Parser_Core::ELEMENT, new WikiVariable($target, $value['callback'], $params), $unparsed);
 			else
-				$target->throwContent(WikiParser::WARNING, 'unknown_variable', $unparsed);
+				$target->throwContent(Wiki_Parser_Core::WARNING, 'unknown_variable', $unparsed);
 		}
 		else
 			die('NOT IMPLEMENTED!' . $type);
@@ -1593,7 +1389,7 @@ class WikiList_Parser
 		$this->type = $type;
 		$this->wikiparser = $wikiparser;
 
-		//$this->throwContent(WikiParser::ELEMENT_OPEN, '', str_repeat($char, $len));
+		//$this->throwContent(Wiki_Parser_Core::ELEMENT_OPEN, '', str_repeat($char, $len));
 	}
 
 	/**
@@ -1603,7 +1399,7 @@ class WikiList_Parser
 	{
 		$i = count($this->content);
 
-		if ($i > 0 && $type == WikiParser::TEXT && $this->content[$i - 1]['type'] == WikiParser::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
+		if ($i > 0 && $type == Wiki_Parser_Core::TEXT && $this->content[$i - 1]['type'] == Wiki_Parser_Core::TEXT && empty($this->content[$i - 1]['additional']) && empty($additonal))
 		{
 			$this->content[$i - 1]['content'] .= $content;
 
@@ -1618,7 +1414,7 @@ class WikiList_Parser
 		}
 
 		// At least two lines is required for element to be complete
-		//$this->is_complete = $type == WikiParser::LIST_ITEM_OPEN;
+		//$this->is_complete = $type == Wiki_Parser_Core::LIST_ITEM_OPEN;
 
 		$this->content[$i] = array(
 			'type' => $type,
@@ -1660,9 +1456,9 @@ class WikiList_Parser
 		{
 			foreach ($this->content as $c)
 			{
-				if ($c['type'] == WikiParser::LIST_ITEM_OPEN)
-					$target->throwContent(WikiParser::TEXT, $c['unparsed']);
-				elseif ($c['type'] == WikiParser::LIST_ITEM_CLOSE || $c['type'] == WikiParser::LIST_OPEN || $c['type'] == WikiParser::LIST_CLOSE)
+				if ($c['type'] == Wiki_Parser_Core::LIST_ITEM_OPEN)
+					$target->throwContent(Wiki_Parser_Core::TEXT, $c['unparsed']);
+				elseif ($c['type'] == Wiki_Parser_Core::LIST_ITEM_CLOSE || $c['type'] == Wiki_Parser_Core::LIST_OPEN || $c['type'] == Wiki_Parser_Core::LIST_CLOSE)
 					continue;
 				else
 					$target->throwContent(
@@ -1676,14 +1472,14 @@ class WikiList_Parser
 			return;
 		}
 
-		$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_OPEN);
-		$target->throwContent(WikiParser::LIST_OPEN, '<' . WikiList_Parser::$listTags[$this->type] . '>', $this->type);
+		$target->throwContent(Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_OPEN);
+		$target->throwContent(Wiki_Parser_Core::LIST_OPEN, '<' . WikiList_Parser::$listTags[$this->type] . '>', $this->type);
 
 		foreach ($this->content as $c)
 		{
-			/*if ($c['type'] == WikiParser::LIST_ITEM_OPEN)
-				$target->throwContent(WikiParser::TEXT, $c['unparsed']);
-			elseif ($c['type'] == WikiParser::LIST_ITEM_CLOSE || $c['type'] == WikiParser::LIST_OPEN || $c['type'] == WikiParser::LIST_CLOSE)
+			/*if ($c['type'] == Wiki_Parser_Core::LIST_ITEM_OPEN)
+				$target->throwContent(Wiki_Parser_Core::TEXT, $c['unparsed']);
+			elseif ($c['type'] == Wiki_Parser_Core::LIST_ITEM_CLOSE || $c['type'] == Wiki_Parser_Core::LIST_OPEN || $c['type'] == Wiki_Parser_Core::LIST_CLOSE)
 				continue;
 			else*/
 				$target->throwContent(
@@ -1694,8 +1490,8 @@ class WikiList_Parser
 				);
 		}
 
-		$target->throwContent(WikiParser::LIST_CLOSE, '</' . WikiList_Parser::$listTags[$this->type] . '>', '');
-		$target->throwContent(WikiParser::CONTROL_BLOCK_LEVEL_CLOSE);
+		$target->throwContent(Wiki_Parser_Core::LIST_CLOSE, '</' . WikiList_Parser::$listTags[$this->type] . '>', '');
+		$target->throwContent(Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_CLOSE);
 	}
 
 	/**
@@ -1751,7 +1547,7 @@ class WikiLink extends WikiElement
 		
 		if (isset($params[0]))
 		{
-			$this->linkText = WikiParser::toText($params[0]);
+			$this->linkText = Wiki_Parser_Core::toText($params[0]);
 			unset($params[0]);
 		}
 		else
@@ -1772,7 +1568,7 @@ class WikiLink extends WikiElement
 				// Size
 				if (!empty($this->params[1]))
 				{
-					$size = WikiParser::toText($this->params[1]);
+					$size = Wiki_Parser_Core::toText($this->params[1]);
 
 					if ($size == 'thumb')
 						$size = ' width="180"';
@@ -1792,22 +1588,22 @@ class WikiLink extends WikiElement
 				// Align
 				if (!empty($this->params[2]))
 				{
-					$align = trim(WikiParser::toText($this->params[1]));
+					$align = trim(Wiki_Parser_Core::toText($this->params[1]));
 					$align = ($align == 'left' || $align == 'right') ? $align : '';
 				}
 
 				// Alt
 				if (!empty($this->params[3]))
-					$alt = WikiParser::toText($this->params[2]);
+					$alt = Wiki_Parser_Core::toText($this->params[2]);
 
 				// Caption
 				if (!empty($this->params[4]))
-					$alt = WikiParser::toText($this->params[3]);
+					$alt = Wiki_Parser_Core::toText($this->params[3]);
 
 				// Link
 				if (isset($this->params['link']))
 				{
-					$link = WikiParser::toText($this->params['link']);
+					$link = Wiki_Parser_Core::toText($this->params['link']);
 					if (!empty($link) && substr(0,7, $link) !== 'http://')
 						$link = wiki_get_url($this->params['link']);
 				}

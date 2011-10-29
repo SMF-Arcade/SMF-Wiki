@@ -13,22 +13,22 @@ function wiki_render(array $content)
 	
 	switch ($content['type'])
 	{
-		case WikiParser::NEW_PARAGRAPH:
-		case WikiParser::END_PARAGRAPH:
-		case WikiParser::NEW_LINE:
-		case WikiParser::TEXT:
-		case WikiParser::NO_PARSE:
-		case WikiParser::LIST_OPEN:
-		case WikiParser::LIST_CLOSE:
-		case WikiParser::LIST_ITEM_OPEN:
-		case WikiParser::LIST_ITEM_CLOSE:
-		case WikiParser::ELEMENT_SEMI_COLON:
+		case Wiki_Parser_Core::NEW_PARAGRAPH:
+		case Wiki_Parser_Core::END_PARAGRAPH:
+		case Wiki_Parser_Core::NEW_LINE:
+		case Wiki_Parser_Core::TEXT:
+		case Wiki_Parser_Core::NO_PARSE:
+		case Wiki_Parser_Core::LIST_OPEN:
+		case Wiki_Parser_Core::LIST_CLOSE:
+		case Wiki_Parser_Core::LIST_ITEM_OPEN:
+		case Wiki_Parser_Core::LIST_ITEM_CLOSE:
+		case Wiki_Parser_Core::ELEMENT_SEMI_COLON:
 			echo $content['content'];
 			break;
-		case WikiParser::ELEMENT:
+		case Wiki_Parser_Core::ELEMENT:
 			echo $content['content']->getHtml();
 			break;
-		case WikiParser::WARNING:
+		case Wiki_Parser_Core::WARNING:
 			echo '<span class="wiki_warning" title="' . $content['unparsed'] . '">' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '</span>';
 			break;
 		default:
