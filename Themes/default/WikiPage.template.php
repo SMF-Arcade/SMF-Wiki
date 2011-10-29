@@ -113,14 +113,16 @@ function template_view_page()
 function template_wiki_content(WikiPage $wikiPage, $options = array())
 {
 	global $context, $modSettings, $txt;
+	
+	var_dump($wikiPage);
 
-	foreach ($wikiPage->parser->sections as $section)
+	foreach ($wikiPage->content->getAll() as $section)
 	{
-		if ($section['level'] > 1 && $section['level'] < 5)
+		if ($section->getLevel() > 1 && $section->getLevel() < 5)
 		{
 			echo '
-			<h', $section['level'] + 1, ' id="', $section['id'], '">
-				<span class="floatleft">', $section['title'], '</span>';
+			<h', $section->getLevel() + 1, ' id="', $section->getID(), '">
+				<span class="floatleft">', $section->getName(), '</span>';
 
 			if (!empty($context['can_edit_page']))
 				echo '
@@ -131,7 +133,7 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 			</h', $section['level'] + 1, '>';
 		}
 		// Replace this
-		elseif ($section['level'] >= 5)
+		elseif ($section->getLevel() >= 5)
 		{
 			echo '
 			<h6 id="', $section['id'], '" class="clearfix">
@@ -146,7 +148,7 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 			</h6>';
 		}
 
-		if ($section['level'] == 1 && !empty($context['wiki_page']->file))
+		if ($section->getLevel() == 1 && !empty($context['wiki_page']->file))
 		{
 			if ($context['wiki_page']->file['is_image'])
 			{
@@ -159,16 +161,14 @@ function template_wiki_content(WikiPage $wikiPage, $options = array())
 				$context['wiki_page']->file['is_image'] ? ', ' .$context['wiki_page']->file['width'] . 'x' . $context['wiki_page']->file['height']  : '', ')';
 		}
 
-		foreach ($section['content'] as $content)
-		{
+		foreach ($section->getContent() as $content)
 			wiki_render($content);
-		}
 		
-		if ($section['level'] == 1 && empty($options['no_toc']) && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->parser->tableOfContents))
+		if ($section->getLevel() == 1 && empty($options['no_toc']) && empty($wikiPage->pageSettings['hide_toc']) && !empty($wikiPage->toc))
 			echo '
 			<div class="wikitoc floatright">
 				<ul class="reset">',
-					output_toc($context['current_page_url'], '', $wikiPage->parser->tableOfContents), '
+					output_toc($context['current_page_url'], '', $wikiPage->toc), '
 				</ul>
 			</div>';
 	}

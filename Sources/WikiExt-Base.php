@@ -248,7 +248,7 @@ class WikiExtension_Core extends WikiExtensionBase
 	/**
 	 *
 	 * @global <type> $wiki_version
-	 * @param WikiParser $wikiparser
+	 * @param Wiki_Parser $wikiparser
 	 * @param <type> $parameters
 	 * @return <type>
 	 */
@@ -261,11 +261,11 @@ class WikiExtension_Core extends WikiExtensionBase
 
 	/**
 	 *
-	 * @param WikiParser $wikiparser
+	 * @param Wiki_Parser $wikiparser
 	 * @param <type> $parameters
 	 * @return <type>
 	 */
-	static function variable_DisplayTitle(WikiParser $wikiparser, $parameters)
+	static function variable_DisplayTitle(Wiki_Parser $wikiparser, $parameters)
 	{
 		if (empty($parameters))
 			return $wikiparser->page->title;
@@ -277,7 +277,7 @@ class WikiExtension_Core extends WikiExtensionBase
 
 	/**
 	 *
-	 * @param WikiParser $wikiparser
+	 * @param Wiki_Parser $wikiparser
 	 * @param <type> $parameters
 	 */
 	static function function_if($wikiparser, $parameters)
@@ -292,7 +292,7 @@ class WikiExtension_Core extends WikiExtensionBase
 	/**
 	 *
 	 */
-	static function magicword_index(WikiParser $wikiparser)
+	static function magicword_index(Wiki_Parser $wikiparser)
 	{
 		$wikiparser->pageOptions['index'] = true;
 	}
@@ -300,7 +300,7 @@ class WikiExtension_Core extends WikiExtensionBase
 	/**
 	 *
 	 */
-	static function magicword_noindex(WikiParser $wikiparser)
+	static function magicword_noindex(Wiki_Parser $wikiparser)
 	{
 		$wikiparser->pageOptions['index'] = true;
 	}

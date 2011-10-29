@@ -77,6 +77,13 @@ class Wiki_Parser_Core
 	);
 	
 	/**
+	 *
+	 */
+	static public $hashTags = array(
+		'test' => array(),
+	);
+	
+	/**
 	 * Makes html id for section
 	 */
 	static function html_id($name)
@@ -128,7 +135,6 @@ class Wiki_Parser_Core
 		return $return;
 	}
 
-
 	/**
 	 * Parser content into text for use in parameters etc.
 	 */
@@ -142,6 +148,7 @@ class Wiki_Parser_Core
 
 	/**
 	 * Prepares content array for boolean conversion
+	 * 
 	 * @param array $content
 	 * @return array
 	 */

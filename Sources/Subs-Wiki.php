@@ -366,7 +366,7 @@ function wiki_get_page_info($page, $namespace)
 
 /**
  * Returns raw (unparsed) page content.
- * Used to get templates from WikiParser
+ * Used to get templates from Wiki_Parser
  */
 function wiki_get_page_raw_content(WikiPage $page_info, $revision = null)
 {
@@ -418,8 +418,9 @@ function wiki_get_page_content(WikiPage $page_info, $namespace, $revision, $incl
 		fatal_lang_error('wiki_invalid_revision');
 	$smcFunc['db_free_result']($request);
 	
-	$wiki_parser = new WikiParser($page_info);
-	$wiki_parser->parse($row['content']);
+	$wiki_parser = new Wiki_Parser($page_info);
+	list ($page_info->content, $page_info->toc) = $wiki_parser->parse($row['content']);
+	unset($wiki_parser); // No longer needed
 
 	if (!empty($row['id_file']))
 		$page_info->addFile($row['id_file']);
@@ -461,7 +462,7 @@ function loadWikiMenu()
 	$level = 0;
 	$in_item = false;
 
-	foreach ($wikiPage->parser->sections[0]['content'] as $item)
+	foreach ($wikiPage->content->get(0)->getContent() as $item)
 	{
 		if ($level == 0 && $item['type'] != Wiki_Parser_Core::LIST_OPEN)
 			continue;

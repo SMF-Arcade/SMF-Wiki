@@ -82,7 +82,7 @@ function EditPage()
 		$context['page_info_preview'] = clone $context['page_info'];
 		
 		// $preview_content
-		$context['wiki_page_preview'] = new WikiParser($context['page_info_preview']);
+		$context['wiki_page_preview'] = new Wiki_Parser($context['page_info_preview']);
 		$context['wiki_page_preview']->parse($preview_content);
 		
 		$context['current_page_title'] = $context['page_info_preview']->title;
@@ -212,7 +212,7 @@ function EditPage2()
 
 	// Parse Page for usage in
 	$context['page_info']->title = get_default_display_title($_REQUEST['page'], $context['namespace']['id']);
-	$wikiParser = new WikiParser($context['page_info']);
+	$wikiParser = new Wiki_Parser($context['page_info']);
 	$wikiParser->parse($body);
 
 	$pageOptions = array(

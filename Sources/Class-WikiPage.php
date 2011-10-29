@@ -102,8 +102,16 @@ class WikiPage
 	public $topic = 0;
 	
 	public $page_tree;
-
-	public $parser;
+	
+	/**
+	 * @var Wiki_Parser_SectionContainer
+	 */
+	public $content;
+	
+	/**
+	 *
+	 */
+	public $toc;
 
 	/**
 	 *
