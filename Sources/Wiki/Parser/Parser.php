@@ -238,10 +238,13 @@ class Wiki_Parser
 			if ($target instanceof Wiki_Parser_SubParser)
 			{
 				$closeChar = $target->getCloseChar();
-				$search .= $closeChar . implode('', array_keys($target->getWantedChars()));
+				$wantedChars = $target->getWantedChars();
+				$search .= $closeChar . implode('', array_keys($wantedChars));
 			}
 			else
 			{
+				$closeChar = null;
+				$wantedChars = null;
 				$search .= '&=';
 			}
 
@@ -406,6 +409,8 @@ class Wiki_Parser
 			 */
 			if ($target instanceof Wiki_Parser_SectionContainer && $is_new_line && $curChar == '=')
 			{
+				$target->getCurrent()->finalize();
+				
 				$len = strcspn($text, "\n", $i);
 			
 				if ($len !== false)
@@ -457,7 +462,7 @@ class Wiki_Parser
 				}
 			}
 			
-			// Close char?
+			// Wiki_Parser_SubParser - Close char
 			if ($target instanceof Wiki_Parser_SubParser && $curChar == $closeChar)
 			{
 				if ($res = $target->checkEnd($this, $stack, $curChar, $text, $i))
@@ -467,13 +472,14 @@ class Wiki_Parser
 					continue;
 				}
 			}
-			/*// Start character for WikiElement
-			elseif ($this->parse_bbc && isset(WikiElement_Parser::$rules[$curChar]))
+			// Wiki_Parser_SubParser - Wanted char
+			elseif ($target instanceof Wiki_Parser_SubParser && isset($wantedChars[$curChar]))
 			{
-				
+				$target->throwContent($wantedChars[$curChar], $curChar);
+				$i++;
 			}
 			// Handle lists
-			elseif ($this->parse_bbc && $is_new_line && in_array($curChar, WikiList_Parser::$listTypes))
+			/*elseif ($this->parse_bbc && $is_new_line && in_array($curChar, WikiList_Parser::$listTypes))
 			{
 				// Default only one character
 				$maxLen = 1;
@@ -752,14 +758,14 @@ class Wiki_Parser
 		// Empty stack
 		while (!empty($stack))
 		{
-			if ($target instanceof WikiList_Parser)
-				$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', '');
+			//if ($target instanceof WikiList_Parser)
+			//	$target->throwContent(Wiki_Parser_Core::LIST_ITEM_CLOSE, '</li>', '');
 			
 			$element = $target;
 			$target = array_pop($stack);
 			
 			// Ask element to throw content to previous element
-			$element->throwContentTo($target);
+			$element->forceEnd($target);
 			
 			unset($element);
 		}

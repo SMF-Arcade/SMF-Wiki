@@ -93,6 +93,15 @@ class Wiki_Parser_Section
 	}
 	
 	/**
+	 *
+	 *
+	 */
+	public function finalize()
+	{
+		$this->throwContent(Wiki_Parser_Core::END_PARAGRAPH, '</p>', '');
+	}
+	
+	/**
 	 * Adds content to this section
 	 */
 	public function throwContent($type, $content = '', $unparsed = '', $additonal = array())

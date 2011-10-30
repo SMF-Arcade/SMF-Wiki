@@ -13,18 +13,6 @@ function wiki_render(array $content)
 	
 	switch ($content['type'])
 	{
-		case Wiki_Parser_Core::NEW_PARAGRAPH:
-		case Wiki_Parser_Core::END_PARAGRAPH:
-		case Wiki_Parser_Core::NEW_LINE:
-		case Wiki_Parser_Core::TEXT:
-		case Wiki_Parser_Core::NO_PARSE:
-		case Wiki_Parser_Core::LIST_OPEN:
-		case Wiki_Parser_Core::LIST_CLOSE:
-		case Wiki_Parser_Core::LIST_ITEM_OPEN:
-		case Wiki_Parser_Core::LIST_ITEM_CLOSE:
-		case Wiki_Parser_Core::ELEMENT_SEMI_COLON:
-			echo $content['content'];
-			break;
 		case Wiki_Parser_Core::ELEMENT:
 			echo $content['content']->getHtml();
 			break;
@@ -32,7 +20,7 @@ function wiki_render(array $content)
 			echo '<span class="wiki_warning" title="' . $content['unparsed'] . '">' . vsprintf($txt['parser_' . $content['content']], $content['additional']) . '</span>';
 			break;
 		default:
-			fatal_error('unknown type ' . $content['type'] . ' used by parsed... check that all files are from same version');
+			echo $content['content'];
 			break;
 	}
 }

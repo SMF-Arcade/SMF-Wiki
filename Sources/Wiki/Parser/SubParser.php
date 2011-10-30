@@ -16,7 +16,7 @@ abstract class Wiki_Parser_SubParser
 	/**
 	 *
 	 */
-	private $content = array();
+	protected $content = array();
 	
 	/**
 	 *
@@ -48,6 +48,11 @@ abstract class Wiki_Parser_SubParser
 	 *
 	 */
 	abstract function checkEnd($parser, &$stack, $curChar, &$text, &$i);
+
+	/**
+	 *
+	 */
+	abstract function forceEnd($parser, $target);
 	
 	/**
 	 * Adds content to this tag
@@ -77,6 +82,24 @@ abstract class Wiki_Parser_SubParser
 			'additional' => $additonal,
 		);
 	}
+	
+	/**
+	 * 
+	 */
+	protected function throwContentTo($target)
+	{
+		global $context;
+
+		foreach ($this->content as $c)
+		{
+			$target->throwContent(
+				$c['type'],
+				$c['content'],
+				$c['unparsed'],
+				$c['additional']
+			);
+		}
+	}
 
 	/**
 	 *
@@ -96,24 +119,6 @@ abstract class Wiki_Parser_SubParser
 		foreach ($this->content as $c)
 			$return .= !empty($c['unparsed'])? $c['unparsed'] : $c['content'];
 		return $return;
-	}
-	
-	/**
-	 * Fails
-	 */
-	protected function fail($target)
-	{
-		global $context;
-
-		foreach ($this->content as $c)
-		{
-			$target->throwContent(
-				$c['type'],
-				$c['content'],
-				$c['unparsed'],
-				$c['additional']
-			);
-		}
 	}
 }
 

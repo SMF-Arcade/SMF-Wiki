@@ -29,12 +29,6 @@ class Wiki_Parser_Core
 	
 	// Rules for WikiElement (such as Wikilinks etc.)
 	const ELEMENT = 40;
-	/*const ELEMENT_OPEN = 41;
-	const ELEMENT_NAME = 42;
-	const ELEMENT_PARAM_NAME = 43;
-	const ELEMENT_NEW_PARAM = 44;
-	const ELEMENT_SEMI_COLON = 45;
-	const ELEMENT_CLOSE = 49;*/
 	
 	// Behaviour Switch
 	const BEHAVIOUR_SWITCH = 50;
@@ -108,12 +102,6 @@ class Wiki_Parser_Core
 		{
 			switch ($c['type'])
 			{
-				case Wiki_Parser_Core::ELEMENT_SEMI_COLON:
-				case Wiki_Parser_Core::CONTROL_BLOCK_LEVEL_OPEN:
-				case Wiki_Parser_Core::NO_PARSE:
-				case Wiki_Parser_Core::TEXT:
-					$return .= $c['content'];
-					break;
 				case Wiki_Parser_Core::NEW_LINE:
 					$return .= $single_line ? ' ' : '<br />';
 					break;
@@ -127,7 +115,7 @@ class Wiki_Parser_Core
 					$return .= $c['unparsed'];
 					break;
 				default:
-					die('toText: Unknown part type ' . $c['type']);
+					$return .= $c['content'];
 					break;
 			}
 		}
@@ -159,12 +147,6 @@ class Wiki_Parser_Core
 		{
 			switch ($c['type'])
 			{
-				case Wiki_Parser_Core::ELEMENT_SEMI_COLON:
-				case Wiki_Parser_Core::TEXT:
-					$c['content'] = trim($c['content']);
-					if ($c['content'] !== '')
-						$return[] = $c;
-					break;
 				case Wiki_Parser_Core::NEW_LINE:
 				case Wiki_Parser_Core::NEW_PARAGRAPH:
 					break;
@@ -175,7 +157,9 @@ class Wiki_Parser_Core
 					$return[] = $c;
 					break;
 				default:
-					die('__boolean_trim: Unknown part type ' . $c['type']);
+					$c['content'] = trim($c['content']);
+					if ($c['content'] !== '')
+						$return[] = $c;
 					break;
 			}
 		}
