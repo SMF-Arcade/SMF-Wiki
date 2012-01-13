@@ -94,7 +94,7 @@ function template_wiki_below()
 	echo '
 	</div>
 	<div id="project_bottom" class="smalltext" style="text-align: center; clear: both;">
-		Powered by: <a href="http://smfwiki.net">SMF Wiki ', $wiki_version, '</a> &copy; <a href="http://www.madjoki.com/" target="_blank">Niko Pahajoki</a> 2008-2011
+		Powered by: <a href="http://smfwiki.net">SMF Wiki ', $wiki_version, '</a> &copy; <a href="http://www.madjoki.com/" target="_blank">Niko Pahajoki</a> 2008-2012
 	</div>';
 }
 
